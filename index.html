@@ -23,7 +23,7 @@
         /* ----- DESKTOP ----- */
         #desktop {
             width: 100%;
-            height: calc(100% - 50px); /* leave room for taskbar */
+            height: calc(100% - 50px);
             padding: 20px;
             display: flex;
             flex-direction: column;
@@ -31,6 +31,7 @@
             align-content: flex-start;
             gap: 20px;
             background: radial-gradient(ellipse at 20% 20%, #16213e, #0a0a1a);
+            transition: background 0.5s;
         }
 
         .desktop-icon {
@@ -54,10 +55,10 @@
         .desktop-icon .icon {
             font-size: 42px;
             margin-bottom: 6px;
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6));
         }
         .desktop-icon .label {
-            text-shadow: 0 1px 6px rgba(0,0,0,0.9);
+            text-shadow: 0 1px 6px rgba(0, 0, 0, 0.9);
             word-wrap: break-word;
             line-height: 1.2;
         }
@@ -77,7 +78,7 @@
             left: 0;
             right: 0;
             z-index: 9999;
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
         }
 
         #start-btn {
@@ -104,6 +105,7 @@
             gap: 4px;
             flex: 1;
             padding: 0 12px;
+            overflow-x: auto;
         }
         .taskbar-app {
             background: transparent;
@@ -115,6 +117,7 @@
             font-size: 13px;
             transition: background 0.2s;
             height: 32px;
+            white-space: nowrap;
         }
         .taskbar-app:hover {
             background: rgba(255, 255, 255, 0.15);
@@ -129,7 +132,7 @@
             color: white;
             font-size: 13px;
             padding: 0 8px;
-            min-width: 80px;
+            min-width: 100px;
             text-align: right;
             font-weight: 400;
             letter-spacing: 0.3px;
@@ -140,7 +143,7 @@
             position: fixed;
             bottom: 60px;
             left: 10px;
-            width: 320px;
+            width: 340px;
             background: rgba(25, 25, 45, 0.96);
             backdrop-filter: blur(20px);
             border-radius: 12px;
@@ -148,7 +151,7 @@
             padding: 16px;
             display: none;
             z-index: 10000;
-            box-shadow: 0 12px 60px rgba(0,0,0,0.8);
+            box-shadow: 0 12px 60px rgba(0, 0, 0, 0.8);
             max-height: 400px;
             overflow-y: auto;
         }
@@ -161,7 +164,7 @@
             font-weight: 400;
             margin-bottom: 12px;
             letter-spacing: 1px;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
             padding-bottom: 8px;
         }
         .start-item {
@@ -183,26 +186,35 @@
             width: 32px;
             text-align: center;
         }
+        .start-divider {
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            margin: 8px 0;
+        }
 
-        /* ----- WINDOWS (draggable/resizable) ----- */
+        /* ----- WINDOWS ----- */
         .window {
             position: absolute;
-            min-width: 300px;
+            min-width: 320px;
             min-height: 200px;
             background: rgba(28, 28, 48, 0.92);
             backdrop-filter: blur(12px);
             border-radius: 12px;
             border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 20px 80px rgba(0,0,0,0.7);
+            box-shadow: 0 20px 80px rgba(0, 0, 0, 0.7);
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            resize: both;
             animation: fadeIn 0.2s ease;
         }
         @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.96); }
-            to { opacity: 1; transform: scale(1); }
+            from {
+                opacity: 0;
+                transform: scale(0.96);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
         }
 
         .window-header {
@@ -249,11 +261,11 @@
             color: white;
         }
         .window-controls .max-btn:hover {
-            background: rgba(255,255,255,0.15);
+            background: rgba(255, 255, 255, 0.15);
             color: white;
         }
         .window-controls .min-btn:hover {
-            background: rgba(255,255,255,0.15);
+            background: rgba(255, 255, 255, 0.15);
             color: white;
         }
 
@@ -264,11 +276,13 @@
             overflow: auto;
             font-size: 14px;
             line-height: 1.6;
+            display: flex;
+            flex-direction: column;
         }
         .window-body textarea {
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.3);
+            background: rgba(0, 0, 0, 0.3);
             border: none;
             color: #eee;
             font-size: 14px;
@@ -277,6 +291,7 @@
             resize: none;
             outline: none;
             font-family: 'Consolas', monospace;
+            flex: 1;
         }
         .window-body .file-list {
             list-style: none;
@@ -288,10 +303,169 @@
             transition: background 0.1s;
         }
         .window-body .file-list li:hover {
-            background: rgba(255,255,255,0.08);
+            background: rgba(255, 255, 255, 0.08);
         }
 
-        /* ----- SCROLLBAR STYLING ----- */
+        /* ----- APP STORE CARDS ----- */
+        .app-card {
+            background: rgba(255, 255, 255, 0.04);
+            padding: 16px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            transition: background 0.2s;
+            margin-bottom: 10px;
+        }
+        .app-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .app-card .info {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .app-card .info .icon {
+            font-size: 32px;
+        }
+        .app-card .info .name {
+            font-weight: 600;
+            font-size: 16px;
+        }
+        .app-card .info .desc {
+            font-size: 13px;
+            color: #888;
+        }
+        .app-card .launch-btn {
+            background: #0078d4;
+            border: none;
+            color: white;
+            padding: 6px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        .app-card .launch-btn:hover {
+            background: #106ebe;
+        }
+
+        /* ----- CALCULATOR ----- */
+        .calc-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .calc-grid button {
+            padding: 14px;
+            font-size: 18px;
+            border: none;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.06);
+            color: white;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .calc-grid button:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+        .calc-grid .op {
+            background: rgba(0, 120, 212, 0.3);
+        }
+        .calc-grid .op:hover {
+            background: rgba(0, 120, 212, 0.5);
+        }
+        .calc-grid .eq {
+            background: #0078d4;
+        }
+        .calc-grid .eq:hover {
+            background: #106ebe;
+        }
+        #calcDisplay {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 16px;
+            border-radius: 6px;
+            text-align: right;
+            font-size: 28px;
+            font-weight: 300;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+            min-height: 60px;
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            width: 100%;
+        }
+
+        /* ----- CAMERA / MICROPHONE ----- */
+        #camVideo {
+            width: 100%;
+            background: #0a0a1a;
+            border-radius: 8px;
+            aspect-ratio: 4/3;
+            object-fit: cover;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .cam-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        .cam-controls button {
+            padding: 6px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            transition: background 0.2s;
+        }
+        .cam-controls button.primary {
+            background: #0078d4;
+        }
+        .cam-controls button.primary:hover {
+            background: #106ebe;
+        }
+        .cam-controls button.danger {
+            background: #d43a3a;
+        }
+        .cam-controls button.danger:hover {
+            background: #b02b2b;
+        }
+        .cam-gallery {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+        .cam-gallery img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        #audioVisualizer {
+            width: 100%;
+            height: 140px;
+            background: #0a0a1a;
+            border-radius: 8px;
+            display: block;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .mic-status {
+            color: #aaa;
+            margin-top: 8px;
+            font-size: 13px;
+        }
+
+        /* Scrollbar */
         ::-webkit-scrollbar {
             width: 5px;
         }
@@ -299,8 +473,24 @@
             background: transparent;
         }
         ::-webkit-scrollbar-thumb {
-            background: rgba(255,255,255,0.2);
+            background: rgba(255, 255, 255, 0.2);
             border-radius: 10px;
+        }
+
+        .settings-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }
+        .settings-row input[type="color"] {
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            background: transparent;
         }
     </style>
 </head>
@@ -316,9 +506,21 @@
             <span class="icon">📝</span>
             <span class="label">Notepad</span>
         </button>
-        <button class="desktop-icon" data-app="recycle">
-            <span class="icon">🗑️</span>
-            <span class="label">Recycle Bin</span>
+        <button class="desktop-icon" data-app="camera">
+            <span class="icon">📷</span>
+            <span class="label">Camera</span>
+        </button>
+        <button class="desktop-icon" data-app="microphone">
+            <span class="icon">🎤</span>
+            <span class="label">Microphone</span>
+        </button>
+        <button class="desktop-icon" data-app="appstore">
+            <span class="icon">🛒</span>
+            <span class="label">App Store</span>
+        </button>
+        <button class="desktop-icon" data-app="calculator">
+            <span class="icon">🧮</span>
+            <span class="label">Calculator</span>
         </button>
     </div>
 
@@ -327,22 +529,25 @@
         <h3>🪟 OpencoreOS</h3>
         <div class="start-item" data-app="explorer"><span class="icon">📁</span> File Explorer</div>
         <div class="start-item" data-app="notepad"><span class="icon">📝</span> Notepad</div>
-        <div class="start-item" data-app="terminal"><span class="icon">⚡</span> Terminal (simulated)</div>
+        <div class="start-item" data-app="camera"><span class="icon">📷</span> Camera</div>
+        <div class="start-item" data-app="microphone"><span class="icon">🎤</span> Microphone</div>
+        <div class="start-item" data-app="appstore"><span class="icon">🛒</span> App Store</div>
+        <div class="start-item" data-app="calculator"><span class="icon">🧮</span> Calculator</div>
+        <div class="start-item" data-app="settings"><span class="icon">⚙️</span> Settings</div>
+        <div class="start-divider"></div>
+        <div class="start-item" id="shutdownBtn"><span class="icon">⏻</span> Restart OS</div>
     </div>
 
     <!-- TASKBAR -->
     <div id="taskbar">
         <button id="start-btn">🪟 Start</button>
-        <div class="taskbar-apps" id="taskbarApps">
-            <button class="taskbar-app" data-app="explorer">📁 Explorer</button>
-            <button class="taskbar-app" data-app="notepad">📝 Notepad</button>
-        </div>
-        <div id="clock">00:00</div>
+        <div class="taskbar-apps" id="taskbarApps"></div>
+        <div id="clock">00:00:00</div>
     </div>
 
     <script>
         // ================================================================
-        //  OPENCOREOS - Full JavaScript Engine
+        //  OPENCOREOS - MEGA ENGINE
         // ================================================================
 
         // ---------- STATE ----------
@@ -359,10 +564,10 @@
         const clockEl = document.getElementById('clock');
         const taskbarApps = document.getElementById('taskbarApps');
 
-        // ---------- CLOCK ----------
+        // ---------- CLOCK (with seconds) ----------
         function updateClock() {
             const now = new Date();
-            clockEl.textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            clockEl.textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         }
         updateClock();
         setInterval(updateClock, 1000);
@@ -374,6 +579,13 @@
         });
         document.addEventListener('click', () => startMenu.classList.remove('open'));
 
+        // ---------- SHUTDOWN / RESTART ----------
+        document.getElementById('shutdownBtn').addEventListener('click', () => {
+            if (confirm('Restart OpencoreOS? All windows will close.')) {
+                location.reload();
+            }
+        });
+
         // ---------- WINDOW MANAGER ----------
         function createWindow(appId, title, icon, contentHTML, width = 520, height = 360) {
             const id = `win-${++state.windowCounter}`;
@@ -384,11 +596,12 @@
             win.id = id;
             win.style.width = width + 'px';
             win.style.height = height + 'px';
-            win.style.left = (40 + (state.windows.length % 5) * 30) + 'px';
-            win.style.top = (40 + (state.windows.length % 5) * 25) + 'px';
+            const left = Math.max(10, Math.min(window.innerWidth - width - 20, 30 + (state.windows.length % 6) * 35));
+            const top = Math.max(10, Math.min(window.innerHeight - height - 70, 30 + (state.windows.length % 6) * 25));
+            win.style.left = left + 'px';
+            win.style.top = top + 'px';
             win.style.zIndex = zIndex;
 
-            // Header
             win.innerHTML = `
                 <div class="window-header">
                     <span class="window-title">${icon} ${title}</span>
@@ -405,8 +618,8 @@
 
             // ---- DRAGGING ----
             const header = win.querySelector('.window-header');
-            let isDragging = false, offsetX, offsetY;
-
+            let isDragging = false,
+                offsetX, offsetY;
             header.addEventListener('mousedown', (e) => {
                 if (e.target.closest('.window-controls')) return;
                 isDragging = true;
@@ -416,7 +629,6 @@
                 win.style.zIndex = ++state.nextZIndex;
                 win.style.cursor = 'grabbing';
             });
-
             document.addEventListener('mousemove', (e) => {
                 if (!isDragging) return;
                 let x = e.clientX - offsetX;
@@ -426,12 +638,9 @@
                 win.style.left = x + 'px';
                 win.style.top = y + 'px';
             });
-
             document.addEventListener('mouseup', () => {
-                if (isDragging) {
-                    isDragging = false;
-                    win.style.cursor = 'default';
-                }
+                if (isDragging) { isDragging = false;
+                    win.style.cursor = 'default'; }
             });
 
             // ---- CONTROLS ----
@@ -439,15 +648,11 @@
             win.querySelector('.max-btn').addEventListener('click', () => toggleMaximize(id));
             win.querySelector('.min-btn').addEventListener('click', () => minimizeWindow(id));
 
-            // Bring to front on click
             win.addEventListener('mousedown', () => {
                 win.style.zIndex = ++state.nextZIndex;
             });
 
-            // Store reference
             state.windows.push({ id, appId, element: win, minimized: false });
-
-            // Update taskbar
             updateTaskbar();
             return win;
         }
@@ -456,6 +661,16 @@
             const idx = state.windows.findIndex(w => w.id === id);
             if (idx === -1) return;
             const win = state.windows[idx].element;
+            // Cleanup media streams if camera/mic
+            if (win._mediaStream) {
+                win._mediaStream.getTracks().forEach(t => t.stop());
+            }
+            if (win._animFrame) {
+                cancelAnimationFrame(win._animFrame);
+            }
+            if (win._audioCtx) {
+                win._audioCtx.close();
+            }
             win.remove();
             state.windows.splice(idx, 1);
             updateTaskbar();
@@ -470,11 +685,15 @@
                 el.style.height = '360px';
                 el.style.left = '40px';
                 el.style.top = '40px';
+                el.style.borderRadius = '12px';
             } else {
+                el.dataset.prevRect = JSON.stringify({ left: el.style.left, top: el.style.top, width: el.style.width,
+                    height: el.style.height });
                 el.style.width = window.innerWidth - 4 + 'px';
                 el.style.height = window.innerHeight - 54 + 'px';
                 el.style.left = '0px';
                 el.style.top = '0px';
+                el.style.borderRadius = '0';
             }
         }
 
@@ -498,11 +717,8 @@
             }
         }
 
-        // ---------- TASKBAR ----------
         function updateTaskbar() {
-            // Clear existing app buttons (keep clock and start)
-            const appsContainer = document.getElementById('taskbarApps');
-            appsContainer.innerHTML = '';
+            taskbarApps.innerHTML = '';
             state.windows.forEach(w => {
                 const btn = document.createElement('button');
                 btn.className = 'taskbar-app' + (w.minimized ? '' : ' active');
@@ -518,13 +734,13 @@
                     }
                     focusWindow(w.id);
                 });
-                appsContainer.appendChild(btn);
+                taskbarApps.appendChild(btn);
             });
         }
 
-        // ---------- LAUNCH APPS ----------
+        // ---------- APP LAUNCHER ----------
         function launchApp(appId) {
-            // Check if already open, if so focus it
+            // Check if already open (not minimized)
             const existing = state.windows.find(w => w.appId === appId && !w.minimized);
             if (existing) {
                 focusWindow(existing.id);
@@ -539,54 +755,291 @@
                 return;
             }
 
-            let title, icon, content;
+            let win;
             switch (appId) {
                 case 'explorer':
-                    title = 'File Explorer';
-                    icon = '📁';
-                    content = `
-                        <ul class="file-list">
+                    win = createWindow(appId, 'File Explorer', '📁',
+                        `<ul class="file-list">
                             <li>📄 Documents</li>
                             <li>🖼️ Pictures</li>
                             <li>🎵 Music</li>
                             <li>💾 Downloads</li>
                             <li style="margin-top:12px;color:#888;">📊 C: (Local Disk) - 23.4 GB free</li>
-                        </ul>
-                    `;
-                    createWindow(appId, title, icon, content, 560, 320);
+                        </ul>`, 560, 320);
                     break;
+
                 case 'notepad':
-                    title = 'Notepad';
-                    icon = '📝';
-                    content = `<textarea placeholder="Write something...">Welcome to OpencoreOS! Type anything here.</textarea>`;
-                    createWindow(appId, title, icon, content, 500, 340);
+                    win = createWindow(appId, 'Notepad', '📝',
+                        `<textarea placeholder="Write something...">Welcome to OpencoreOS! Type anything here.</textarea>`,
+                        500, 340);
                     break;
-                case 'terminal':
-                    title = 'Terminal';
-                    icon = '⚡';
-                    content = `
-                        <div style="background:#0a0a1a;padding:12px;border-radius:6px;font-family:'Consolas',monospace;color:#0f0;font-size:13px;">
-                            > OpencoreOS v1.0<br>
-                            > Type 'help' for commands<br>
-                            > System ready.<br>
-                            <span style="display:block;margin-top:8px;color:#aaa;">[simulated terminal]</span>
+
+                case 'calculator':
+                    win = createWindow(appId, 'Calculator', '🧮',
+                        `<input type="text" id="calcDisplay" readonly value="0" />
+                        <div class="calc-grid">
+                            <button data-val="7">7</button><button data-val="8">8</button><button data-val="9">9</button><button class="op" data-val="/">÷</button>
+                            <button data-val="4">4</button><button data-val="5">5</button><button data-val="6">6</button><button class="op" data-val="*">×</button>
+                            <button data-val="1">1</button><button data-val="2">2</button><button data-val="3">3</button><button class="op" data-val="-">−</button>
+                            <button data-val="0">0</button><button data-val=".">.</button><button class="eq" data-val="=">=</button><button class="op" data-val="+">+</button>
+                            <button style="grid-column: span 4; background:#d43a3a;" data-val="C">C</button>
+                        </div>`,
+                        320, 400);
+                    initCalculator(win);
+                    break;
+
+                case 'camera':
+                    win = createWindow(appId, 'Camera', '📷',
+                        `<video id="camVideo" autoplay playsinline></video>
+                        <div class="cam-controls">
+                            <button class="primary" id="camCaptureBtn">📸 Capture</button>
+                            <button id="camFlipBtn">🔄 Flip</button>
+                            <button class="danger" id="camCloseBtn">✕ Close</button>
                         </div>
-                    `;
-                    createWindow(appId, title, icon, content, 480, 280);
+                        <div class="cam-gallery" id="camGallery"></div>`,
+                        560, 480);
+                    initCamera(win);
                     break;
-                case 'recycle':
-                    title = 'Recycle Bin';
-                    icon = '🗑️';
-                    content = `<p style="color:#888;text-align:center;padding:30px 0;">This bin is empty.</p>`;
-                    createWindow(appId, title, icon, content, 360, 200);
+
+                case 'microphone':
+                    win = createWindow(appId, 'Microphone', '🎤',
+                        `<canvas id="audioVisualizer"></canvas>
+                        <div class="cam-controls">
+                            <button class="primary" id="micStartBtn">▶ Start</button>
+                            <button class="danger" id="micStopBtn">⏹ Stop</button>
+                        </div>
+                        <div class="mic-status" id="micStatus">Click "Start" to listen to your microphone.</div>`,
+                        500, 340);
+                    initMicrophone(win);
                     break;
+
+                case 'appstore':
+                    win = createWindow(appId, 'App Store', '🛒',
+                        `<div style="flex:1;">
+                            <div class="app-card">
+                                <div class="info">
+                                    <span class="icon">🎬</span>
+                                    <div><div class="name">Videohub</div><div class="desc">Streaming & video platform</div></div>
+                                </div>
+                                <button class="launch-btn" id="launchVideohubBtn">Launch</button>
+                            </div>
+                            <p style="color:#555; font-size:13px; margin-top:12px;">More apps coming soon...</p>
+                        </div>`,
+                        480, 280);
+                    win.querySelector('#launchVideohubBtn').addEventListener('click', () => launchApp('videohub'));
+                    break;
+
+                case 'videohub':
+                    win = createWindow(appId, 'Videohub', '🎬',
+                        `<iframe src="https://videohubpro.lovable.app" style="width:100%; height:100%; border:none; border-radius:4px; background:white;"></iframe>`,
+                        800, 600);
+                    break;
+
+                case 'settings':
+                    win = createWindow(appId, 'Settings', '⚙️',
+                        `<div style="flex:1;">
+                            <h3 style="color:#aaa; font-weight:400; margin-bottom:12px;">Desktop Wallpaper</h3>
+                            <div class="settings-row">
+                                <span>Color:</span>
+                                <input type="color" id="wallpaperColor" value="#16213e" />
+                                <button id="applyColorBtn" style="background:#0078d4; border:none; color:white; padding:4px 16px; border-radius:4px; cursor:pointer;">Apply</button>
+                                <button id="resetWallpaperBtn" style="background:#444; border:none; color:white; padding:4px 16px; border-radius:4px; cursor:pointer;">Reset</button>
+                            </div>
+                            <p style="color:#666; font-size:13px; margin-top:20px;">OpencoreOS v2.0</p>
+                        </div>`,
+                        400, 240);
+                    initSettings(win);
+                    break;
+
                 default:
-                    break;
+                    win = createWindow('unknown', 'Unknown App', '❓', '<p>App not found.</p>', 300, 150);
+            }
+            if (win) {
+                // Store appId for reference
+                win._appId = appId;
             }
         }
 
+        // ---------- CALCULATOR ----------
+        function initCalculator(win) {
+            const display = win.querySelector('#calcDisplay');
+            let current = '';
+            const buttons = win.querySelectorAll('.calc-grid button');
+            buttons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const val = btn.dataset.val;
+                    if (val === 'C') { current = '';
+                        display.value = '0'; return; }
+                    if (val === '=') {
+                        try {
+                            // Safe eval replacement
+                            const result = Function('"use strict"; return (' + current + ')')();
+                            display.value = result;
+                            current = String(result);
+                        } catch { display.value = 'Error';
+                            current = ''; }
+                        return;
+                    }
+                    current += val;
+                    display.value = current;
+                });
+            });
+        }
+
+        // ---------- CAMERA ----------
+        let cameraFacing = 'user';
+        let cameraStream = null;
+
+        function initCamera(win) {
+            const video = win.querySelector('#camVideo');
+            const captureBtn = win.querySelector('#camCaptureBtn');
+            const flipBtn = win.querySelector('#camFlipBtn');
+            const gallery = win.querySelector('#camGallery');
+
+            async function startCamera(facing) {
+                if (cameraStream) {
+                    cameraStream.getTracks().forEach(t => t.stop());
+                }
+                try {
+                    cameraStream = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: facing, width: { ideal: 640 } }
+                    });
+                    video.srcObject = cameraStream;
+                    win._mediaStream = cameraStream;
+                } catch (err) {
+                    video.style.background = '#222';
+                    video.style.display = 'flex';
+                    video.style.alignItems = 'center';
+                    video.style.justifyContent = 'center';
+                    video.textContent = '❌ Camera access denied.';
+                    console.error(err);
+                }
+            }
+            startCamera(cameraFacing);
+
+            captureBtn.addEventListener('click', () => {
+                if (!cameraStream) return;
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth || 640;
+                canvas.height = video.videoHeight || 480;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                const img = document.createElement('img');
+                img.src = canvas.toDataURL('image/png');
+                gallery.prepend(img);
+            });
+
+            flipBtn.addEventListener('click', () => {
+                cameraFacing = (cameraFacing === 'user') ? 'environment' : 'user';
+                startCamera(cameraFacing);
+            });
+
+            win.querySelector('#camCloseBtn').addEventListener('click', () => {
+                closeWindow(win.id);
+            });
+        }
+
+        // ---------- MICROPHONE ----------
+        function initMicrophone(win) {
+            const canvas = win.querySelector('#audioVisualizer');
+            const ctx = canvas.getContext('2d');
+            const status = win.querySelector('#micStatus');
+            const startBtn = win.querySelector('#micStartBtn');
+            const stopBtn = win.querySelector('#micStopBtn');
+
+            let audioCtx = null;
+            let analyser = null;
+            let source = null;
+            let animFrame = null;
+            let micStream = null;
+
+            function drawBars() {
+                if (!analyser) return;
+                const bufferLength = analyser.frequencyBinCount;
+                const dataArray = new Uint8Array(bufferLength);
+                analyser.getByteFrequencyData(dataArray);
+
+                const width = canvas.width;
+                const height = canvas.height;
+                ctx.clearRect(0, 0, width, height);
+
+                const barWidth = (width / bufferLength) * 2.5;
+                let x = 0;
+                for (let i = 0; i < bufferLength; i++) {
+                    const barHeight = (dataArray[i] / 255) * height;
+                    ctx.fillStyle = `hsl(${i / bufferLength * 240 + 200}, 80%, 50%)`;
+                    ctx.fillRect(x, height - barHeight, barWidth, barHeight);
+                    x += barWidth + 1;
+                }
+                animFrame = requestAnimationFrame(drawBars);
+            }
+
+            startBtn.addEventListener('click', async () => {
+                if (audioCtx && audioCtx.state === 'running') {
+                    status.textContent = 'Already running.';
+                    return;
+                }
+                try {
+                    micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    win._mediaStream = micStream;
+
+                    audioCtx = new(window.AudioContext || window.webkitAudioContext)();
+                    win._audioCtx = audioCtx;
+                    analyser = audioCtx.createAnalyser();
+                    analyser.fftSize = 256;
+                    source = audioCtx.createMediaStreamSource(micStream);
+                    source.connect(analyser);
+
+                    // Resize canvas
+                    canvas.width = canvas.clientWidth * 2;
+                    canvas.height = canvas.clientHeight * 2;
+
+                    if (audioCtx.state === 'suspended') {
+                        await audioCtx.resume();
+                    }
+                    drawBars();
+                    status.textContent = '🎤 Live! Speaking...';
+                } catch (err) {
+                    status.textContent = '❌ Microphone access denied.';
+                    console.error(err);
+                }
+            });
+
+            stopBtn.addEventListener('click', () => {
+                if (animFrame) {
+                    cancelAnimationFrame(animFrame);
+                    animFrame = null;
+                }
+                if (audioCtx) {
+                    audioCtx.close();
+                    audioCtx = null;
+                }
+                if (micStream) {
+                    micStream.getTracks().forEach(t => t.stop());
+                    micStream = null;
+                }
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                status.textContent = '⏹ Stopped. Click "Start" again.';
+            });
+        }
+
+        // ---------- SETTINGS ----------
+        function initSettings(win) {
+            const colorInput = win.querySelector('#wallpaperColor');
+            const applyBtn = win.querySelector('#applyColorBtn');
+            const resetBtn = win.querySelector('#resetWallpaperBtn');
+            const desktop = document.getElementById('desktop');
+
+            applyBtn.addEventListener('click', () => {
+                desktop.style.background = `radial-gradient(ellipse at 20% 20%, ${colorInput.value}, #0a0a1a)`;
+            });
+            resetBtn.addEventListener('click', () => {
+                desktop.style.background = 'radial-gradient(ellipse at 20% 20%, #16213e, #0a0a1a)';
+                colorInput.value = '#16213e';
+            });
+        }
+
         // ---------- EVENT BINDINGS ----------
-        // Desktop icons
         document.querySelectorAll('.desktop-icon').forEach(el => {
             el.addEventListener('dblclick', () => {
                 const app = el.dataset.app;
@@ -594,7 +1047,6 @@
             });
         });
 
-        // Start menu items
         document.querySelectorAll('.start-item').forEach(el => {
             el.addEventListener('click', () => {
                 const app = el.dataset.app;
@@ -605,25 +1057,20 @@
             });
         });
 
-        // Taskbar pinned apps (pre-launch buttons)
-        document.querySelectorAll('.taskbar-app').forEach(el => {
-            el.addEventListener('click', () => {
-                const app = el.dataset.app;
-                if (app) launchApp(app);
-            });
-        });
-
-        // ---------- KEYBOARD SHORTCUTS (Easter egg) ----------
+        // ---------- KEYBOARD SHORTCUTS ----------
         document.addEventListener('keydown', (e) => {
             if (e.ctrlKey && e.shiftKey && e.key === 'L') {
                 launchApp('terminal');
             }
+            if (e.ctrlKey && e.key === 'Escape') {
+                // Close all windows
+                state.windows.forEach(w => closeWindow(w.id));
+            }
         });
 
         // ---------- BOOT MESSAGE ----------
-        console.log('🪟 OpencoreOS booted successfully!');
-        console.log('ℹ️  Double-click desktop icons or use Start Menu.');
+        console.log('🪟 OpencoreOS v2.0 booted successfully!');
+        console.log('📷 Camera, 🎤 Microphone, 🛒 App Store, 🧮 Calculator loaded.');
     </script>
-
 </body>
 </html>
