@@ -3,23 +3,23 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>OpencoreOS v3.1</title>
+    <title>OpencoreOS v4.0</title>
     <style>
-        /* ===== GLOBAL RESET & VARIABLES ===== */
+        /* ===== RESET & VARIABLES ===== */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: -apple-system, 'Segoe UI', Roboto, system-ui, sans-serif;
+            font-family: -apple-system, 'Segoe UI', Roboto, sans-serif;
             user-select: none;
         }
         :root {
-            --bg-primary: #1a1a2e;
-            --bg-secondary: #16213e;
-            --glass-bg: rgba(28, 28, 48, 0.92);
-            --border-color: rgba(255, 255, 255, 0.06);
-            --text-primary: #eee;
-            --text-secondary: #aaa;
+            --bg: #1a1a2e;
+            --bg2: #16213e;
+            --glass: rgba(28, 28, 48, 0.92);
+            --border: rgba(255, 255, 255, 0.06);
+            --text: #eee;
+            --text2: #aaa;
             --accent: #0078d4;
             --shadow: 0 20px 80px rgba(0, 0, 0, 0.6);
         }
@@ -27,7 +27,7 @@
             width: 100vw;
             height: 100vh;
             overflow: hidden;
-            background: var(--bg-primary);
+            background: var(--bg);
             position: relative;
         }
 
@@ -53,7 +53,6 @@
         }
         #setupWizard .logo {
             font-size: 72px;
-            margin-bottom: 10px;
         }
         #setupWizard h1 {
             font-size: 42px;
@@ -62,7 +61,6 @@
         }
         #setupWizard .subtitle {
             color: #888;
-            font-size: 16px;
             margin-bottom: 30px;
         }
         #setupWizard .progress-container {
@@ -72,7 +70,7 @@
             border-radius: 12px;
             height: 6px;
             overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
         }
         #setupWizard .progress-bar {
             height: 100%;
@@ -85,7 +83,6 @@
             margin-top: 14px;
             color: #aaa;
             font-size: 14px;
-            font-weight: 300;
         }
 
         /* ===== DESKTOP ===== */
@@ -98,9 +95,8 @@
             flex-wrap: wrap;
             align-content: flex-start;
             gap: 20px;
-            background: radial-gradient(ellipse at 20% 20%, var(--bg-secondary), var(--bg-primary));
+            background: radial-gradient(ellipse at 20% 20%, var(--bg2), var(--bg));
             transition: background 0.5s;
-            position: relative;
         }
         .desktop-icon {
             width: 85px;
@@ -121,9 +117,6 @@
             background: rgba(255, 255, 255, 0.1);
             transform: scale(1.02);
         }
-        .desktop-icon:active {
-            transform: scale(0.95);
-        }
         .desktop-icon .icon {
             font-size: 48px;
             margin-bottom: 4px;
@@ -143,7 +136,7 @@
             height: 50px;
             background: rgba(20, 20, 40, 0.88);
             backdrop-filter: blur(20px);
-            border-top: 1px solid var(--border-color);
+            border-top: 1px solid var(--border);
             display: flex;
             align-items: center;
             padding: 0 12px;
@@ -168,7 +161,7 @@
             gap: 6px;
             transition: background 0.2s;
             height: 34px;
-            border: 1px solid var(--border-color);
+            border: 1px solid var(--border);
         }
         #start-btn:hover {
             background: rgba(255, 255, 255, 0.15);
@@ -201,7 +194,7 @@
         .taskbar-app.active {
             background: rgba(255, 255, 255, 0.12);
             color: white;
-            border-color: var(--border-color);
+            border-color: var(--border);
         }
         #systemTray {
             display: flex;
@@ -217,9 +210,13 @@
             padding: 2px 6px;
             border-radius: 4px;
             transition: background 0.15s;
+            position: relative;
         }
         #systemTray .tray-icon:hover {
             background: rgba(255, 255, 255, 0.08);
+        }
+        #batteryIcon {
+            font-size: 18px;
         }
         #clock {
             color: white;
@@ -240,7 +237,7 @@
             background: rgba(22, 22, 40, 0.96);
             backdrop-filter: blur(24px);
             border-radius: 12px;
-            border: 1px solid var(--border-color);
+            border: 1px solid var(--border);
             padding: 16px;
             display: none;
             z-index: 10000;
@@ -256,7 +253,7 @@
             align-items: center;
             gap: 12px;
             padding-bottom: 12px;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border);
             margin-bottom: 10px;
         }
         #start-menu .header .user-icon {
@@ -304,10 +301,10 @@
             position: absolute;
             min-width: 340px;
             min-height: 200px;
-            background: var(--glass-bg);
+            background: var(--glass);
             backdrop-filter: blur(16px);
             border-radius: 10px;
-            border: 1px solid var(--border-color);
+            border: 1px solid var(--border);
             box-shadow: var(--shadow);
             display: flex;
             flex-direction: column;
@@ -331,7 +328,7 @@
             justify-content: space-between;
             align-items: center;
             cursor: grab;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border);
             flex-shrink: 0;
             min-height: 44px;
         }
@@ -339,7 +336,7 @@
             cursor: grabbing;
         }
         .window-title {
-            color: var(--text-primary);
+            color: var(--text);
             font-size: 14px;
             font-weight: 500;
             display: flex;
@@ -380,117 +377,240 @@
         .window-body {
             flex: 1;
             padding: 16px;
-            color: var(--text-primary);
+            color: var(--text);
             overflow: auto;
             font-size: 14px;
             line-height: 1.6;
             display: flex;
             flex-direction: column;
         }
-        .window-body textarea {
-            width: 100%;
-            flex: 1;
-            background: rgba(0, 0, 0, 0.25);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            font-size: 14px;
-            padding: 12px;
-            border-radius: 6px;
-            resize: none;
-            outline: none;
-            font-family: 'Consolas', monospace;
-            min-height: 150px;
-        }
-        .window-body textarea:focus {
-            border-color: rgba(0, 120, 212, 0.3);
-        }
 
-        /* ===== VFS FILE EXPLORER ===== */
-        .file-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-            gap: 10px;
-            padding: 4px;
-        }
-        .file-item {
+        /* ===== BROWSER ===== */
+        .browser-toolbar {
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 10px 6px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background 0.15s;
-            border: 1px solid transparent;
-            text-align: center;
-            color: #ccc;
-            font-size: 12px;
-        }
-        .file-item:hover {
-            background: rgba(255, 255, 255, 0.06);
-            border-color: var(--border-color);
-        }
-        .file-item .icon {
-            font-size: 32px;
-            margin-bottom: 4px;
-        }
-        .file-item .name {
-            word-break: break-all;
-            line-height: 1.2;
-            max-width: 80px;
-            font-size: 11px;
-        }
-        .file-item.folder .icon {
-            color: #ffd700;
-        }
-        .file-item.image .icon {
-            color: #4fc3f7;
-        }
-        .file-item.text .icon {
-            color: #81c784;
-        }
-        .file-item.audio .icon {
-            color: #ff8a65;
-        }
-        .file-toolbar {
-            display: flex;
-            gap: 8px;
+            gap: 6px;
             padding: 6px 0 12px 0;
-            flex-wrap: wrap;
-            border-bottom: 1px solid var(--border-color);
-            margin-bottom: 12px;
             align-items: center;
+            flex-wrap: wrap;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 10px;
         }
-        .file-toolbar button {
+        .browser-toolbar button {
             background: rgba(255, 255, 255, 0.04);
             border: none;
             color: #ccc;
-            padding: 4px 14px;
+            width: 30px;
+            height: 30px;
             border-radius: 4px;
             cursor: pointer;
-            font-size: 13px;
+            font-size: 16px;
             transition: background 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        .file-toolbar button:hover {
+        .browser-toolbar button:hover {
             background: rgba(255, 255, 255, 0.1);
             color: white;
         }
-        .file-toolbar .path-display {
-            color: #666;
-            font-size: 12px;
+        .browser-toolbar input {
             flex: 1;
-            padding: 4px 8px;
             background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border);
+            color: white;
+            padding: 4px 12px;
             border-radius: 4px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+            outline: none;
+            font-size: 14px;
+            min-width: 100px;
+        }
+        .browser-toolbar input:focus {
+            border-color: var(--accent);
+        }
+        .browser-frame {
+            flex: 1;
+            width: 100%;
+            border: none;
+            border-radius: 4px;
+            background: white;
+            min-height: 300px;
         }
 
-        /* ===== SETTINGS (Tabs & Stats) ===== */
+        /* ===== TERMINAL ===== */
+        .terminal-output {
+            background: #0a0a1a;
+            padding: 12px;
+            border-radius: 6px;
+            font-family: 'Consolas', monospace;
+            font-size: 13px;
+            color: #0f0;
+            flex: 1;
+            min-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+            border: 1px solid var(--border);
+        }
+        .terminal-output .error {
+            color: #ff6b6b;
+        }
+        .terminal-output .success {
+            color: #51cf66;
+        }
+        .terminal-output .info {
+            color: #4dabf7;
+        }
+        .terminal-input-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+            align-items: center;
+        }
+        .terminal-input-row span {
+            color: #0f0;
+            font-family: 'Consolas', monospace;
+            font-size: 14px;
+        }
+        .terminal-input-row input {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border);
+            color: #0f0;
+            padding: 4px 10px;
+            border-radius: 4px;
+            outline: none;
+            font-family: 'Consolas', monospace;
+            font-size: 14px;
+        }
+        .terminal-input-row input:focus {
+            border-color: var(--accent);
+        }
+
+        /* ===== TASK MANAGER ===== */
+        .task-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .task-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 6px;
+            border: 1px solid var(--border);
+        }
+        .task-item .name {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .task-item .kill-btn {
+            background: #d43a3a;
+            border: none;
+            color: white;
+            padding: 2px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .task-item .kill-btn:hover {
+            background: #b02b2b;
+        }
+
+        /* ===== MUSIC APP ===== */
+        .music-search-row {
+            display: flex;
+            gap: 8px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        .music-search-row input {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 4px;
+            outline: none;
+            font-size: 14px;
+            min-width: 150px;
+        }
+        .music-search-row input:focus {
+            border-color: var(--accent);
+        }
+        .music-search-row button {
+            background: var(--accent);
+            border: none;
+            color: white;
+            padding: 4px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.15s;
+        }
+        .music-search-row button:hover {
+            background: #106ebe;
+        }
+        .music-results {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .music-result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 10px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 4px;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .music-result-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .music-result-item .info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .music-result-item .info img {
+            width: 40px;
+            height: 40px;
+            border-radius: 4px;
+            object-fit: cover;
+        }
+        .music-result-item .info .title {
+            font-weight: 500;
+        }
+        .music-result-item .info .artist {
+            color: #888;
+            font-size: 13px;
+        }
+        .music-player-embed {
+            margin-top: 12px;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #0a0a1a;
+        }
+        .music-player-embed iframe {
+            width: 100%;
+            height: 80px;
+            border: none;
+        }
+
+        /* ===== SETTINGS (new network/bluetooth) ===== */
         .settings-tabs {
             display: flex;
             gap: 2px;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border);
             margin-bottom: 16px;
             flex-wrap: wrap;
         }
@@ -524,10 +644,10 @@
             align-items: center;
             gap: 12px;
             padding: 10px 0;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border);
         }
         .settings-row .label {
-            color: var(--text-secondary);
+            color: var(--text2);
             min-width: 100px;
             font-size: 14px;
         }
@@ -547,7 +667,7 @@
         }
         .settings-row input[type="text"] {
             background: rgba(0, 0, 0, 0.2);
-            border: 1px solid var(--border-color);
+            border: 1px solid var(--border);
             color: white;
             padding: 4px 12px;
             border-radius: 4px;
@@ -584,198 +704,111 @@
         .settings-row .btn-secondary:hover {
             background: rgba(255, 255, 255, 0.12);
         }
-        .stat-bar {
-            background: rgba(255, 255, 255, 0.04);
-            border-radius: 6px;
-            height: 6px;
-            width: 100%;
-            max-width: 200px;
-            overflow: hidden;
-        }
-        .stat-bar .fill {
-            height: 100%;
-            background: var(--accent);
-            border-radius: 6px;
-            transition: width 0.5s;
-        }
-
-        /* ===== APP STORE ===== */
-        .app-card {
-            background: rgba(255, 255, 255, 0.03);
-            padding: 14px 16px;
-            border-radius: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border: 1px solid var(--border-color);
-            transition: background 0.2s;
-            margin-bottom: 8px;
-        }
-        .app-card:hover {
-            background: rgba(255, 255, 255, 0.06);
-        }
-        .app-card .info {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-        .app-card .info .icon {
-            font-size: 28px;
-        }
-        .app-card .info .name {
-            font-weight: 600;
-            font-size: 15px;
-            color: var(--text-primary);
-        }
-        .app-card .info .desc {
-            font-size: 13px;
-            color: #777;
-        }
-        .app-card .launch-btn {
-            background: var(--accent);
-            border: none;
-            color: white;
-            padding: 4px 18px;
-            border-radius: 6px;
+        .settings-row .toggle {
+            position: relative;
+            width: 40px;
+            height: 22px;
+            background: #444;
+            border-radius: 11px;
             cursor: pointer;
-            font-weight: 500;
-            transition: background 0.2s;
+            transition: background 0.3s;
         }
-        .app-card .launch-btn:hover {
-            background: #106ebe;
+        .settings-row .toggle.on {
+            background: var(--accent);
+        }
+        .settings-row .toggle .slider {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 18px;
+            height: 18px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+        }
+        .settings-row .toggle.on .slider {
+            transform: translateX(18px);
         }
 
-        /* ===== CALCULATOR ===== */
-        .calc-grid {
+        /* ===== FILE EXPLORER (VFS) ===== */
+        .file-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 6px;
-            margin-top: 8px;
-        }
-        .calc-grid button {
-            padding: 12px;
-            font-size: 18px;
-            border: none;
-            border-radius: 6px;
-            background: rgba(255, 255, 255, 0.05);
-            color: white;
-            cursor: pointer;
-            transition: background 0.12s;
-        }
-        .calc-grid button:hover {
-            background: rgba(255, 255, 255, 0.12);
-        }
-        .calc-grid .op {
-            background: rgba(0, 120, 212, 0.2);
-        }
-        .calc-grid .op:hover {
-            background: rgba(0, 120, 212, 0.35);
-        }
-        .calc-grid .eq {
-            background: var(--accent);
-        }
-        .calc-grid .eq:hover {
-            background: #106ebe;
-        }
-        #calcDisplay {
-            background: rgba(0, 0, 0, 0.2);
-            padding: 14px;
-            border-radius: 6px;
-            text-align: right;
-            font-size: 26px;
-            font-weight: 300;
-            margin-bottom: 8px;
-            min-height: 50px;
-            color: white;
-            border: 1px solid var(--border-color);
-            width: 100%;
-            font-family: 'Consolas', monospace;
-        }
-
-        /* ===== CAMERA ===== */
-        #camVideo {
-            width: 100%;
-            background: #0a0a1a;
-            border-radius: 8px;
-            aspect-ratio: 4/3;
-            object-fit: cover;
-            border: 1px solid var(--border-color);
-        }
-        .cam-controls {
-            display: flex;
-            gap: 8px;
-            margin-top: 10px;
-            flex-wrap: wrap;
-        }
-        .cam-controls button {
-            padding: 5px 14px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: 500;
-            background: rgba(255, 255, 255, 0.06);
-            color: white;
-            transition: background 0.15s;
-        }
-        .cam-controls button.primary {
-            background: var(--accent);
-        }
-        .cam-controls button.primary:hover {
-            background: #106ebe;
-        }
-        .cam-controls button.danger {
-            background: #d43a3a;
-        }
-        .cam-controls button.danger:hover {
-            background: #b02b2b;
-        }
-        .cam-gallery {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin-top: 8px;
-            max-height: 100px;
-            overflow-y: auto;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 10px;
             padding: 4px;
         }
-        .cam-gallery img {
-            width: 56px;
-            height: 56px;
-            object-fit: cover;
-            border-radius: 4px;
-            border: 1px solid var(--border-color);
-            cursor: pointer;
-        }
-
-        /* ===== MICROPHONE ===== */
-        #audioVisualizer {
-            width: 100%;
-            height: 120px;
-            background: #0a0a1a;
-            border-radius: 8px;
-            display: block;
-            border: 1px solid var(--border-color);
-        }
-        .mic-status {
-            color: var(--text-secondary);
-            margin-top: 8px;
-            font-size: 13px;
-        }
-
-        /* ===== IMAGE VIEWER ===== */
-        .image-viewer {
+        .file-item {
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            height: 100%;
-            min-height: 200px;
+            padding: 10px 6px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.15s;
+            border: 1px solid transparent;
+            text-align: center;
+            color: #ccc;
+            font-size: 12px;
         }
-        .image-viewer img {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
+        .file-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: var(--border);
+        }
+        .file-item .icon {
+            font-size: 32px;
+            margin-bottom: 4px;
+        }
+        .file-item .name {
+            word-break: break-all;
+            line-height: 1.2;
+            max-width: 80px;
+            font-size: 11px;
+        }
+        .file-item.folder .icon {
+            color: #ffd700;
+        }
+        .file-item.image .icon {
+            color: #4fc3f7;
+        }
+        .file-item.text .icon {
+            color: #81c784;
+        }
+        .file-item.audio .icon {
+            color: #ff8a65;
+        }
+        .file-toolbar {
+            display: flex;
+            gap: 8px;
+            padding: 6px 0 12px 0;
+            flex-wrap: wrap;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 12px;
+            align-items: center;
+        }
+        .file-toolbar button {
+            background: rgba(255, 255, 255, 0.04);
+            border: none;
+            color: #ccc;
+            padding: 4px 14px;
             border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: background 0.15s;
+        }
+        .file-toolbar button:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        .file-toolbar .path-display {
+            color: #666;
+            font-size: 12px;
+            flex: 1;
+            padding: 4px 8px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         /* ===== SCROLLBAR ===== */
@@ -802,18 +835,20 @@
         <div class="logo">🪟</div>
         <h1>OpencoreOS</h1>
         <div class="subtitle">Preparing your system...</div>
-        <div class="progress-container">
-            <div class="progress-bar" id="setupProgress"></div>
-        </div>
+        <div class="progress-container"><div class="progress-bar" id="setupProgress"></div></div>
         <div class="status-text" id="setupStatus">Initializing...</div>
     </div>
 
     <!-- ===== DESKTOP ===== -->
     <div id="desktop">
         <button class="desktop-icon" data-app="explorer"><span class="icon">📁</span><span class="label">Files</span></button>
+        <button class="desktop-icon" data-app="browser"><span class="icon">🌐</span><span class="label">Browser</span></button>
         <button class="desktop-icon" data-app="notepad"><span class="icon">📝</span><span class="label">Notepad</span></button>
         <button class="desktop-icon" data-app="camera"><span class="icon">📷</span><span class="label">Camera</span></button>
         <button class="desktop-icon" data-app="microphone"><span class="icon">🎤</span><span class="label">Microphone</span></button>
+        <button class="desktop-icon" data-app="music"><span class="icon">🎵</span><span class="label">Music</span></button>
+        <button class="desktop-icon" data-app="terminal"><span class="icon">💻</span><span class="label">Terminal</span></button>
+        <button class="desktop-icon" data-app="taskmanager"><span class="icon">📊</span><span class="label">Task Manager</span></button>
         <button class="desktop-icon" data-app="appstore"><span class="icon">🛒</span><span class="label">App Store</span></button>
         <button class="desktop-icon" data-app="calculator"><span class="icon">🧮</span><span class="label">Calculator</span></button>
         <button class="desktop-icon" data-app="settings"><span class="icon">⚙️</span><span class="label">Settings</span></button>
@@ -825,10 +860,14 @@
         <div class="header"><span class="user-icon">👤</span><div><div class="user-name">Opencore User</div><div class="user-status">System ready</div></div></div>
         <div class="section">📌 Pinned</div>
         <div class="start-item" data-app="explorer"><span class="icon">📁</span> File Explorer</div>
+        <div class="start-item" data-app="browser"><span class="icon">🌐</span> Web Browser</div>
         <div class="start-item" data-app="notepad"><span class="icon">📝</span> Notepad</div>
+        <div class="start-item" data-app="music"><span class="icon">🎵</span> Music</div>
+        <div class="start-item" data-app="terminal"><span class="icon">💻</span> Terminal</div>
+        <div class="section">🎯 All Apps</div>
         <div class="start-item" data-app="camera"><span class="icon">📷</span> Camera</div>
         <div class="start-item" data-app="microphone"><span class="icon">🎤</span> Microphone</div>
-        <div class="section">🎯 All Apps</div>
+        <div class="start-item" data-app="taskmanager"><span class="icon">📊</span> Task Manager</div>
         <div class="start-item" data-app="appstore"><span class="icon">🛒</span> App Store</div>
         <div class="start-item" data-app="calculator"><span class="icon">🧮</span> Calculator</div>
         <div class="start-item" data-app="settings"><span class="icon">⚙️</span> Settings</div>
@@ -840,16 +879,18 @@
         <button id="start-btn">🪟 Start</button>
         <div class="taskbar-apps" id="taskbarApps"></div>
         <div id="systemTray">
+            <span class="tray-icon" id="batteryIcon">🔋</span>
             <span class="tray-icon" title="Network">📶</span>
             <span class="tray-icon" title="Sound">🔊</span>
-            <span class="tray-icon" title="Battery">🔋</span>
         </div>
         <div id="clock">00:00:00</div>
     </div>
 
     <script>
         // ================================================================
-        //  OPENCOREOS v3.1 - INTERNAL VFS + MEGA SETTINGS
+        //  OPENCOREOS v4.0 - THE MEGA ULTIMATE EDITION
+        //  Features: Browser, Terminal, Task Manager, .oc files, Battery,
+        //  Network/Bluetooth management, Music app with Spotify
         // ================================================================
 
         // ---------- STATE ----------
@@ -857,8 +898,10 @@
             windows: [],
             nextZIndex: 100,
             windowCounter: 0,
-            setupComplete: false,
             bootTime: Date.now(),
+            terminalHistory: [],
+            browserHistory: [],
+            browserIndex: -1,
         };
 
         // ---------- DOM REFS ----------
@@ -867,12 +910,13 @@
         const startBtn = document.getElementById('start-btn');
         const clockEl = document.getElementById('clock');
         const taskbarApps = document.getElementById('taskbarApps');
+        const batteryIcon = document.getElementById('batteryIcon');
         const setupWizard = document.getElementById('setupWizard');
         const setupProgress = document.getElementById('setupProgress');
         const setupStatus = document.getElementById('setupStatus');
 
         // ================================================================
-        //  VIRTUAL FILE SYSTEM (VFS) - INTERNAL STORAGE
+        //  VIRTUAL FILE SYSTEM (VFS) WITH .oc SUPPORT
         // ================================================================
         const VFS = {
             init() {
@@ -886,7 +930,7 @@
                             'Desktop': { type: 'folder', children: {} },
                             'readme.txt': {
                                 type: 'file',
-                                content: 'Welcome to OpencoreOS!\n\nYour files are stored inside this OS.\nCreate, edit, and save everything here.'
+                                content: 'Welcome to OpencoreOS v4.0!\n\n.oc files are wrappers that store any file type.'
                             }
                         }
                     };
@@ -910,7 +954,17 @@
             },
             readFile(path) {
                 const node = this.getNode(path);
-                return node && node.type === 'file' ? node.content : null;
+                if (!node || node.type !== 'file') return null;
+                // Check if .oc file
+                if (path.endsWith('.oc')) {
+                    try {
+                        const parsed = JSON.parse(node.content);
+                        return parsed; // { type, content, metadata }
+                    } catch {
+                        return node.content;
+                    }
+                }
+                return node.content;
             },
             writeFile(path, content) {
                 const parts = path.split('/').filter(p => p);
@@ -926,6 +980,16 @@
                 node.children[fileName] = { type: 'file', content: content };
                 this.saveRoot(root);
                 return true;
+            },
+            // Write a .oc wrapper file
+            writeOCFile(path, originalType, data, metadata = {}) {
+                const wrapper = JSON.stringify({
+                    type: originalType,
+                    content: data,
+                    metadata: metadata,
+                    _oc: true
+                });
+                return this.writeFile(path, wrapper);
             },
             listFolder(path) {
                 const node = this.getNode(path);
@@ -998,6 +1062,14 @@
                 };
                 walk(root);
                 return count;
+            },
+            // Resolve .oc file to original content and type
+            resolveOCFile(path) {
+                const data = this.readFile(path);
+                if (typeof data === 'object' && data._oc) {
+                    return data;
+                }
+                return null;
             }
         };
         VFS.init();
@@ -1006,13 +1078,8 @@
         //  SETUP WIZARD
         // ================================================================
         function runSetupWizard() {
-            const steps = [
-                'Formatting virtual drive...',
-                'Creating system folders...',
-                'Installing core components...',
-                'Configuring user settings...',
-                'Optimizing performance...',
-                'Finalizing setup...',
+            const steps = ['Formatting virtual drive...', 'Creating system folders...', 'Installing core components...',
+                'Configuring user settings...', 'Optimizing performance...', 'Finalizing setup...'
             ];
             let progress = 0;
             const interval = setInterval(() => {
@@ -1026,24 +1093,40 @@
                     setupStatus.textContent = '✅ Installation complete!';
                     setTimeout(() => {
                         setupWizard.classList.add('hidden');
-                        state.setupComplete = true;
                         localStorage.setItem('opencore_setup_done', 'true');
                         loadSavedSettings();
                         updateClock();
                         setInterval(updateClock, 1000);
+                        updateBattery();
+                        setInterval(updateBattery, 30000);
                     }, 600);
                 }
             }, 1200);
         }
-
         if (localStorage.getItem('opencore_setup_done') === 'true') {
             setupWizard.classList.add('hidden');
-            state.setupComplete = true;
             loadSavedSettings();
             updateClock();
             setInterval(updateClock, 1000);
+            updateBattery();
+            setInterval(updateBattery, 30000);
         } else {
             runSetupWizard();
+        }
+
+        // ================================================================
+        //  BATTERY
+        // ================================================================
+        async function updateBattery() {
+            if ('getBattery' in navigator) {
+                try {
+                    const battery = await navigator.getBattery();
+                    const level = Math.round(battery.level * 100);
+                    const charging = battery.charging;
+                    batteryIcon.textContent = charging ? '⚡' : '🔋';
+                    batteryIcon.title = `${level}% ${charging ? '(Charging)' : ''}`;
+                } catch {}
+            }
         }
 
         // ================================================================
@@ -1067,10 +1150,8 @@
         // ================================================================
         //  START MENU
         // ================================================================
-        startBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            startMenu.classList.toggle('open');
-        });
+        startBtn.addEventListener('click', (e) => { e.stopPropagation();
+            startMenu.classList.toggle('open'); });
         document.addEventListener('click', () => startMenu.classList.remove('open'));
         document.getElementById('shutdownBtn').addEventListener('click', () => {
             if (confirm('Restart OpencoreOS?')) location.reload();
@@ -1080,21 +1161,16 @@
         //  WINDOW MANAGER (SINGLE INSTANCE)
         // ================================================================
         function createWindow(appId, title, icon, contentHTML, width = 520, height = 360) {
-            // SINGLE INSTANCE CHECK: If window exists, focus it.
             const existing = state.windows.find(w => w.appId === appId);
             if (existing) {
-                if (existing.minimized) {
-                    existing.minimized = false;
+                if (existing.minimized) { existing.minimized = false;
                     existing.element.style.display = 'flex';
-                    updateTaskbar();
-                }
+                    updateTaskbar(); }
                 focusWindow(existing.id);
                 return existing.element;
             }
-
             const id = `win-${++state.windowCounter}`;
             const zIndex = ++state.nextZIndex;
-
             const win = document.createElement('div');
             win.className = 'window';
             win.id = id;
@@ -1105,7 +1181,6 @@
             win.style.left = left + 'px';
             win.style.top = top + 'px';
             win.style.zIndex = zIndex;
-
             win.innerHTML = `
                 <div class="window-header">
                     <span class="window-title">${icon} ${title}</span>
@@ -1118,8 +1193,6 @@
                 <div class="window-body">${contentHTML}</div>
             `;
             document.body.appendChild(win);
-
-            // Drag
             const header = win.querySelector('.window-header');
             let isDragging = false,
                 offsetX, offsetY;
@@ -1134,25 +1207,19 @@
             });
             document.addEventListener('mousemove', (e) => {
                 if (!isDragging) return;
-                let x = e.clientX - offsetX;
-                let y = e.clientY - offsetY;
+                let x = e.clientX - offsetX,
+                    y = e.clientY - offsetY;
                 x = Math.max(0, Math.min(window.innerWidth - 100, x));
                 y = Math.max(0, Math.min(window.innerHeight - 80, y));
                 win.style.left = x + 'px';
                 win.style.top = y + 'px';
             });
-            document.addEventListener('mouseup', () => {
-                if (isDragging) { isDragging = false;
-                    win.style.cursor = 'default'; }
-            });
-
-            // Controls
+            document.addEventListener('mouseup', () => { if (isDragging) { isDragging = false;
+                    win.style.cursor = 'default'; } });
             win.querySelector('.close-btn').addEventListener('click', () => closeWindow(id));
             win.querySelector('.max-btn').addEventListener('click', () => toggleMaximize(id));
             win.querySelector('.min-btn').addEventListener('click', () => minimizeWindow(id));
-
             win.addEventListener('mousedown', () => { win.style.zIndex = ++state.nextZIndex; });
-
             state.windows.push({ id, appId, element: win, minimized: false });
             updateTaskbar();
             return win;
@@ -1203,11 +1270,9 @@
             const win = state.windows.find(w => w.id === id);
             if (win) {
                 win.element.style.zIndex = ++state.nextZIndex;
-                if (win.minimized) {
-                    win.minimized = false;
+                if (win.minimized) { win.minimized = false;
                     win.element.style.display = 'flex';
-                    updateTaskbar();
-                }
+                    updateTaskbar(); }
             }
         }
 
@@ -1219,13 +1284,9 @@
                 btn.textContent = w.element.querySelector('.window-title')?.textContent || 'App';
                 btn.dataset.winId = w.id;
                 btn.addEventListener('click', () => {
-                    if (w.minimized) {
-                        w.minimized = false;
+                    if (w.minimized) { w.minimized = false;
                         w.element.style.display = 'flex';
-                        updateTaskbar();
-                    } else {
-                        minimizeWindow(w.id);
-                    }
+                        updateTaskbar(); } else { minimizeWindow(w.id); }
                     focusWindow(w.id);
                 });
                 taskbarApps.appendChild(btn);
@@ -1233,7 +1294,7 @@
         }
 
         // ================================================================
-        //  VFS FILE EXPLORER (RENDERER)
+        //  VFS FILE EXPLORER (with .oc support)
         // ================================================================
         let currentVFSPath = '/';
 
@@ -1241,18 +1302,17 @@
             const body = win.querySelector('.window-body');
             const entries = VFS.listFolder(path);
             const displayPath = path === '/' ? 'Root' : path;
-
             let html = `
                 <div class="file-toolbar">
                     <button id="vfsBackBtn">⬅ Back</button>
                     <button id="vfsHomeBtn">🏠 Home</button>
                     <button id="vfsNewFolderBtn">📁 New Folder</button>
                     <button id="vfsNewFileBtn">📄 New File</button>
+                    <button id="vfsNewOCBtn">📦 New .oc File</button>
                     <span class="path-display">📂 ${displayPath}</span>
                 </div>
                 <div class="file-grid" id="vfsGrid">
             `;
-
             if (entries && entries.length > 0) {
                 const sorted = entries.sort((a, b) => {
                     if (a.type === 'folder' && b.type !== 'folder') return -1;
@@ -1261,7 +1321,7 @@
                 });
                 for (const entry of sorted) {
                     const isFolder = entry.type === 'folder';
-                    const icon = isFolder ? '📁' : getVFSFileIcon(entry.name);
+                    let icon = isFolder ? '📁' : getVFSFileIcon(entry.name);
                     const cls = isFolder ? 'file-item folder' : 'file-item';
                     const name = entry.name.length > 18 ? entry.name.slice(0, 15) + '…' : entry.name;
                     html += `
@@ -1277,39 +1337,20 @@
             html += `</div>`;
             body.innerHTML = html;
 
-            // Event listeners
             body.querySelectorAll('.file-item').forEach(el => {
                 el.addEventListener('dblclick', () => {
                     const name = el.dataset.name;
                     const type = el.dataset.type;
                     const newPath = path === '/' ? '/' + name : path + '/' + name;
-
                     if (type === 'folder') {
                         currentVFSPath = newPath;
                         renderFileExplorer(win, newPath);
                     } else {
-                        // File
-                        const content = VFS.readFile(newPath);
-                        if (content !== null) {
-                            const ext = name.split('.').pop().toLowerCase();
-                            if (['png', 'jpg', 'jpeg', 'gif', 'bmp', 'svg', 'webp'].includes(ext)) {
-                                // Image
-                                const imgWin = createWindow('imageviewer', 'Image Viewer', '🖼️',
-                                    `<div class="image-viewer"><img src="${content}" alt="${name}" /></div>`,
-                                    540, 420);
-                            } else if (['txt', 'md', 'json', 'js', 'html', 'css', 'xml'].includes(ext)) {
-                                launchApp('notepad', { path: newPath, content });
-                            } else {
-                                alert('📄 File: ' + name + '\nContent length: ' + content.length + ' chars');
-                            }
-                        } else {
-                            alert('Could not read file.');
-                        }
+                        openFileByExtension(win, newPath, name);
                     }
                 });
             });
 
-            // Toolbar
             body.querySelector('#vfsBackBtn').addEventListener('click', () => {
                 if (path !== '/') {
                     const parent = path.split('/').slice(0, -1).join('/') || '/';
@@ -1325,28 +1366,73 @@
                 const name = prompt('New folder name:');
                 if (name) {
                     const newPath = path === '/' ? '/' + name : path + '/' + name;
-                    if (VFS.createFolder(newPath)) {
-                        renderFileExplorer(win, path);
-                    } else {
-                        alert('Folder already exists or invalid name.');
-                    }
+                    if (VFS.createFolder(newPath)) renderFileExplorer(win, path);
+                    else alert('Folder exists or invalid name.');
                 }
             });
             body.querySelector('#vfsNewFileBtn').addEventListener('click', () => {
                 const name = prompt('New file name (e.g., note.txt):');
                 if (name) {
                     const newPath = path === '/' ? '/' + name : path + '/' + name;
-                    if (VFS.writeFile(newPath, '')) {
-                        renderFileExplorer(win, path);
-                    } else {
-                        alert('Could not create file.');
-                    }
+                    if (VFS.writeFile(newPath, '')) renderFileExplorer(win, path);
+                    else alert('Failed.');
                 }
             });
+            body.querySelector('#vfsNewOCBtn').addEventListener('click', () => {
+                const name = prompt('New .oc file name (e.g., doc.oc):');
+                if (name && name.endsWith('.oc')) {
+                    const newPath = path === '/' ? '/' + name : path + '/' + name;
+                    const originalType = prompt('Original file type (txt, png, jpg, wav, etc.):') || 'txt';
+                    const content = prompt('Content (text for txt, or base64 for images):') || 'Sample content';
+                    if (VFS.writeOCFile(newPath, originalType, content)) {
+                        renderFileExplorer(win, path);
+                        alert('✅ .oc file created!');
+                    } else alert('Failed.');
+                } else alert('Name must end with .oc');
+            });
+        }
+
+        function openFileByExtension(win, path, name) {
+            const ext = name.split('.').pop().toLowerCase();
+            // Check if .oc file
+            if (ext === 'oc') {
+                const resolved = VFS.resolveOCFile(path);
+                if (resolved) {
+                    const { type, content } = resolved;
+                    // Open based on original type
+                    if (type === 'txt' || type === 'text' || type === 'md' || type === 'json' || type === 'js' || type ===
+                        'html' || type === 'css' || type === 'xml') {
+                        launchApp('notepad', { path, content });
+                    } else if (['png', 'jpg', 'jpeg', 'gif', 'bmp', 'svg', 'webp'].includes(type)) {
+                        launchApp('imageviewer', content);
+                    } else if (['wav', 'mp3', 'ogg'].includes(type)) {
+                        alert('🎵 Audio .oc file: would play here.');
+                    } else {
+                        alert(`📦 .oc file (${type}): ${content.slice(0, 100)}`);
+                    }
+                } else {
+                    alert('Invalid .oc file.');
+                }
+                return;
+            }
+
+            // Regular file
+            const content = VFS.readFile(path);
+            if (content === null) { alert('Could not read file.'); return; }
+            if (['png', 'jpg', 'jpeg', 'gif', 'bmp', 'svg', 'webp'].includes(ext)) {
+                launchApp('imageviewer', content);
+            } else if (['txt', 'md', 'json', 'js', 'html', 'css', 'xml'].includes(ext)) {
+                launchApp('notepad', { path, content });
+            } else if (['wav', 'mp3', 'ogg'].includes(ext)) {
+                alert('🎵 Audio: ' + name);
+            } else {
+                alert('📄 File: ' + name + '\nContent length: ' + content.length);
+            }
         }
 
         function getVFSFileIcon(name) {
             const ext = name.split('.').pop().toLowerCase();
+            if (ext === 'oc') return '📦';
             const icons = {
                 'png': '🖼️',
                 'jpg': '🖼️',
@@ -1371,17 +1457,14 @@
         }
 
         // ================================================================
-        //  APP LAUNCHER (SINGLE INSTANCE)
+        //  APP LAUNCHER
         // ================================================================
         function launchApp(appId, extraData) {
-            // Single instance enforcement
             const existing = state.windows.find(w => w.appId === appId);
             if (existing) {
-                if (existing.minimized) {
-                    existing.minimized = false;
+                if (existing.minimized) { existing.minimized = false;
                     existing.element.style.display = 'flex';
-                    updateTaskbar();
-                }
+                    updateTaskbar(); }
                 focusWindow(existing.id);
                 return;
             }
@@ -1390,10 +1473,59 @@
             switch (appId) {
                 case 'explorer':
                     win = createWindow(appId, 'File Explorer', '📁', '', 640, 420);
-                    setTimeout(() => {
-                        currentVFSPath = '/';
-                        renderFileExplorer(win, '/');
-                    }, 50);
+                    setTimeout(() => { currentVFSPath = '/';
+                        renderFileExplorer(win, '/'); }, 50);
+                    break;
+
+                case 'browser':
+                    win = createWindow(appId, 'Browser', '🌐', `
+                        <div class="browser-toolbar">
+                            <button id="browserBack">◀</button>
+                            <button id="browserForward">▶</button>
+                            <button id="browserRefresh">⟳</button>
+                            <button id="browserHome">🏠</button>
+                            <input type="text" id="browserUrl" placeholder="Enter URL (https://...)" value="https://example.com" />
+                            <button id="browserGo">Go</button>
+                        </div>
+                        <iframe class="browser-frame" id="browserFrame" src="https://example.com" sandbox="allow-scripts allow-forms allow-same-origin allow-popups"></iframe>
+                    `, 780, 520);
+                    initBrowser(win);
+                    break;
+
+                case 'terminal':
+                    win = createWindow(appId, 'Terminal', '💻', `
+                        <div class="terminal-output" id="termOutput"></div>
+                        <div class="terminal-input-row">
+                            <span>$</span>
+                            <input type="text" id="termInput" placeholder="Enter command..." autofocus />
+                        </div>
+                    `, 600, 400);
+                    initTerminal(win);
+                    break;
+
+                case 'taskmanager':
+                    win = createWindow(appId, 'Task Manager', '📊', `
+                        <div style="display:flex;gap:20px;padding-bottom:12px;border-bottom:1px solid var(--border);margin-bottom:12px;">
+                            <div><span style="color:#888;">CPU: </span><span id="tmCpu">0%</span></div>
+                            <div><span style="color:#888;">Memory: </span><span id="tmMem">0 MB</span></div>
+                            <div><span style="color:#888;">Apps: </span><span id="tmCount">0</span></div>
+                        </div>
+                        <div class="task-list" id="taskList"></div>
+                    `, 540, 420);
+                    initTaskManager(win);
+                    break;
+
+                case 'music':
+                    win = createWindow(appId, 'Music', '🎵', `
+                        <div class="music-search-row">
+                            <input type="text" id="musicSearchInput" placeholder="Search Spotify (e.g., song name)" />
+                            <button id="musicSearchBtn">🔍 Search</button>
+                        </div>
+                        <div class="music-results" id="musicResults"></div>
+                        <div class="music-player-embed" id="musicPlayer"></div>
+                        <p style="color:#666;font-size:12px;margin-top:8px;">Requires Spotify Client ID & Secret (set in Settings). Paste a track link or search.</p>
+                    `, 560, 480);
+                    initMusic(win);
                     break;
 
                 case 'notepad': {
@@ -1410,19 +1542,15 @@
                         `<textarea id="notepadText">${content}</textarea>
                         <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
                             <button id="npSaveBtn" style="background:#0078d4;border:none;color:white;padding:4px 16px;border-radius:4px;cursor:pointer;">💾 Save to OS</button>
-                            <button id="npExportBtn" style="background:rgba(255,255,255,0.06);border:none;color:#ccc;padding:4px 16px;border-radius:4px;cursor:pointer;">📥 Export to Device</button>
-                            <span style="color:#666;font-size:12px;display:flex;align-items:center;">Saved internally</span>
+                            <button id="npExportBtn" style="background:rgba(255,255,255,0.06);border:none;color:#ccc;padding:4px 16px;border-radius:4px;cursor:pointer;">📥 Export</button>
+                            <button id="npSaveOCBtn" style="background:#ffd700;border:none;color:#000;padding:4px 16px;border-radius:4px;cursor:pointer;">📦 Save as .oc</button>
                         </div>`,
                         540, 400);
                     const textarea = win.querySelector('#notepadText');
                     win._savePath = path;
-
                     win.querySelector('#npSaveBtn').addEventListener('click', () => {
-                        if (VFS.writeFile(win._savePath, textarea.value)) {
-                            alert('✅ Saved to: ' + win._savePath);
-                        } else {
-                            alert('❌ Save failed.');
-                        }
+                        if (VFS.writeFile(win._savePath, textarea.value)) alert('✅ Saved to ' + win._savePath);
+                        else alert('❌ Save failed.');
                     });
                     win.querySelector('#npExportBtn').addEventListener('click', () => {
                         const blob = new Blob([textarea.value], { type: 'text/plain' });
@@ -1433,22 +1561,15 @@
                         a.click();
                         URL.revokeObjectURL(url);
                     });
+                    win.querySelector('#npSaveOCBtn').addEventListener('click', () => {
+                        const ocName = fileName.replace(/\.[^.]+$/, '') + '.oc';
+                        const ocPath = win._savePath.replace(/[^/]+$/, '') + ocName;
+                        if (VFS.writeOCFile(ocPath, 'txt', textarea.value)) {
+                            alert('✅ Saved as .oc: ' + ocPath);
+                        } else alert('❌ Failed.');
+                    });
                     break;
                 }
-
-                case 'calculator':
-                    win = createWindow(appId, 'Calculator', '🧮',
-                        `<input type="text" id="calcDisplay" readonly value="0" />
-                        <div class="calc-grid">
-                            <button data-val="7">7</button><button data-val="8">8</button><button data-val="9">9</button><button class="op" data-val="/">÷</button>
-                            <button data-val="4">4</button><button data-val="5">5</button><button data-val="6">6</button><button class="op" data-val="*">×</button>
-                            <button data-val="1">1</button><button data-val="2">2</button><button data-val="3">3</button><button class="op" data-val="-">−</button>
-                            <button data-val="0">0</button><button data-val=".">.</button><button class="eq" data-val="=">=</button><button class="op" data-val="+">+</button>
-                            <button style="grid-column: span 4; background:#d43a3a;" data-val="C">C</button>
-                        </div>`,
-                        320, 400);
-                    initCalculator(win);
-                    break;
 
                 case 'camera':
                     win = createWindow(appId, 'Camera', '📷',
@@ -1480,11 +1601,14 @@
                     win = createWindow(appId, 'App Store', '🛒',
                         `<div style="flex:1;">
                             <div class="app-card"><div class="info"><span class="icon">🎬</span><div><div class="name">Videohub</div><div class="desc">Streaming platform</div></div></div><button class="launch-btn" id="launchVideohubBtn">Launch</button></div>
-                            <div class="app-card"><div class="info"><span class="icon">🎮</span><div><div class="name">Game Center</div><div class="desc">Coming soon...</div></div></div><button class="launch-btn" style="opacity:0.5;cursor:default;">Soon</button></div>
-                            <p style="color:#555;font-size:12px;margin-top:12px;">Apps are stored internally.</p>
+                            <div class="app-card"><div class="info"><span class="icon">🌐</span><div><div class="name">Browser</div><div class="desc">Web browser</div></div></div><button class="launch-btn" id="launchBrowserBtn">Launch</button></div>
+                            <div class="app-card"><div class="info"><span class="icon">🎵</span><div><div class="name">Music</div><div class="desc">Spotify player</div></div></div><button class="launch-btn" id="launchMusicBtn">Launch</button></div>
+                            <p style="color:#555;font-size:12px;margin-top:12px;">All apps are single-instance.</p>
                         </div>`,
-                        480, 300);
+                        480, 340);
                     win.querySelector('#launchVideohubBtn').addEventListener('click', () => launchApp('videohub'));
+                    win.querySelector('#launchBrowserBtn').addEventListener('click', () => launchApp('browser'));
+                    win.querySelector('#launchMusicBtn').addEventListener('click', () => launchApp('music'));
                     break;
 
                 case 'videohub':
@@ -1495,12 +1619,26 @@
 
                 case 'imageviewer':
                     win = createWindow('imageviewer', 'Image Viewer', '🖼️',
-                        `<div class="image-viewer"><img src="${extraData}" alt="Image" /></div>`,
+                        `<div class="image-viewer"><img src="${extraData}" alt="Image" style="max-width:100%;max-height:100%;object-fit:contain;" /></div>`,
                         540, 420);
                     break;
 
+                case 'calculator':
+                    win = createWindow(appId, 'Calculator', '🧮',
+                        `<input type="text" id="calcDisplay" readonly value="0" />
+                        <div class="calc-grid">
+                            <button data-val="7">7</button><button data-val="8">8</button><button data-val="9">9</button><button class="op" data-val="/">÷</button>
+                            <button data-val="4">4</button><button data-val="5">5</button><button data-val="6">6</button><button class="op" data-val="*">×</button>
+                            <button data-val="1">1</button><button data-val="2">2</button><button data-val="3">3</button><button class="op" data-val="-">−</button>
+                            <button data-val="0">0</button><button data-val=".">.</button><button class="eq" data-val="=">=</button><button class="op" data-val="+">+</button>
+                            <button style="grid-column:span 4;background:#d43a3a;" data-val="C">C</button>
+                        </div>`,
+                        320, 400);
+                    initCalculator(win);
+                    break;
+
                 case 'settings':
-                    win = createWindow(appId, 'Settings', '⚙️', `<div id="settingsContainer" style="flex:1;"></div>`, 560, 480);
+                    win = createWindow(appId, 'Settings', '⚙️', `<div id="settingsContainer" style="flex:1;"></div>`, 580, 500);
                     setTimeout(() => renderSettings(win), 50);
                     break;
 
@@ -1508,6 +1646,304 @@
                     win = createWindow('unknown', 'Unknown', '❓', '<p>App not found.</p>', 300, 150);
             }
             if (win) win._appId = appId;
+        }
+
+        // ================================================================
+        //  BROWSER
+        // ================================================================
+        function initBrowser(win) {
+            const urlInput = win.querySelector('#browserUrl');
+            const frame = win.querySelector('#browserFrame');
+            const backBtn = win.querySelector('#browserBack');
+            const forwardBtn = win.querySelector('#browserForward');
+            const refreshBtn = win.querySelector('#browserRefresh');
+            const homeBtn = win.querySelector('#browserHome');
+            const goBtn = win.querySelector('#browserGo');
+
+            function loadUrl(url) {
+                if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                    url = 'https://' + url;
+                }
+                try {
+                    frame.src = url;
+                    urlInput.value = url;
+                    state.browserHistory.push(url);
+                    state.browserIndex = state.browserHistory.length - 1;
+                } catch {
+                    alert('Invalid URL');
+                }
+            }
+
+            goBtn.addEventListener('click', () => loadUrl(urlInput.value));
+            urlInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') loadUrl(urlInput.value); });
+            backBtn.addEventListener('click', () => {
+                if (state.browserIndex > 0) {
+                    state.browserIndex--;
+                    const url = state.browserHistory[state.browserIndex];
+                    frame.src = url;
+                    urlInput.value = url;
+                }
+            });
+            forwardBtn.addEventListener('click', () => {
+                if (state.browserIndex < state.browserHistory.length - 1) {
+                    state.browserIndex++;
+                    const url = state.browserHistory[state.browserIndex];
+                    frame.src = url;
+                    urlInput.value = url;
+                }
+            });
+            refreshBtn.addEventListener('click', () => { frame.src = frame.src; });
+            homeBtn.addEventListener('click', () => loadUrl('https://example.com'));
+            // Load default
+            setTimeout(() => loadUrl('https://example.com'), 100);
+        }
+
+        // ================================================================
+        //  TERMINAL
+        // ================================================================
+        function initTerminal(win) {
+            const output = win.querySelector('#termOutput');
+            const input = win.querySelector('#termInput');
+            let cwd = '/';
+
+            function printLine(text, cls = '') {
+                output.innerHTML += `<div class="${cls}">${text}</div>`;
+                output.scrollTop = output.scrollHeight;
+            }
+
+            function processCommand(cmd) {
+                const parts = cmd.trim().split(/\s+/);
+                const command = parts[0];
+                const args = parts.slice(1);
+                printLine(`$ ${cmd}`, 'info');
+
+                switch (command) {
+                    case 'help':
+                        printLine('Available commands: ls, cd, mkdir, touch, cat, echo, rm, clear, uptime, whoami, date, pwd, help');
+                        break;
+                    case 'ls': {
+                        const entries = VFS.listFolder(cwd) || [];
+                        const names = entries.map(e => e.type === 'folder' ? e.name + '/' : e.name);
+                        printLine(names.join('  ') || '(empty)');
+                        break;
+                    }
+                    case 'cd': {
+                        const target = args[0] || '/';
+                        if (target === '..') {
+                            const parts2 = cwd.split('/').filter(Boolean);
+                            parts2.pop();
+                            cwd = '/' + parts2.join('/') || '/';
+                        } else if (target.startsWith('/')) {
+                            const node = VFS.getNode(target);
+                            if (node && node.type === 'folder') cwd = target;
+                            else printLine('cd: no such directory: ' + target, 'error');
+                        } else {
+                            const newPath = cwd === '/' ? '/' + target : cwd + '/' + target;
+                            const node = VFS.getNode(newPath);
+                            if (node && node.type === 'folder') cwd = newPath;
+                            else printLine('cd: no such directory: ' + target, 'error');
+                        }
+                        break;
+                    }
+                    case 'pwd':
+                        printLine(cwd);
+                        break;
+                    case 'mkdir': {
+                        if (!args[0]) { printLine('mkdir: missing operand', 'error'); break; }
+                        const path = cwd === '/' ? '/' + args[0] : cwd + '/' + args[0];
+                        if (VFS.createFolder(path)) printLine('Created: ' + path, 'success');
+                        else printLine('mkdir: failed to create', 'error');
+                        break;
+                    }
+                    case 'touch': {
+                        if (!args[0]) { printLine('touch: missing operand', 'error'); break; }
+                        const path = cwd === '/' ? '/' + args[0] : cwd + '/' + args[0];
+                        if (VFS.writeFile(path, '')) printLine('Created: ' + path, 'success');
+                        else printLine('touch: failed', 'error');
+                        break;
+                    }
+                    case 'cat': {
+                        if (!args[0]) { printLine('cat: missing operand', 'error'); break; }
+                        const path = cwd === '/' ? '/' + args[0] : cwd + '/' + args[0];
+                        const content = VFS.readFile(path);
+                        if (content !== null) printLine(typeof content === 'object' ? JSON.stringify(content) : content);
+                        else printLine('cat: no such file', 'error');
+                        break;
+                    }
+                    case 'echo':
+                        printLine(args.join(' ') || '');
+                        break;
+                    case 'rm': {
+                        if (!args[0]) { printLine('rm: missing operand', 'error'); break; }
+                        const path = cwd === '/' ? '/' + args[0] : cwd + '/' + args[0];
+                        if (VFS.deleteEntry(path)) printLine('Removed: ' + path, 'success');
+                        else printLine('rm: failed to remove', 'error');
+                        break;
+                    }
+                    case 'clear':
+                        output.innerHTML = '';
+                        break;
+                    case 'uptime': {
+                        const uptime = Math.floor((Date.now() - state.bootTime) / 1000);
+                        const d = Math.floor(uptime / 86400),
+                            h = Math.floor((uptime % 86400) / 3600),
+                            m = Math.floor((uptime % 3600) / 60);
+                        printLine(`Uptime: ${d}d ${h}h ${m}m`);
+                        break;
+                    }
+                    case 'whoami':
+                        printLine('opencore-user');
+                        break;
+                    case 'date':
+                        printLine(new Date().toString());
+                        break;
+                    default:
+                        printLine(`command not found: ${command}`, 'error');
+                }
+            }
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    const cmd = input.value;
+                    input.value = '';
+                    processCommand(cmd);
+                }
+            });
+            // Focus
+            input.focus();
+            win.addEventListener('click', () => input.focus());
+            printLine('Welcome to OpencoreOS Terminal v1.0', 'success');
+            printLine('Type "help" for commands.');
+        }
+
+        // ================================================================
+        //  TASK MANAGER
+        // ================================================================
+        function initTaskManager(win) {
+            const cpuEl = win.querySelector('#tmCpu');
+            const memEl = win.querySelector('#tmMem');
+            const countEl = win.querySelector('#tmCount');
+            const listEl = win.querySelector('#taskList');
+
+            function updateTasks() {
+                // CPU (simulated)
+                cpuEl.textContent = Math.round(Math.random() * 20 + 5) + '%';
+                // Memory
+                const mem = performance.memory ? (performance.memory.usedJSHeapSize / (1024 * 1024)).toFixed(1) : 'N/A';
+                memEl.textContent = mem + ' MB';
+                // Count
+                countEl.textContent = state.windows.length;
+                // List
+                listEl.innerHTML = '';
+                state.windows.forEach(w => {
+                    const title = w.element.querySelector('.window-title')?.textContent || 'Unknown';
+                    const div = document.createElement('div');
+                    div.className = 'task-item';
+                    div.innerHTML =
+                        `<span class="name">${title}</span><button class="kill-btn" data-wid="${w.id}">End Task</button>`;
+                    listEl.appendChild(div);
+                });
+                listEl.querySelectorAll('.kill-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const wid = btn.dataset.wid;
+                        closeWindow(wid);
+                        updateTasks();
+                    });
+                });
+                setTimeout(updateTasks, 2000);
+            }
+            updateTasks();
+        }
+
+        // ================================================================
+        //  MUSIC (Spotify Search + Embed)
+        // ================================================================
+        function initMusic(win) {
+            const searchInput = win.querySelector('#musicSearchInput');
+            const searchBtn = win.querySelector('#musicSearchBtn');
+            const resultsDiv = win.querySelector('#musicResults');
+            const playerDiv = win.querySelector('#musicPlayer');
+
+            // Load Spotify Client ID from localStorage
+            const clientId = localStorage.getItem('opencore_spotify_client_id') || '';
+            const clientSecret = localStorage.getItem('opencore_spotify_client_secret') || '';
+
+            async function searchSpotify(query) {
+                if (!clientId || !clientSecret) {
+                    resultsDiv.innerHTML =
+                        `<p style="color:#ff6b6b;">❌ Please set your Spotify Client ID & Secret in Settings first.</p>`;
+                    return;
+                }
+                try {
+                    // Get token
+                    const tokenResp = await fetch('https://accounts.spotify.com/api/token', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'Authorization': 'Basic ' + btoa(clientId + ':' + clientSecret)
+                        },
+                        body: 'grant_type=client_credentials'
+                    });
+                    const tokenData = await tokenResp.json();
+                    if (!tokenData.access_token) { throw new Error('Invalid credentials'); }
+                    const token = tokenData.access_token;
+
+                    // Search
+                    const searchResp = await fetch(
+                        `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=8`, {
+                            headers: { 'Authorization': 'Bearer ' + token }
+                        });
+                    const data = await searchResp.json();
+                    if (!data.tracks || data.tracks.items.length === 0) {
+                        resultsDiv.innerHTML = `<p style="color:#888;">No results found.</p>`;
+                        return;
+                    }
+                    resultsDiv.innerHTML = '';
+                    data.tracks.items.forEach(track => {
+                        const div = document.createElement('div');
+                        div.className = 'music-result-item';
+                        const img = track.album.images[0]?.url || '';
+                        div.innerHTML = `
+                            <div class="info">
+                                ${img ? `<img src="${img}" />` : ''}
+                                <div><div class="title">${track.name}</div><div class="artist">${track.artists.map(a => a.name).join(', ')}</div></div>
+                            </div>
+                            <button class="launch-btn" style="background:#1db954;" data-uri="${track.uri}">▶ Play</button>
+                        `;
+                        resultsDiv.appendChild(div);
+                    });
+                    resultsDiv.querySelectorAll('[data-uri]').forEach(btn => {
+                        btn.addEventListener('click', () => {
+                            const uri = btn.dataset.uri;
+                            const trackId = uri.split(':')[2];
+                            playerDiv.innerHTML =
+                                `<iframe src="https://open.spotify.com/embed/track/${trackId}" style="width:100%;height:80px;border:none;"></iframe>`;
+                        });
+                    });
+                } catch (err) {
+                    resultsDiv.innerHTML =
+                        `<p style="color:#ff6b6b;">❌ Search error: ${err.message}. Check your Spotify credentials in Settings.</p>`;
+                }
+            }
+
+            searchBtn.addEventListener('click', () => {
+                const q = searchInput.value.trim();
+                if (q) searchSpotify(q);
+            });
+            searchInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') searchBtn.click(); });
+
+            // Handle direct link paste: if user pastes a Spotify track link, extract ID
+            searchInput.addEventListener('paste', () => {
+                setTimeout(() => {
+                    const val = searchInput.value;
+                    const match = val.match(/spotify\.com\/track\/([a-zA-Z0-9]+)/);
+                    if (match) {
+                        playerDiv.innerHTML =
+                            `<iframe src="https://open.spotify.com/embed/track/${match[1]}" style="width:100%;height:80px;border:none;"></iframe>`;
+                        searchInput.value = '';
+                    }
+                }, 100);
+            });
         }
 
         // ================================================================
@@ -1545,12 +1981,12 @@
         function initCamera(win) {
             const video = win.querySelector('#camVideo');
             const gallery = win.querySelector('#camGallery');
-            // Load existing photos from VFS
             const photos = VFS.listFolder('/Pictures') || [];
             photos.filter(f => f.type === 'file' && ['png', 'jpg', 'jpeg'].some(e => f.name.endsWith(e))).forEach(f => {
                 const img = document.createElement('img');
-                img.src = VFS.readFile('/Pictures/' + f.name);
-                gallery.appendChild(img);
+                const data = VFS.readFile('/Pictures/' + f.name);
+                if (data) { img.src = data;
+                    gallery.appendChild(img); }
             });
 
             async function startCamera(facing) {
@@ -1560,7 +1996,7 @@
                             width: { ideal: 640 } } });
                     video.srcObject = cameraStream;
                     win._mediaStream = cameraStream;
-                } catch { video.textContent = '❌ Camera access denied.';
+                } catch { video.textContent = '❌ Camera denied.';
                     video.style.display = 'flex';
                     video.style.alignItems = 'center';
                     video.style.justifyContent = 'center'; }
@@ -1639,7 +2075,7 @@
                     mediaRecorder.start(1000);
                     drawBars();
                     status.textContent = '🎤 Recording...';
-                } catch { status.textContent = '❌ Microphone access denied.'; }
+                } catch { status.textContent = '❌ Microphone denied.'; }
             });
 
             win.querySelector('#micStopBtn').addEventListener('click', () => {
@@ -1668,62 +2104,71 @@
         }
 
         // ================================================================
-        //  SETTINGS - MEGA PANEL
+        //  SETTINGS - MEGA WITH NETWORK/BLUETOOTH
         // ================================================================
         function renderSettings(win) {
             const container = win.querySelector('#settingsContainer');
             const uptime = Math.floor((Date.now() - state.bootTime) / 1000);
-            const days = Math.floor(uptime / 86400);
-            const hours = Math.floor((uptime % 86400) / 3600);
-            const mins = Math.floor((uptime % 3600) / 60);
+            const days = Math.floor(uptime / 86400),
+                hours = Math.floor((uptime % 86400) / 3600),
+                mins = Math.floor((uptime % 3600) / 60);
             const uptimeStr = days > 0 ? `${days}d ${hours}h ${mins}m` : `${hours}h ${mins}m`;
-
             const mem = performance.memory ? (performance.memory.usedJSHeapSize / (1024 * 1024)).toFixed(1) : 'N/A';
             const totalMem = performance.memory ? (performance.memory.totalJSHeapSize / (1024 * 1024)).toFixed(1) : 'N/A';
             const cores = navigator.hardwareConcurrency || 'N/A';
-
-            const vfsSize = (VFS.getTotalSize() / 1024).toFixed(1);
-            const fileCount = VFS.getFileCount();
-
             const devName = localStorage.getItem('opencore_device_name') || 'Opencore-PC';
             const wallpaper = localStorage.getItem('opencore_wallpaper') || '#16213e';
+            const clientId = localStorage.getItem('opencore_spotify_client_id') || '';
+            const clientSecret = localStorage.getItem('opencore_spotify_client_secret') || '';
 
             container.innerHTML = `
                 <div class="settings-tabs">
                     <button class="active" data-tab="system">💻 System</button>
-                    <button data-tab="personalize">🎨 Personalization</button>
+                    <button data-tab="network">📶 Network</button>
+                    <button data-tab="bluetooth">📡 Bluetooth</button>
+                    <button data-tab="personalize">🎨 Personalize</button>
                     <button data-tab="storage">💾 Storage</button>
                     <button data-tab="about">ℹ️ About</button>
                 </div>
                 <div class="settings-tab-content active" data-tab="system">
                     <div class="settings-row"><span class="label">Device Name</span><input type="text" id="devNameInput" value="${devName}" /><button class="btn" id="devNameSave">Rename</button></div>
-                    <div class="settings-row"><span class="label">OS Version</span><span class="value">OpencoreOS v3.1</span></div>
-                    <div class="settings-row"><span class="label">Architecture</span><span class="value">Web x64</span></div>
+                    <div class="settings-row"><span class="label">OS Version</span><span class="value">OpencoreOS v4.0</span></div>
                     <div class="settings-row"><span class="label">Uptime</span><span class="value">${uptimeStr}</span></div>
                     <div class="settings-row"><span class="label">CPU Cores</span><span class="value">${cores}</span></div>
-                    <div class="settings-row"><span class="label">Memory (Heap)</span><span class="value">${mem} MB / ${totalMem} MB</span></div>
-                    <div class="settings-row"><span class="label">Display</span><span class="value">${window.innerWidth}x${window.innerHeight}</span></div>
-                    <div class="settings-row"><span class="label">Pixel Ratio</span><span class="value">${window.devicePixelRatio}x</span></div>
+                    <div class="settings-row"><span class="label">Memory</span><span class="value">${mem} MB / ${totalMem} MB</span></div>
+                    <div class="settings-row"><span class="label">Display</span><span class="value">${window.innerWidth}x${window.innerHeight} (${window.devicePixelRatio}x)</span></div>
+                    <div class="settings-row"><span class="label">Battery</span><span class="value" id="settingsBattery">Checking...</span></div>
+                </div>
+                <div class="settings-tab-content" data-tab="network">
+                    <div class="settings-row"><span class="label">Wi-Fi</span><div class="toggle" id="wifiToggle"><div class="slider"></div></div><span id="wifiStatus">Off</span></div>
+                    <div class="settings-row"><span class="label">Network Type</span><span class="value" id="netType">${navigator.connection ? navigator.connection.effectiveType : 'Unknown'}</span></div>
+                    <div class="settings-row"><span class="label">IP (simulated)</span><span class="value">192.168.1.100</span></div>
+                </div>
+                <div class="settings-tab-content" data-tab="bluetooth">
+                    <div class="settings-row"><span class="label">Bluetooth</span><div class="toggle" id="btToggle"><div class="slider"></div></div><span id="btStatus">Off</span></div>
+                    <div class="settings-row"><span class="label">Devices</span><button class="btn" id="btScanBtn">🔍 Scan</button></div>
+                    <div id="btDevices" style="color:#888;font-size:13px;">No devices scanned. Click "Scan".</div>
                 </div>
                 <div class="settings-tab-content" data-tab="personalize">
                     <div class="settings-row"><span class="label">Wallpaper</span><input type="color" id="wallColor" value="${wallpaper.replace('#','')}" /><button class="btn" id="wallApply">Apply</button><button class="btn-secondary" id="wallReset">Reset</button></div>
-                    <div class="settings-row"><span class="label">Theme</span><button class="btn-secondary" id="themeToggle">Toggle Dark/Light (Experimental)</button></div>
+                    <div class="settings-row"><span class="label">Spotify Client ID</span><input type="text" id="spotifyId" value="${clientId}" style="flex:1;min-width:120px;" /></div>
+                    <div class="settings-row"><span class="label">Spotify Secret</span><input type="text" id="spotifySecret" value="${clientSecret}" style="flex:1;min-width:120px;" /></div>
+                    <div class="settings-row"><button class="btn" id="spotifySave">Save Spotify Credentials</button></div>
                 </div>
                 <div class="settings-tab-content" data-tab="storage">
-                    <div class="settings-row"><span class="label">Total Files</span><span class="value">${fileCount}</span></div>
-                    <div class="settings-row"><span class="label">Storage Used</span><span class="value">${vfsSize} KB</span></div>
-                    <div class="settings-row"><span class="label">Notepad Data</span><button class="btn-secondary" id="clearNotepad">🗑️ Clear</button></div>
-                    <div class="settings-row"><span class="label">Photos (Pictures)</span><button class="btn-secondary" id="clearPhotos">🗑️ Clear</button></div>
-                    <div class="settings-row"><span class="label">Recordings</span><button class="btn-secondary" id="clearRecordings">🗑️ Clear</button></div>
+                    <div class="settings-row"><span class="label">Total Files</span><span class="value">${VFS.getFileCount()}</span></div>
+                    <div class="settings-row"><span class="label">Storage Used</span><span class="value">${(VFS.getTotalSize()/1024).toFixed(1)} KB</span></div>
+                    <div class="settings-row"><button class="btn-secondary" id="clearNotepad">🗑️ Clear Documents</button></div>
+                    <div class="settings-row"><button class="btn-secondary" id="clearPhotos">🗑️ Clear Pictures</button></div>
+                    <div class="settings-row"><button class="btn-secondary" id="clearRecordings">🗑️ Clear Recordings</button></div>
                     <div class="settings-row"><button class="btn" id="clearAllVFS" style="background:#d43a3a;">⚠️ Delete ALL Files</button></div>
                 </div>
                 <div class="settings-tab-content" data-tab="about">
                     <div style="text-align:center;padding:20px;">
                         <div style="font-size:64px;">🪟</div>
-                        <h2 style="font-weight:300;margin:10px 0;">OpencoreOS</h2>
-                        <p style="color:#888;">Version 3.1 "Mega Update"</p>
-                        <p style="color:#666;font-size:13px;margin-top:10px;">Built with HTML, CSS, JavaScript</p>
-                        <p style="color:#555;font-size:12px;margin-top:4px;">Virtual File System • Single Instance Apps • Enterprise Settings</p>
+                        <h2 style="font-weight:300;">OpencoreOS v4.0</h2>
+                        <p style="color:#888;">"The Ultimate Edition"</p>
+                        <p style="color:#666;font-size:13px;margin-top:10px;">Browser • Terminal • Task Manager • .oc Files • Music • Network</p>
                         <p style="color:#444;font-size:12px;margin-top:20px;">© 2026 OpencoreOS</p>
                     </div>
                 </div>
@@ -1734,9 +2179,9 @@
                 tab.addEventListener('click', () => {
                     container.querySelectorAll('.settings-tabs button').forEach(t => t.classList.remove('active'));
                     tab.classList.add('active');
-                    const target = tab.dataset.tab;
                     container.querySelectorAll('.settings-tab-content').forEach(c => c.classList.remove('active'));
-                    container.querySelector(`.settings-tab-content[data-tab="${target}"]`).classList.add('active');
+                    container.querySelector(`.settings-tab-content[data-tab="${tab.dataset.tab}"]`).classList.add(
+                    'active');
                 });
             });
 
@@ -1745,7 +2190,7 @@
                 const name = container.querySelector('#devNameInput').value.trim() || 'Opencore-PC';
                 localStorage.setItem('opencore_device_name', name);
                 document.querySelector('.user-name').textContent = name;
-                alert('Device renamed to ' + name);
+                alert('Renamed to ' + name);
             });
 
             // Wallpaper
@@ -1762,37 +2207,85 @@
                 container.querySelector('#wallColor').value = '16213e';
             });
 
-            // Theme toggle (visual only)
-            container.querySelector('#themeToggle').addEventListener('click', () => {
-                document.body.style.filter = document.body.style.filter === 'invert(1)' ? 'none' : 'invert(1)';
+            // Spotify credentials
+            container.querySelector('#spotifySave').addEventListener('click', () => {
+                const id = container.querySelector('#spotifyId').value.trim();
+                const secret = container.querySelector('#spotifySecret').value.trim();
+                if (id && secret) {
+                    localStorage.setItem('opencore_spotify_client_id', id);
+                    localStorage.setItem('opencore_spotify_client_secret', secret);
+                    alert('✅ Spotify credentials saved!');
+                } else {
+                    alert('Please enter both Client ID and Secret.');
+                }
             });
 
-            // Storage clear functions
+            // Network Toggle (simulated)
+            let wifiOn = false;
+            container.querySelector('#wifiToggle').addEventListener('click', function() {
+                wifiOn = !wifiOn;
+                this.classList.toggle('on', wifiOn);
+                container.querySelector('#wifiStatus').textContent = wifiOn ? 'On' : 'Off';
+            });
+
+            // Bluetooth Toggle + Scan
+            let btOn = false;
+            container.querySelector('#btToggle').addEventListener('click', function() {
+                btOn = !btOn;
+                this.classList.toggle('on', btOn);
+                container.querySelector('#btStatus').textContent = btOn ? 'On' : 'Off';
+                if (!btOn) container.querySelector('#btDevices').textContent = 'Bluetooth disabled.';
+            });
+            container.querySelector('#btScanBtn').addEventListener('click', () => {
+                if (!btOn) { alert('Turn on Bluetooth first!'); return; }
+                const devices = ['Headphones 🎧', 'Keyboard ⌨️', 'Mouse 🖱️', 'Speaker 🔊', 'Phone 📱'];
+                const list = devices.map(d => `<div style="padding:4px 0;">🔵 ${d} <button style="background:#0078d4;border:none;color:white;padding:0 12px;border-radius:4px;cursor:pointer;font-size:12px;">Connect</button></div>`)
+                    .join('');
+                container.querySelector('#btDevices').innerHTML = list;
+                // Connect buttons just simulate
+                container.querySelectorAll('#btDevices button').forEach(b => {
+                    b.addEventListener('click', () => {
+                        b.textContent = 'Connected ✓';
+                        b.style.background = '#4caf50';
+                    });
+                });
+            });
+
+            // Battery update
+            async function updateBatterySettings() {
+                if ('getBattery' in navigator) {
+                    try {
+                        const bat = await navigator.getBattery();
+                        const el = container.querySelector('#settingsBattery');
+                        if (el) el.textContent = `${Math.round(bat.level*100)}% ${bat.charging ? '⚡' : ''}`;
+                    } catch {}
+                }
+            }
+            updateBatterySettings();
+
+            // Storage clear
             const clearFolder = (folder, msg) => {
                 if (confirm(`Delete all files in /${folder}?`)) {
                     const entries = VFS.listFolder('/' + folder) || [];
-                    entries.forEach(f => {
-                        if (f.type === 'file') VFS.deleteEntry('/' + folder + '/' + f.name);
-                    });
-                    alert(msg || 'Cleared!');
+                    entries.forEach(f => { if (f.type === 'file') VFS.deleteEntry('/' + folder + '/' + f.name); });
+                    alert(msg);
                     renderSettings(win);
                 }
             };
-            container.querySelector('#clearNotepad').addEventListener('click', () => clearFolder('Documents', 'Notepad files cleared.'));
-            container.querySelector('#clearPhotos').addEventListener('click', () => clearFolder('Pictures', 'Photos cleared.'));
+            container.querySelector('#clearNotepad').addEventListener('click', () => clearFolder('Documents',
+                'Documents cleared.'));
+            container.querySelector('#clearPhotos').addEventListener('click', () => clearFolder('Pictures',
+            'Pictures cleared.'));
             container.querySelector('#clearRecordings').addEventListener('click', () => clearFolder('Recordings',
-            'Recordings cleared.'));
-
+                'Recordings cleared.'));
             container.querySelector('#clearAllVFS').addEventListener('click', () => {
-                if (confirm('⚠️ Delete ALL files in the OS? This cannot be undone!')) {
+                if (confirm('⚠️ Delete ALL files?')) {
                     if (confirm('Are you sure?')) {
                         const root = VFS.getRoot();
-                        root.children = {
-                            'Documents': { type: 'folder', children: {} },
+                        root.children = { 'Documents': { type: 'folder', children: {} },
                             'Pictures': { type: 'folder', children: {} },
                             'Recordings': { type: 'folder', children: {} },
-                            'Desktop': { type: 'folder', children: {} },
-                        };
+                            'Desktop': { type: 'folder', children: {} } };
                         VFS.saveRoot(root);
                         alert('All files deleted.');
                         renderSettings(win);
@@ -1805,12 +2298,8 @@
         //  EVENT BINDINGS
         // ================================================================
         document.querySelectorAll('.desktop-icon').forEach(el => {
-            el.addEventListener('dblclick', () => {
-                const app = el.dataset.app;
-                if (app) launchApp(app);
-            });
+            el.addEventListener('dblclick', () => { const app = el.dataset.app; if (app) launchApp(app); });
         });
-
         document.querySelectorAll('.start-item').forEach(el => {
             el.addEventListener('click', () => {
                 const app = el.dataset.app;
@@ -1818,38 +2307,39 @@
                     startMenu.classList.remove('open'); }
             });
         });
-
         document.getElementById('desktopRecycle').addEventListener('dblclick', () => {
             launchApp('explorer');
             setTimeout(() => {
                 const win = state.windows.find(w => w.appId === 'explorer');
                 if (win) {
-                    // Just show empty
-                    const body = win.element.querySelector('.window-body');
-                    body.innerHTML =
+                    win.element.querySelector('.window-body').innerHTML =
                         `<p style="color:#666;text-align:center;padding:30px;">🗑️ Recycle Bin is empty.</p>`;
                 }
             }, 200);
         });
 
-        // Keyboard shortcuts
+        // Keyboard
         document.addEventListener('keydown', (e) => {
             if (e.ctrlKey && e.key === 'e') { e.preventDefault();
                 launchApp('explorer'); }
             if (e.ctrlKey && e.key === 'n') { e.preventDefault();
                 launchApp('notepad'); }
-            if (e.ctrlKey && e.key === 'c') { e.preventDefault();
-                launchApp('calculator'); }
+            if (e.ctrlKey && e.key === 'b') { e.preventDefault();
+                launchApp('browser'); }
+            if (e.ctrlKey && e.key === 't') { e.preventDefault();
+                launchApp('terminal'); }
             if (e.key === 'Escape' && state.windows.length > 0) {
                 const last = state.windows[state.windows.length - 1];
                 closeWindow(last.id);
             }
         });
 
-        console.log('🪟 OpencoreOS v3.1 booted!');
-        console.log('📁 Internal VFS: Your files are stored in the OS.');
-        console.log('⚡ Single Instance Apps: No duplicates!');
-        console.log('⚙️ Mega Settings with live performance stats.');
+        console.log('🪟 OpencoreOS v4.0 booted!');
+        console.log('🌐 Browser: load any website');
+        console.log('💻 Terminal: ls, cd, mkdir, touch, cat, echo, rm, clear, uptime, whoami, date, pwd');
+        console.log('📦 .oc files: wrappers for any file type');
+        console.log('🎵 Music: Spotify search & embed');
+        console.log('📶 Network & Bluetooth management in Settings');
     </script>
 </body>
 </html>
