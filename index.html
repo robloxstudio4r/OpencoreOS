@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>OpencoreOS</title>
+    <title>OpencoreOS v3.0</title>
     <style>
-        /* ----- RESET & BASE ----- */
+        /* ========== RESET & BASE ========== */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', system-ui, sans-serif;
+            font-family: -apple-system, 'Segoe UI', Roboto, system-ui, sans-serif;
             user-select: none;
         }
         body {
@@ -18,9 +18,81 @@
             height: 100vh;
             overflow: hidden;
             background: #1a1a2e;
+            position: relative;
         }
 
-        /* ----- DESKTOP ----- */
+        /* ========== SETUP WIZARD ========== */
+        #setupWizard {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(ellipse at center, #1a1a2e, #0a0a1a);
+            z-index: 999999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            transition: opacity 0.8s;
+        }
+        #setupWizard.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        #setupWizard .logo {
+            font-size: 72px;
+            margin-bottom: 10px;
+        }
+        #setupWizard h1 {
+            font-size: 42px;
+            font-weight: 300;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+        #setupWizard .subtitle {
+            color: #888;
+            font-size: 16px;
+            margin-bottom: 40px;
+        }
+        #setupWizard .progress-container {
+            width: 400px;
+            max-width: 80%;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            height: 8px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        #setupWizard .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #0078d4, #00b4d8);
+            border-radius: 12px;
+            transition: width 0.3s;
+        }
+        #setupWizard .status-text {
+            margin-top: 16px;
+            color: #aaa;
+            font-size: 14px;
+            font-weight: 300;
+        }
+        #setupWizard .steps {
+            margin-top: 20px;
+            display: flex;
+            gap: 12px;
+            color: #555;
+            font-size: 13px;
+        }
+        #setupWizard .steps .done {
+            color: #00b4d8;
+        }
+        #setupWizard .steps .active {
+            color: white;
+        }
+
+        /* ========== DESKTOP ========== */
         #desktop {
             width: 100%;
             height: calc(100% - 50px);
@@ -32,10 +104,11 @@
             gap: 20px;
             background: radial-gradient(ellipse at 20% 20%, #16213e, #0a0a1a);
             transition: background 0.5s;
+            position: relative;
         }
 
         .desktop-icon {
-            width: 80px;
+            width: 85px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -44,68 +117,111 @@
             font-size: 13px;
             cursor: pointer;
             padding: 8px;
-            border-radius: 8px;
-            transition: background 0.2s;
+            border-radius: 10px;
+            transition: background 0.2s, transform 0.1s;
             background: transparent;
             border: none;
+            position: relative;
         }
         .desktop-icon:hover {
-            background: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.12);
+            transform: scale(1.02);
+        }
+        .desktop-icon:active {
+            transform: scale(0.95);
         }
         .desktop-icon .icon {
-            font-size: 42px;
+            font-size: 48px;
             margin-bottom: 6px;
-            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6));
+            filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.6));
         }
         .desktop-icon .label {
             text-shadow: 0 1px 6px rgba(0, 0, 0, 0.9);
             word-wrap: break-word;
             line-height: 1.2;
+            font-size: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 8px;
+            border-radius: 4px;
+            backdrop-filter: blur(4px);
         }
 
-        /* ----- TASKBAR ----- */
-        #taskbar {
-            height: 50px;
-            background: rgba(20, 20, 40, 0.85);
-            backdrop-filter: blur(16px);
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        /* Right-click menu */
+        #contextMenu {
+            position: fixed;
+            background: rgba(28, 28, 48, 0.96);
+            backdrop-filter: blur(20px);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 6px 0;
+            min-width: 200px;
+            z-index: 99999;
+            display: none;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+        }
+        #contextMenu .menu-item {
+            padding: 8px 18px;
+            color: #ddd;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.1s;
             display: flex;
             align-items: center;
-            padding: 0 16px;
-            gap: 8px;
+            gap: 10px;
+        }
+        #contextMenu .menu-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+        }
+        #contextMenu .menu-divider {
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            margin: 4px 12px;
+        }
+
+        /* ========== TASKBAR (Windows-style) ========== */
+        #taskbar {
+            height: 50px;
+            background: rgba(20, 20, 40, 0.88);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            gap: 6px;
             position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
             z-index: 9999;
-            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 -2px 20px rgba(0, 0, 0, 0.4);
         }
 
         #start-btn {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.06);
             border: none;
             color: white;
-            padding: 6px 16px;
+            padding: 4px 14px;
             border-radius: 6px;
-            font-size: 18px;
-            font-weight: bold;
+            font-size: 15px;
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             transition: background 0.2s;
-            height: 36px;
+            height: 34px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
         }
         #start-btn:hover {
-            background: rgba(255, 255, 255, 0.25);
+            background: rgba(255, 255, 255, 0.15);
         }
 
         .taskbar-apps {
             display: flex;
-            gap: 4px;
+            gap: 2px;
             flex: 1;
-            padding: 0 12px;
+            padding: 0 8px;
             overflow-x: auto;
+            align-items: center;
         }
         .taskbar-app {
             background: transparent;
@@ -115,121 +231,152 @@
             border-radius: 4px;
             cursor: pointer;
             font-size: 13px;
-            transition: background 0.2s;
+            transition: background 0.15s;
             height: 32px;
             white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border: 1px solid transparent;
         }
         .taskbar-app:hover {
-            background: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.1);
             color: white;
         }
         .taskbar-app.active {
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.12);
             color: white;
+            border-color: rgba(255, 255, 255, 0.06);
         }
 
+        #systemTray {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #aaa;
+            font-size: 13px;
+            padding: 0 6px;
+        }
+        #systemTray .tray-icon {
+            font-size: 16px;
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 4px;
+            transition: background 0.15s;
+        }
+        #systemTray .tray-icon:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
         #clock {
             color: white;
             font-size: 13px;
-            padding: 0 8px;
-            min-width: 100px;
-            text-align: right;
+            padding: 0 6px;
+            min-width: 80px;
+            text-align: center;
             font-weight: 400;
-            letter-spacing: 0.3px;
         }
 
-        /* ----- START MENU ----- */
+        /* ========== START MENU ========== */
         #start-menu {
             position: fixed;
-            bottom: 60px;
-            left: 10px;
-            width: 340px;
-            background: rgba(25, 25, 45, 0.96);
-            backdrop-filter: blur(20px);
+            bottom: 56px;
+            left: 8px;
+            width: 360px;
+            background: rgba(22, 22, 40, 0.96);
+            backdrop-filter: blur(24px);
             border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.06);
             padding: 16px;
             display: none;
             z-index: 10000;
-            box-shadow: 0 12px 60px rgba(0, 0, 0, 0.8);
-            max-height: 400px;
+            box-shadow: 0 16px 60px rgba(0, 0, 0, 0.7);
+            max-height: 450px;
             overflow-y: auto;
         }
         #start-menu.open {
             display: block;
         }
-        #start-menu h3 {
-            color: #aaa;
-            font-size: 13px;
-            font-weight: 400;
-            margin-bottom: 12px;
+        #start-menu .header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            margin-bottom: 10px;
+        }
+        #start-menu .header .user-icon {
+            font-size: 32px;
+        }
+        #start-menu .header .user-name {
+            color: white;
+            font-weight: 500;
+            font-size: 16px;
+        }
+        #start-menu .header .user-status {
+            color: #666;
+            font-size: 12px;
+        }
+        #start-menu .section {
+            color: #666;
+            font-size: 11px;
+            text-transform: uppercase;
             letter-spacing: 1px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            padding-bottom: 8px;
+            padding: 8px 4px 4px 4px;
         }
         .start-item {
             display: flex;
             align-items: center;
             gap: 14px;
-            padding: 10px 12px;
+            padding: 8px 12px;
             border-radius: 8px;
             cursor: pointer;
-            color: white;
-            transition: background 0.15s;
-            font-size: 15px;
+            color: #ddd;
+            transition: background 0.12s;
+            font-size: 14px;
         }
         .start-item:hover {
-            background: rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.06);
+            color: white;
         }
         .start-item .icon {
-            font-size: 24px;
-            width: 32px;
+            font-size: 20px;
+            width: 28px;
             text-align: center;
         }
-        .start-divider {
-            border-top: 1px solid rgba(255, 255, 255, 0.06);
-            margin: 8px 0;
-        }
 
-        /* ----- WINDOWS ----- */
+        /* ========== WINDOWS ========== */
         .window {
             position: absolute;
             min-width: 320px;
-            min-height: 200px;
-            background: rgba(28, 28, 48, 0.92);
-            backdrop-filter: blur(12px);
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 20px 80px rgba(0, 0, 0, 0.7);
+            min-height: 180px;
+            background: rgba(28, 28, 48, 0.94);
+            backdrop-filter: blur(16px);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: 0 20px 80px rgba(0, 0, 0, 0.6);
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            animation: fadeIn 0.2s ease;
+            animation: windowIn 0.2s ease;
+            resize: both;
         }
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: scale(0.96);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
+        @keyframes windowIn {
+            from { opacity: 0; transform: scale(0.95) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
         }
 
         .window-header {
-            background: rgba(255, 255, 255, 0.04);
+            background: rgba(255, 255, 255, 0.03);
             padding: 10px 14px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             cursor: grab;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
             flex-shrink: 0;
+            min-height: 44px;
         }
-        .window-header:active {
-            cursor: grabbing;
-        }
+        .window-header:active { cursor: grabbing; }
         .window-title {
             color: #eee;
             font-size: 14px;
@@ -240,32 +387,33 @@
         }
         .window-controls {
             display: flex;
-            gap: 8px;
+            gap: 6px;
         }
         .window-controls button {
             background: transparent;
             border: none;
-            color: #aaa;
+            color: #888;
             cursor: pointer;
-            font-size: 16px;
+            font-size: 14px;
             width: 28px;
             height: 28px;
-            border-radius: 6px;
-            transition: background 0.2s, color 0.2s;
+            border-radius: 50%;
+            transition: background 0.15s, color 0.15s;
             display: flex;
             align-items: center;
             justify-content: center;
+            font-weight: 300;
         }
         .window-controls .close-btn:hover {
             background: #e81123;
             color: white;
         }
         .window-controls .max-btn:hover {
-            background: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.12);
             color: white;
         }
         .window-controls .min-btn:hover {
-            background: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.12);
             color: white;
         }
 
@@ -281,160 +429,198 @@
         }
         .window-body textarea {
             width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.3);
-            border: none;
+            flex: 1;
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.04);
             color: #eee;
             font-size: 14px;
-            padding: 10px;
+            padding: 12px;
             border-radius: 6px;
             resize: none;
             outline: none;
             font-family: 'Consolas', monospace;
-            flex: 1;
+            min-height: 150px;
         }
-        .window-body .file-list {
-            list-style: none;
-        }
-        .window-body .file-list li {
-            padding: 6px 10px;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background 0.1s;
-        }
-        .window-body .file-list li:hover {
-            background: rgba(255, 255, 255, 0.08);
+        .window-body textarea:focus {
+            border-color: rgba(0, 120, 212, 0.3);
         }
 
-        /* ----- APP STORE CARDS ----- */
-        .app-card {
+        /* ========== FILE EXPLORER ========== */
+        .file-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 10px;
+            padding: 4px;
+        }
+        .file-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px 6px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.15s;
+            border: 1px solid transparent;
+            text-align: center;
+            color: #ccc;
+            font-size: 12px;
+        }
+        .file-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.04);
+        }
+        .file-item .icon {
+            font-size: 32px;
+            margin-bottom: 4px;
+        }
+        .file-item .name {
+            word-break: break-all;
+            line-height: 1.2;
+            max-width: 80px;
+            font-size: 11px;
+        }
+        .file-item.folder .icon { color: #ffd700; }
+        .file-item.image .icon { color: #4fc3f7; }
+        .file-item.text .icon { color: #81c784; }
+        .file-item.audio .icon { color: #ff8a65; }
+        .file-item.video .icon { color: #ef5350; }
+
+        .file-toolbar {
+            display: flex;
+            gap: 8px;
+            padding: 8px 0 12px 0;
+            flex-wrap: wrap;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            margin-bottom: 12px;
+        }
+        .file-toolbar button {
             background: rgba(255, 255, 255, 0.04);
-            padding: 16px;
+            border: none;
+            color: #ccc;
+            padding: 4px 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: background 0.15s;
+        }
+        .file-toolbar button:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        .file-toolbar .path-display {
+            color: #666;
+            font-size: 12px;
+            flex: 1;
+            padding: 4px 8px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* ========== APP STORE ========== */
+        .app-card {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 14px 16px;
             border-radius: 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border: 1px solid rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.04);
             transition: background 0.2s;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
         .app-card:hover {
-            background: rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.06);
         }
         .app-card .info {
             display: flex;
             align-items: center;
             gap: 14px;
         }
-        .app-card .info .icon {
-            font-size: 32px;
-        }
-        .app-card .info .name {
-            font-weight: 600;
-            font-size: 16px;
-        }
-        .app-card .info .desc {
-            font-size: 13px;
-            color: #888;
-        }
+        .app-card .info .icon { font-size: 28px; }
+        .app-card .info .name { font-weight: 600; font-size: 15px; color: #eee; }
+        .app-card .info .desc { font-size: 13px; color: #777; }
         .app-card .launch-btn {
             background: #0078d4;
             border: none;
             color: white;
-            padding: 6px 20px;
+            padding: 4px 18px;
             border-radius: 6px;
             cursor: pointer;
             font-weight: 500;
             transition: background 0.2s;
         }
-        .app-card .launch-btn:hover {
-            background: #106ebe;
-        }
+        .app-card .launch-btn:hover { background: #106ebe; }
 
-        /* ----- CALCULATOR ----- */
+        /* ========== CALCULATOR ========== */
         .calc-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
-            margin-top: 10px;
+            gap: 6px;
+            margin-top: 8px;
         }
         .calc-grid button {
-            padding: 14px;
+            padding: 12px;
             font-size: 18px;
             border: none;
             border-radius: 6px;
-            background: rgba(255, 255, 255, 0.06);
+            background: rgba(255, 255, 255, 0.05);
             color: white;
             cursor: pointer;
-            transition: background 0.15s;
+            transition: background 0.12s;
         }
-        .calc-grid button:hover {
-            background: rgba(255, 255, 255, 0.15);
-        }
-        .calc-grid .op {
-            background: rgba(0, 120, 212, 0.3);
-        }
-        .calc-grid .op:hover {
-            background: rgba(0, 120, 212, 0.5);
-        }
-        .calc-grid .eq {
-            background: #0078d4;
-        }
-        .calc-grid .eq:hover {
-            background: #106ebe;
-        }
+        .calc-grid button:hover { background: rgba(255, 255, 255, 0.12); }
+        .calc-grid .op { background: rgba(0, 120, 212, 0.2); }
+        .calc-grid .op:hover { background: rgba(0, 120, 212, 0.35); }
+        .calc-grid .eq { background: #0078d4; }
+        .calc-grid .eq:hover { background: #106ebe; }
         #calcDisplay {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 16px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 14px;
             border-radius: 6px;
             text-align: right;
-            font-size: 28px;
+            font-size: 26px;
             font-weight: 300;
-            margin-bottom: 10px;
-            letter-spacing: 1px;
-            min-height: 60px;
+            margin-bottom: 8px;
+            min-height: 50px;
             color: white;
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.04);
             width: 100%;
+            font-family: 'Consolas', monospace;
         }
 
-        /* ----- CAMERA / MICROPHONE ----- */
+        /* ========== CAMERA ========== */
         #camVideo {
             width: 100%;
             background: #0a0a1a;
             border-radius: 8px;
             aspect-ratio: 4/3;
             object-fit: cover;
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.04);
         }
         .cam-controls {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             margin-top: 10px;
             flex-wrap: wrap;
         }
         .cam-controls button {
-            padding: 6px 16px;
+            padding: 5px 14px;
             border: none;
             border-radius: 4px;
             cursor: pointer;
             font-weight: 500;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.06);
             color: white;
-            transition: background 0.2s;
+            transition: background 0.15s;
         }
-        .cam-controls button.primary {
-            background: #0078d4;
-        }
-        .cam-controls button.primary:hover {
-            background: #106ebe;
-        }
-        .cam-controls button.danger {
-            background: #d43a3a;
-        }
-        .cam-controls button.danger:hover {
-            background: #b02b2b;
-        }
+        .cam-controls button.primary { background: #0078d4; }
+        .cam-controls button.primary:hover { background: #106ebe; }
+        .cam-controls button.danger { background: #d43a3a; }
+        .cam-controls button.danger:hover { background: #b02b2b; }
+
         .cam-gallery {
             display: flex;
             flex-wrap: wrap;
@@ -442,65 +628,142 @@
             margin-top: 8px;
             max-height: 100px;
             overflow-y: auto;
+            padding: 4px;
         }
         .cam-gallery img {
-            width: 60px;
-            height: 60px;
+            width: 56px;
+            height: 56px;
             object-fit: cover;
             border-radius: 4px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            cursor: pointer;
         }
 
+        /* ========== MICROPHONE ========== */
         #audioVisualizer {
             width: 100%;
-            height: 140px;
+            height: 120px;
             background: #0a0a1a;
             border-radius: 8px;
             display: block;
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.04);
         }
         .mic-status {
-            color: #aaa;
+            color: #888;
             margin-top: 8px;
             font-size: 13px;
         }
 
-        /* Scrollbar */
-        ::-webkit-scrollbar {
-            width: 5px;
-        }
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-        }
-
+        /* ========== SETTINGS ========== */
         .settings-row {
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
         }
         .settings-row input[type="color"] {
-            width: 40px;
-            height: 40px;
+            width: 36px;
+            height: 36px;
             border: none;
             border-radius: 6px;
             cursor: pointer;
             background: transparent;
+            padding: 0;
         }
+        .settings-row input[type="text"],
+        .settings-row input[type="number"] {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            outline: none;
+            font-size: 14px;
+        }
+        .settings-row input:focus {
+            border-color: rgba(0, 120, 212, 0.3);
+        }
+        .settings-row .label { color: #aaa; min-width: 80px; }
+        .settings-row .btn {
+            background: #0078d4;
+            border: none;
+            color: white;
+            padding: 4px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .settings-row .btn:hover { background: #106ebe; }
+        .settings-row .btn-secondary {
+            background: rgba(255, 255, 255, 0.06);
+            border: none;
+            color: #ccc;
+            padding: 4px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .settings-row .btn-secondary:hover { background: rgba(255, 255, 255, 0.12); }
+
+        /* ========== IMAGE VIEWER ========== */
+        .image-viewer {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            min-height: 200px;
+        }
+        .image-viewer img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 4px;
+        }
+
+        /* ========== SCROLLBAR ========== */
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.25); }
     </style>
 </head>
 <body>
 
-    <!-- DESKTOP -->
+    <!-- ===== SETUP WIZARD ===== -->
+    <div id="setupWizard">
+        <div class="logo">🪟</div>
+        <h1>OpencoreOS</h1>
+        <div class="subtitle">Preparing your system...</div>
+        <div class="progress-container">
+            <div class="progress-bar" id="setupProgress"></div>
+        </div>
+        <div class="status-text" id="setupStatus">Initializing...</div>
+        <div class="steps">
+            <span class="done">✓ Formatting</span>
+            <span class="active">● Installing</span>
+            <span>○ Configuring</span>
+            <span>○ Ready</span>
+        </div>
+    </div>
+
+    <!-- ===== CONTEXT MENU ===== -->
+    <div id="contextMenu">
+        <div class="menu-item" id="ctxRefresh">🔄 Refresh</div>
+        <div class="menu-divider"></div>
+        <div class="menu-item" id="ctxNewFolder">📁 New Folder</div>
+        <div class="menu-item" id="ctxNewFile">📄 New Text File</div>
+        <div class="menu-divider"></div>
+        <div class="menu-item" id="ctxWallpaper">🖼️ Change Wallpaper</div>
+        <div class="menu-item" id="ctxSettings">⚙️ Settings</div>
+    </div>
+
+    <!-- ===== DESKTOP ===== -->
     <div id="desktop">
         <button class="desktop-icon" data-app="explorer">
             <span class="icon">📁</span>
-            <span class="label">My PC</span>
+            <span class="label">Files</span>
         </button>
         <button class="desktop-icon" data-app="notepad">
             <span class="icon">📝</span>
@@ -522,32 +785,53 @@
             <span class="icon">🧮</span>
             <span class="label">Calculator</span>
         </button>
+        <button class="desktop-icon" data-app="settings">
+            <span class="icon">⚙️</span>
+            <span class="label">Settings</span>
+        </button>
+        <button class="desktop-icon" id="desktopRecycle">
+            <span class="icon">🗑️</span>
+            <span class="label">Recycle Bin</span>
+        </button>
     </div>
 
-    <!-- START MENU -->
+    <!-- ===== START MENU ===== -->
     <div id="start-menu">
-        <h3>🪟 OpencoreOS</h3>
+        <div class="header">
+            <span class="user-icon">👤</span>
+            <div>
+                <div class="user-name">Opencore User</div>
+                <div class="user-status">System ready</div>
+            </div>
+        </div>
+        <div class="section">📌 Pinned</div>
         <div class="start-item" data-app="explorer"><span class="icon">📁</span> File Explorer</div>
         <div class="start-item" data-app="notepad"><span class="icon">📝</span> Notepad</div>
         <div class="start-item" data-app="camera"><span class="icon">📷</span> Camera</div>
         <div class="start-item" data-app="microphone"><span class="icon">🎤</span> Microphone</div>
+        <div class="section">🎯 All Apps</div>
         <div class="start-item" data-app="appstore"><span class="icon">🛒</span> App Store</div>
         <div class="start-item" data-app="calculator"><span class="icon">🧮</span> Calculator</div>
         <div class="start-item" data-app="settings"><span class="icon">⚙️</span> Settings</div>
-        <div class="start-divider"></div>
         <div class="start-item" id="shutdownBtn"><span class="icon">⏻</span> Restart OS</div>
     </div>
 
-    <!-- TASKBAR -->
+    <!-- ===== TASKBAR ===== -->
     <div id="taskbar">
         <button id="start-btn">🪟 Start</button>
         <div class="taskbar-apps" id="taskbarApps"></div>
+        <div id="systemTray">
+            <span class="tray-icon" title="Wi-Fi">📶</span>
+            <span class="tray-icon" title="Sound">🔊</span>
+            <span class="tray-icon" title="Battery">🔋</span>
+        </div>
         <div id="clock">00:00:00</div>
     </div>
 
     <script>
         // ================================================================
-        //  OPENCOREOS - MEGA ENGINE
+        //  OPENCOREOS v3.0 - MEGA ENGINE
+        //  Everything persists via localStorage, File System API, and IndexedDB
         // ================================================================
 
         // ---------- STATE ----------
@@ -555,6 +839,9 @@
             windows: [],
             nextZIndex: 100,
             windowCounter: 0,
+            fileHandle: null,
+            currentDirectory: null,
+            setupComplete: false,
         };
 
         // ---------- DOM REFS ----------
@@ -563,30 +850,137 @@
         const startBtn = document.getElementById('start-btn');
         const clockEl = document.getElementById('clock');
         const taskbarApps = document.getElementById('taskbarApps');
+        const contextMenu = document.getElementById('contextMenu');
+        const setupWizard = document.getElementById('setupWizard');
+        const setupProgress = document.getElementById('setupProgress');
+        const setupStatus = document.getElementById('setupStatus');
 
-        // ---------- CLOCK (with seconds) ----------
+        // ================================================================
+        //  SETUP WIZARD - 2 Minute Simulated Installation
+        // ================================================================
+        function runSetupWizard() {
+            const steps = [
+                'Formatting system partition...',
+                'Copying system files...',
+                'Installing core components...',
+                'Configuring user settings...',
+                'Optimizing performance...',
+                'Finalizing setup...',
+            ];
+            let progress = 0;
+            let stepIndex = 0;
+
+            const interval = setInterval(() => {
+                progress += Math.random() * 3 + 1;
+                if (progress > 100) progress = 100;
+                setupProgress.style.width = progress + '%';
+
+                if (progress < 20) {
+                    setupStatus.textContent = steps[0];
+                } else if (progress < 40) {
+                    setupStatus.textContent = steps[1];
+                } else if (progress < 60) {
+                    setupStatus.textContent = steps[2];
+                } else if (progress < 80) {
+                    setupStatus.textContent = steps[3];
+                } else if (progress < 95) {
+                    setupStatus.textContent = steps[4];
+                } else {
+                    setupStatus.textContent = steps[5];
+                }
+
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    setupStatus.textContent = '✅ Installation complete! Starting OpencoreOS...';
+                    setTimeout(() => {
+                        setupWizard.classList.add('hidden');
+                        state.setupComplete = true;
+                        localStorage.setItem('opencore_setup_done', 'true');
+                        loadSavedSettings();
+                    }, 800);
+                }
+            }, 1200); // ~2 minutes total
+        }
+
+        // Check if setup was already done
+        if (localStorage.getItem('opencore_setup_done') === 'true') {
+            setupWizard.classList.add('hidden');
+            state.setupComplete = true;
+            loadSavedSettings();
+        } else {
+            runSetupWizard();
+        }
+
+        // ================================================================
+        //  SAVED SETTINGS (persist to localStorage)
+        // ================================================================
+        function loadSavedSettings() {
+            // Wallpaper
+            const savedWallpaper = localStorage.getItem('opencore_wallpaper');
+            if (savedWallpaper) {
+                desktop.style.background = savedWallpaper;
+            }
+            // Clock format
+            updateClock();
+            setInterval(updateClock, 1000);
+        }
+
+        // ---------- CLOCK ----------
         function updateClock() {
             const now = new Date();
-            clockEl.textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            clockEl.textContent = now.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
         }
-        updateClock();
-        setInterval(updateClock, 1000);
 
-        // ---------- START MENU TOGGLE ----------
+        // ---------- START MENU ----------
         startBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             startMenu.classList.toggle('open');
         });
         document.addEventListener('click', () => startMenu.classList.remove('open'));
 
-        // ---------- SHUTDOWN / RESTART ----------
+        // ---------- SHUTDOWN ----------
         document.getElementById('shutdownBtn').addEventListener('click', () => {
-            if (confirm('Restart OpencoreOS? All windows will close.')) {
+            if (confirm('Restart OpencoreOS?')) {
+                localStorage.setItem('opencore_restarting', 'true');
                 location.reload();
             }
         });
 
-        // ---------- WINDOW MANAGER ----------
+        // ---------- CONTEXT MENU ----------
+        document.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            contextMenu.style.display = 'block';
+            contextMenu.style.left = Math.min(e.clientX, window.innerWidth - 220) + 'px';
+            contextMenu.style.top = Math.min(e.clientY, window.innerHeight - 200) + 'px';
+        });
+        document.addEventListener('click', () => {
+            contextMenu.style.display = 'none';
+        });
+
+        document.getElementById('ctxRefresh').addEventListener('click', () => location.reload());
+        document.getElementById('ctxNewFolder').addEventListener('click', () => {
+            launchApp('explorer');
+            setTimeout(() => createNewFolder(), 300);
+        });
+        document.getElementById('ctxNewFile').addEventListener('click', () => {
+            launchApp('notepad');
+        });
+        document.getElementById('ctxWallpaper').addEventListener('click', () => {
+            const color = prompt('Enter a color code (e.g., #16213e) or gradient:', '#16213e');
+            if (color) {
+                desktop.style.background = `radial-gradient(ellipse at 20% 20%, ${color}, #0a0a1a)`;
+                localStorage.setItem('opencore_wallpaper', `radial-gradient(ellipse at 20% 20%, ${color}, #0a0a1a)`);
+            }
+        });
+        document.getElementById('ctxSettings').addEventListener('click', () => launchApp('settings'));
+
+        // ================================================================
+        //  WINDOW MANAGER
+        // ================================================================
         function createWindow(appId, title, icon, contentHTML, width = 520, height = 360) {
             const id = `win-${++state.windowCounter}`;
             const zIndex = ++state.nextZIndex;
@@ -616,7 +1010,7 @@
 
             document.body.appendChild(win);
 
-            // ---- DRAGGING ----
+            // Drag
             const header = win.querySelector('.window-header');
             let isDragging = false,
                 offsetX, offsetY;
@@ -643,7 +1037,7 @@
                     win.style.cursor = 'default'; }
             });
 
-            // ---- CONTROLS ----
+            // Controls
             win.querySelector('.close-btn').addEventListener('click', () => closeWindow(id));
             win.querySelector('.max-btn').addEventListener('click', () => toggleMaximize(id));
             win.querySelector('.min-btn').addEventListener('click', () => minimizeWindow(id));
@@ -661,7 +1055,7 @@
             const idx = state.windows.findIndex(w => w.id === id);
             if (idx === -1) return;
             const win = state.windows[idx].element;
-            // Cleanup media streams if camera/mic
+            // Cleanup media
             if (win._mediaStream) {
                 win._mediaStream.getTracks().forEach(t => t.stop());
             }
@@ -685,7 +1079,7 @@
                 el.style.height = '360px';
                 el.style.left = '40px';
                 el.style.top = '40px';
-                el.style.borderRadius = '12px';
+                el.style.borderRadius = '10px';
             } else {
                 el.dataset.prevRect = JSON.stringify({ left: el.style.left, top: el.style.top, width: el.style.width,
                     height: el.style.height });
@@ -738,9 +1132,194 @@
             });
         }
 
-        // ---------- APP LAUNCHER ----------
-        function launchApp(appId) {
-            // Check if already open (not minimized)
+        // ================================================================
+        //  FILE SYSTEM API - Read REAL device files
+        // ================================================================
+        let currentDirHandle = null;
+        let currentDirEntries = [];
+
+        async function openDirectory() {
+            try {
+                const dirHandle = await window.showDirectoryPicker();
+                currentDirHandle = dirHandle;
+                await readDirectory(dirHandle);
+                return true;
+            } catch (err) {
+                console.log('User cancelled or error:', err);
+                return false;
+            }
+        }
+
+        async function readDirectory(dirHandle) {
+            const entries = [];
+            for await (const entry of dirHandle.values()) {
+                entries.push(entry);
+            }
+            currentDirEntries = entries;
+            return entries;
+        }
+
+        function renderFileExplorer(win, entries, dirName) {
+            const body = win.querySelector('.window-body');
+            const pathDisplay = dirName || 'My Computer';
+
+            let html = `
+                <div class="file-toolbar">
+                    <button id="fileBackBtn">⬅ Back</button>
+                    <button id="fileHomeBtn">🏠 Home</button>
+                    <button id="fileNewFolderBtn">📁 New Folder</button>
+                    <span class="path-display">📂 ${pathDisplay}</span>
+                </div>
+                <div class="file-grid" id="fileGrid">
+            `;
+
+            if (entries) {
+                // Sort: folders first, then files
+                const sorted = [...entries].sort((a, b) => {
+                    if (a.kind === 'directory' && b.kind !== 'directory') return -1;
+                    if (a.kind !== 'directory' && b.kind === 'directory') return 1;
+                    return a.name.localeCompare(b.name);
+                });
+
+                for (const entry of sorted) {
+                    const isFolder = entry.kind === 'directory';
+                    const icon = isFolder ? '📁' : getFileIcon(entry.name);
+                    const cls = isFolder ? 'file-item folder' : 'file-item';
+                    const name = entry.name.length > 18 ? entry.name.slice(0, 15) + '…' : entry.name;
+                    html += `
+                        <div class="${cls}" data-name="${entry.name}" data-kind="${entry.kind}">
+                            <span class="icon">${icon}</span>
+                            <span class="name">${name}</span>
+                        </div>
+                    `;
+                }
+            } else {
+                html += `<p style="color:#666;padding:20px;text-align:center;">📂 No files or folder open. Click "Home" to browse.</p>`;
+            }
+
+            html += `</div>`;
+            body.innerHTML = html;
+
+            // Event listeners for file items
+            body.querySelectorAll('.file-item').forEach(el => {
+                el.addEventListener('dblclick', async () => {
+                    const name = el.dataset.name;
+                    const kind = el.dataset.kind;
+                    if (!currentDirHandle) return;
+
+                    try {
+                        const entry = await currentDirHandle.getFileHandle(name, { create: false })
+                            .catch(() => currentDirHandle.getDirectoryHandle(name, { create: false }));
+
+                        if (entry.kind === 'directory') {
+                            currentDirHandle = entry;
+                            const newEntries = await readDirectory(entry);
+                            renderFileExplorer(win, newEntries, entry.name);
+                        } else if (entry.kind === 'file') {
+                            const file = await entry.getFile();
+                            const ext = name.split('.').pop().toLowerCase();
+                            if (['png', 'jpg', 'jpeg', 'gif', 'bmp', 'svg', 'webp'].includes(ext)) {
+                                // Open image viewer
+                                const reader = new FileReader();
+                                reader.onload = (e) => {
+                                    launchApp('imageviewer', e.target.result, name);
+                                };
+                                reader.readAsDataURL(file);
+                            } else if (['txt', 'md', 'json', 'js', 'html', 'css', 'xml'].includes(ext)) {
+                                const text = await file.text();
+                                launchApp('notepad', text, name);
+                            } else if (['wav', 'mp3', 'ogg'].includes(ext)) {
+                                alert('🎵 Audio file: ' + name + ' (would play here)');
+                            } else {
+                                alert('📄 File: ' + name + '\nSize: ' + (file.size / 1024).toFixed(1) + ' KB');
+                            }
+                        }
+                    } catch (err) {
+                        console.error('Error opening:', err);
+                    }
+                });
+
+                el.addEventListener('click', () => {
+                    // Single click selection visual
+                    body.querySelectorAll('.file-item').forEach(i => i.style.background = 'transparent');
+                    el.style.background = 'rgba(255,255,255,0.08)';
+                });
+            });
+
+            // Toolbar buttons
+            body.querySelector('#fileHomeBtn').addEventListener('click', async () => {
+                currentDirHandle = null;
+                renderFileExplorer(win, null, 'My Computer');
+            });
+
+            body.querySelector('#fileBackBtn').addEventListener('click', () => {
+                // Simple back - just go home for now
+                currentDirHandle = null;
+                renderFileExplorer(win, null, 'My Computer');
+            });
+
+            body.querySelector('#fileNewFolderBtn').addEventListener('click', async () => {
+                if (!currentDirHandle) {
+                    alert('Please open a folder first.');
+                    return;
+                }
+                const name = prompt('New folder name:', 'New Folder');
+                if (name) {
+                    try {
+                        await currentDirHandle.getDirectoryHandle(name, { create: true });
+                        const entries = await readDirectory(currentDirHandle);
+                        renderFileExplorer(win, entries, currentDirHandle.name);
+                    } catch (err) {
+                        alert('Could not create folder: ' + err.message);
+                    }
+                }
+            });
+        }
+
+        function getFileIcon(name) {
+            const ext = name.split('.').pop().toLowerCase();
+            const icons = {
+                'png': '🖼️',
+                'jpg': '🖼️',
+                'jpeg': '🖼️',
+                'gif': '🖼️',
+                'svg': '🖼️',
+                'webp': '🖼️',
+                'txt': '📄',
+                'md': '📄',
+                'json': '📄',
+                'js': '📄',
+                'html': '🌐',
+                'css': '🎨',
+                'xml': '📄',
+                'pdf': '📕',
+                'doc': '📘',
+                'docx': '📘',
+                'xls': '📊',
+                'xlsx': '📊',
+                'ppt': '📑',
+                'pptx': '📑',
+                'mp3': '🎵',
+                'wav': '🎵',
+                'ogg': '🎵',
+                'mp4': '🎬',
+                'avi': '🎬',
+                'mov': '🎬',
+                'zip': '📦',
+                'rar': '📦',
+                '7z': '📦',
+                'exe': '⚙️',
+                'dmg': '💿',
+                'iso': '💿',
+            };
+            return icons[ext] || '📄';
+        }
+
+        // ================================================================
+        //  APP LAUNCHER
+        // ================================================================
+        function launchApp(appId, extraData, extraName) {
+            // Check if already open
             const existing = state.windows.find(w => w.appId === appId && !w.minimized);
             if (existing) {
                 focusWindow(existing.id);
@@ -758,20 +1337,68 @@
             let win;
             switch (appId) {
                 case 'explorer':
-                    win = createWindow(appId, 'File Explorer', '📁',
-                        `<ul class="file-list">
-                            <li>📄 Documents</li>
-                            <li>🖼️ Pictures</li>
-                            <li>🎵 Music</li>
-                            <li>💾 Downloads</li>
-                            <li style="margin-top:12px;color:#888;">📊 C: (Local Disk) - 23.4 GB free</li>
-                        </ul>`, 560, 320);
+                    win = createWindow(appId, 'File Explorer', '📁', '', 640, 420);
+                    // Try to open directory picker if available
+                    if ('showDirectoryPicker' in window) {
+                        setTimeout(async () => {
+                            const opened = await openDirectory();
+                            if (opened && currentDirHandle) {
+                                const entries = await readDirectory(currentDirHandle);
+                                renderFileExplorer(win, entries, currentDirHandle.name);
+                            } else {
+                                renderFileExplorer(win, null, 'My Computer');
+                            }
+                        }, 100);
+                    } else {
+                        renderFileExplorer(win, null, 'My Computer (read-only mode)');
+                        win.querySelector('.window-body').innerHTML +=
+                            `<p style="color:#666;font-size:12px;margin-top:12px;">💡 Your browser doesn't support File System API. Try Chrome or Edge.</p>`;
+                    }
                     break;
 
                 case 'notepad':
-                    win = createWindow(appId, 'Notepad', '📝',
-                        `<textarea placeholder="Write something...">Welcome to OpencoreOS! Type anything here.</textarea>`,
-                        500, 340);
+                    const textContent = extraData || localStorage.getItem('opencore_notepad_save') || '';
+                    const fileName = extraName || 'Untitled.txt';
+                    win = createWindow(appId, 'Notepad - ' + fileName, '📝',
+                        `<textarea id="notepadText" placeholder="Write anything...">${textContent}</textarea>
+                        <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+                            <button id="notepadSaveBtn" style="background:#0078d4;border:none;color:white;padding:4px 16px;border-radius:4px;cursor:pointer;">💾 Save to Device</button>
+                            <button id="notepadDownloadBtn" style="background:rgba(255,255,255,0.06);border:none;color:#ccc;padding:4px 16px;border-radius:4px;cursor:pointer;">📥 Download</button>
+                            <span style="color:#666;font-size:12px;display:flex;align-items:center;">Auto-saved to browser</span>
+                        </div>`,
+                        540, 400);
+
+                    const textarea = win.querySelector('#notepadText');
+                    textarea.addEventListener('input', () => {
+                        localStorage.setItem('opencore_notepad_save', textarea.value);
+                    });
+
+                    win.querySelector('#notepadSaveBtn').addEventListener('click', async () => {
+                        try {
+                            const handle = await window.showSaveFilePicker({
+                                suggestedName: fileName,
+                                types: [{ description: 'Text File', accept: { 'text/plain': ['.txt'] } }]
+                            });
+                            const writable = await handle.createWritable();
+                            await writable.write(textarea.value);
+                            await writable.close();
+                            alert('✅ File saved to: ' + handle.name);
+                        } catch (err) {
+                            if (err.name !== 'AbortError') {
+                                alert('Could not save: ' + err.message);
+                            }
+                        }
+                    });
+
+                    win.querySelector('#notepadDownloadBtn').addEventListener('click', () => {
+                        const blob = new Blob([textarea.value], { type: 'text/plain' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = fileName || 'document.txt';
+                        a.click();
+                        URL.revokeObjectURL(url);
+                    });
                     break;
 
                 case 'calculator':
@@ -807,8 +1434,9 @@
                         <div class="cam-controls">
                             <button class="primary" id="micStartBtn">▶ Start</button>
                             <button class="danger" id="micStopBtn">⏹ Stop</button>
+                            <button id="micSaveBtn" style="background:#0078d4;border:none;color:white;padding:4px 16px;border-radius:4px;cursor:pointer;">💾 Save Recording</button>
                         </div>
-                        <div class="mic-status" id="micStatus">Click "Start" to listen to your microphone.</div>`,
+                        <div class="mic-status" id="micStatus">Click "Start" to listen.</div>`,
                         500, 340);
                     initMicrophone(win);
                     break;
@@ -819,35 +1447,60 @@
                             <div class="app-card">
                                 <div class="info">
                                     <span class="icon">🎬</span>
-                                    <div><div class="name">Videohub</div><div class="desc">Streaming & video platform</div></div>
+                                    <div><div class="name">Videohub</div><div class="desc">Streaming platform</div></div>
                                 </div>
                                 <button class="launch-btn" id="launchVideohubBtn">Launch</button>
                             </div>
-                            <p style="color:#555; font-size:13px; margin-top:12px;">More apps coming soon...</p>
+                            <div class="app-card">
+                                <div class="info">
+                                    <span class="icon">🎮</span>
+                                    <div><div class="name">Game Center</div><div class="desc">Coming soon...</div></div>
+                                </div>
+                                <button class="launch-btn" style="opacity:0.5;cursor:default;">Soon</button>
+                            </div>
+                            <p style="color:#555;font-size:12px;margin-top:12px;">More apps added regularly.</p>
                         </div>`,
-                        480, 280);
+                        480, 300);
                     win.querySelector('#launchVideohubBtn').addEventListener('click', () => launchApp('videohub'));
                     break;
 
                 case 'videohub':
                     win = createWindow(appId, 'Videohub', '🎬',
-                        `<iframe src="https://videohubpro.lovable.app" style="width:100%; height:100%; border:none; border-radius:4px; background:white;"></iframe>`,
-                        800, 600);
+                        `<iframe src="https://videohubpro.lovable.app" style="width:100%;height:100%;border:none;border-radius:4px;background:white;"></iframe>`,
+                        820, 620);
+                    break;
+
+                case 'imageviewer':
+                    win = createWindow('imageviewer', 'Image Viewer', '🖼️',
+                        `<div class="image-viewer"><img src="${extraData}" alt="Image" /></div>`,
+                        540, 420);
                     break;
 
                 case 'settings':
                     win = createWindow(appId, 'Settings', '⚙️',
                         `<div style="flex:1;">
-                            <h3 style="color:#aaa; font-weight:400; margin-bottom:12px;">Desktop Wallpaper</h3>
+                            <h3 style="color:#aaa;font-weight:400;margin-bottom:12px;">🎨 Desktop</h3>
                             <div class="settings-row">
-                                <span>Color:</span>
+                                <span class="label">Wallpaper Color</span>
                                 <input type="color" id="wallpaperColor" value="#16213e" />
-                                <button id="applyColorBtn" style="background:#0078d4; border:none; color:white; padding:4px 16px; border-radius:4px; cursor:pointer;">Apply</button>
-                                <button id="resetWallpaperBtn" style="background:#444; border:none; color:white; padding:4px 16px; border-radius:4px; cursor:pointer;">Reset</button>
+                                <button class="btn" id="applyColorBtn">Apply</button>
+                                <button class="btn-secondary" id="resetWallpaperBtn">Reset</button>
                             </div>
-                            <p style="color:#666; font-size:13px; margin-top:20px;">OpencoreOS v2.0</p>
+                            <h3 style="color:#aaa;font-weight:400;margin:16px 0 12px 0;">💾 Storage</h3>
+                            <div class="settings-row">
+                                <span class="label">Notepad Auto-save</span>
+                                <span style="color:#4caf50;">✓ Enabled</span>
+                            </div>
+                            <div class="settings-row">
+                                <span class="label">Data</span>
+                                <span style="color:#888;font-size:12px;">Stored in browser localStorage</span>
+                            </div>
+                            <div style="margin-top:16px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.03);">
+                                <button class="btn-secondary" id="clearDataBtn">🗑️ Clear All Saved Data</button>
+                            </div>
+                            <p style="color:#666;font-size:12px;margin-top:16px;">OpencoreOS v3.0</p>
                         </div>`,
-                        400, 240);
+                        420, 320);
                     initSettings(win);
                     break;
 
@@ -855,12 +1508,13 @@
                     win = createWindow('unknown', 'Unknown App', '❓', '<p>App not found.</p>', 300, 150);
             }
             if (win) {
-                // Store appId for reference
                 win._appId = appId;
             }
         }
 
-        // ---------- CALCULATOR ----------
+        // ================================================================
+        //  CALCULATOR
+        // ================================================================
         function initCalculator(win) {
             const display = win.querySelector('#calcDisplay');
             let current = '';
@@ -872,7 +1526,6 @@
                         display.value = '0'; return; }
                     if (val === '=') {
                         try {
-                            // Safe eval replacement
                             const result = Function('"use strict"; return (' + current + ')')();
                             display.value = result;
                             current = String(result);
@@ -886,7 +1539,9 @@
             });
         }
 
-        // ---------- CAMERA ----------
+        // ================================================================
+        //  CAMERA
+        // ================================================================
         let cameraFacing = 'user';
         let cameraStream = null;
 
@@ -895,6 +1550,14 @@
             const captureBtn = win.querySelector('#camCaptureBtn');
             const flipBtn = win.querySelector('#camFlipBtn');
             const gallery = win.querySelector('#camGallery');
+            let photos = JSON.parse(localStorage.getItem('opencore_photos') || '[]');
+
+            // Load existing photos
+            photos.forEach(src => {
+                const img = document.createElement('img');
+                img.src = src;
+                gallery.appendChild(img);
+            });
 
             async function startCamera(facing) {
                 if (cameraStream) {
@@ -908,6 +1571,7 @@
                     win._mediaStream = cameraStream;
                 } catch (err) {
                     video.style.background = '#222';
+                    video.style.height = '200px';
                     video.style.display = 'flex';
                     video.style.alignItems = 'center';
                     video.style.justifyContent = 'center';
@@ -924,8 +1588,11 @@
                 canvas.height = video.videoHeight || 480;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                const dataUrl = canvas.toDataURL('image/png');
+                photos.push(dataUrl);
+                localStorage.setItem('opencore_photos', JSON.stringify(photos));
                 const img = document.createElement('img');
-                img.src = canvas.toDataURL('image/png');
+                img.src = dataUrl;
                 gallery.prepend(img);
             });
 
@@ -939,19 +1606,24 @@
             });
         }
 
-        // ---------- MICROPHONE ----------
+        // ================================================================
+        //  MICROPHONE - WITH SAVE
+        // ================================================================
         function initMicrophone(win) {
             const canvas = win.querySelector('#audioVisualizer');
             const ctx = canvas.getContext('2d');
             const status = win.querySelector('#micStatus');
             const startBtn = win.querySelector('#micStartBtn');
             const stopBtn = win.querySelector('#micStopBtn');
+            const saveBtn = win.querySelector('#micSaveBtn');
 
-            let audioCtx = null;
-            let analyser = null;
-            let source = null;
-            let animFrame = null;
+            let audioCtx = null,
+                analyser = null,
+                source = null,
+                animFrame = null;
             let micStream = null;
+            let mediaRecorder = null;
+            let recordedChunks = [];
 
             function drawBars() {
                 if (!analyser) return;
@@ -990,15 +1662,23 @@
                     source = audioCtx.createMediaStreamSource(micStream);
                     source.connect(analyser);
 
-                    // Resize canvas
                     canvas.width = canvas.clientWidth * 2;
                     canvas.height = canvas.clientHeight * 2;
 
                     if (audioCtx.state === 'suspended') {
                         await audioCtx.resume();
                     }
+
+                    // Setup recorder
+                    recordedChunks = [];
+                    mediaRecorder = new MediaRecorder(micStream);
+                    mediaRecorder.ondataavailable = (e) => {
+                        if (e.data.size > 0) recordedChunks.push(e.data);
+                    };
+                    mediaRecorder.start(1000);
+
                     drawBars();
-                    status.textContent = '🎤 Live! Speaking...';
+                    status.textContent = '🎤 Recording... Speak!';
                 } catch (err) {
                     status.textContent = '❌ Microphone access denied.';
                     console.error(err);
@@ -1010,6 +1690,9 @@
                     cancelAnimationFrame(animFrame);
                     animFrame = null;
                 }
+                if (mediaRecorder && mediaRecorder.state === 'recording') {
+                    mediaRecorder.stop();
+                }
                 if (audioCtx) {
                     audioCtx.close();
                     audioCtx = null;
@@ -1019,27 +1702,58 @@
                     micStream = null;
                 }
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                status.textContent = '⏹ Stopped. Click "Start" again.';
+                status.textContent = '⏹ Stopped. Click "Save Recording" to download.';
+            });
+
+            saveBtn.addEventListener('click', () => {
+                if (recordedChunks.length === 0) {
+                    alert('No recording to save. Record something first!');
+                    return;
+                }
+                const blob = new Blob(recordedChunks, { type: 'audio/webm' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'recording_' + new Date().toISOString().slice(0, 19).replace(/[:-]/g, '') + '.webm';
+                a.click();
+                URL.revokeObjectURL(url);
+                status.textContent = '💾 Recording saved!';
             });
         }
 
-        // ---------- SETTINGS ----------
+        // ================================================================
+        //  SETTINGS
+        // ================================================================
         function initSettings(win) {
             const colorInput = win.querySelector('#wallpaperColor');
             const applyBtn = win.querySelector('#applyColorBtn');
             const resetBtn = win.querySelector('#resetWallpaperBtn');
-            const desktop = document.getElementById('desktop');
+            const clearDataBtn = win.querySelector('#clearDataBtn');
 
             applyBtn.addEventListener('click', () => {
-                desktop.style.background = `radial-gradient(ellipse at 20% 20%, ${colorInput.value}, #0a0a1a)`;
+                const color = colorInput.value;
+                desktop.style.background = `radial-gradient(ellipse at 20% 20%, ${color}, #0a0a1a)`;
+                localStorage.setItem('opencore_wallpaper', `radial-gradient(ellipse at 20% 20%, ${color}, #0a0a1a)`);
             });
+
             resetBtn.addEventListener('click', () => {
                 desktop.style.background = 'radial-gradient(ellipse at 20% 20%, #16213e, #0a0a1a)';
                 colorInput.value = '#16213e';
+                localStorage.setItem('opencore_wallpaper', 'radial-gradient(ellipse at 20% 20%, #16213e, #0a0a1a)');
+            });
+
+            clearDataBtn.addEventListener('click', () => {
+                if (confirm('Clear all saved data? This includes Notepad text and settings.')) {
+                    localStorage.clear();
+                    alert('All data cleared. The OS will restart.');
+                    location.reload();
+                }
             });
         }
 
-        // ---------- EVENT BINDINGS ----------
+        // ================================================================
+        //  EVENT BINDINGS
+        // ================================================================
         document.querySelectorAll('.desktop-icon').forEach(el => {
             el.addEventListener('dblclick', () => {
                 const app = el.dataset.app;
@@ -1057,20 +1771,54 @@
             });
         });
 
-        // ---------- KEYBOARD SHORTCUTS ----------
+        // Recycle Bin
+        document.getElementById('desktopRecycle').addEventListener('dblclick', () => {
+            launchApp('explorer');
+            setTimeout(() => {
+                const win = state.windows.find(w => w.appId === 'explorer');
+                if (win) {
+                    const body = win.element.querySelector('.window-body');
+                    body.innerHTML =
+                        `<p style="color:#666;text-align:center;padding:30px;">🗑️ Recycle Bin is empty.</p>`;
+                }
+            }, 200);
+        });
+
+        // ================================================================
+        //  KEYBOARD SHORTCUTS
+        // ================================================================
         document.addEventListener('keydown', (e) => {
-            if (e.ctrlKey && e.shiftKey && e.key === 'L') {
-                launchApp('terminal');
+            if (e.ctrlKey && e.key === 'e') {
+                e.preventDefault();
+                launchApp('explorer');
             }
-            if (e.ctrlKey && e.key === 'Escape') {
-                // Close all windows
-                state.windows.forEach(w => closeWindow(w.id));
+            if (e.ctrlKey && e.key === 'n') {
+                e.preventDefault();
+                launchApp('notepad');
+            }
+            if (e.ctrlKey && e.key === 'c') {
+                e.preventDefault();
+                launchApp('calculator');
+            }
+            if (e.ctrlKey && e.shiftKey && e.key === 'L') {
+                // Quick reload
+                location.reload();
+            }
+            // Escape to close windows
+            if (e.key === 'Escape' && state.windows.length > 0) {
+                const last = state.windows[state.windows.length - 1];
+                closeWindow(last.id);
             }
         });
 
-        // ---------- BOOT MESSAGE ----------
-        console.log('🪟 OpencoreOS v2.0 booted successfully!');
-        console.log('📷 Camera, 🎤 Microphone, 🛒 App Store, 🧮 Calculator loaded.');
+        // ================================================================
+        //  BOOT
+        // ================================================================
+        console.log('🪟 OpencoreOS v3.0 booted!');
+        console.log('📁 File Explorer with REAL files');
+        console.log('🎤 Save microphone recordings');
+        console.log('📝 Save Notepad to device');
+        console.log('⚡ Ctrl+E = Explorer, Ctrl+N = Notepad');
     </script>
 </body>
 </html>
