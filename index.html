@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OpencoreOS</title>
+    <style>
+        /* ----- RESET & BASE ----- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            user-select: none;
+        }
+        body {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background: #1a1a2e;
+        }
+
+        /* ----- DESKTOP ----- */
+        #desktop {
+            width: 100%;
+            height: calc(100% - 50px); /* leave room for taskbar */
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            flex-wrap: wrap;
+            align-content: flex-start;
+            gap: 20px;
+            background: radial-gradient(ellipse at 20% 20%, #16213e, #0a0a1a);
+        }
+
+        .desktop-icon {
+            width: 80px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            color: white;
+            font-size: 13px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: background 0.2s;
+            background: transparent;
+            border: none;
+        }
+        .desktop-icon:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+        .desktop-icon .icon {
+            font-size: 42px;
+            margin-bottom: 6px;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
+        }
+        .desktop-icon .label {
+            text-shadow: 0 1px 6px rgba(0,0,0,0.9);
+            word-wrap: break-word;
+            line-height: 1.2;
+        }
+
+        /* ----- TASKBAR ----- */
+        #taskbar {
+            height: 50px;
+            background: rgba(20, 20, 40, 0.85);
+            backdrop-filter: blur(16px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            gap: 8px;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 9999;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
+        }
+
+        #start-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            padding: 6px 16px;
+            border-radius: 6px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.2s;
+            height: 36px;
+        }
+        #start-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .taskbar-apps {
+            display: flex;
+            gap: 4px;
+            flex: 1;
+            padding: 0 12px;
+        }
+        .taskbar-app {
+            background: transparent;
+            border: none;
+            color: #ccc;
+            padding: 4px 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: background 0.2s;
+            height: 32px;
+        }
+        .taskbar-app:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+        }
+        .taskbar-app.active {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        #clock {
+            color: white;
+            font-size: 13px;
+            padding: 0 8px;
+            min-width: 80px;
+            text-align: right;
+            font-weight: 400;
+            letter-spacing: 0.3px;
+        }
+
+        /* ----- START MENU ----- */
+        #start-menu {
+            position: fixed;
+            bottom: 60px;
+            left: 10px;
+            width: 320px;
+            background: rgba(25, 25, 45, 0.96);
+            backdrop-filter: blur(20px);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 16px;
+            display: none;
+            z-index: 10000;
+            box-shadow: 0 12px 60px rgba(0,0,0,0.8);
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        #start-menu.open {
+            display: block;
+        }
+        #start-menu h3 {
+            color: #aaa;
+            font-size: 13px;
+            font-weight: 400;
+            margin-bottom: 12px;
+            letter-spacing: 1px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding-bottom: 8px;
+        }
+        .start-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            color: white;
+            transition: background 0.15s;
+            font-size: 15px;
+        }
+        .start-item:hover {
+            background: rgba(255, 255, 255, 0.12);
+        }
+        .start-item .icon {
+            font-size: 24px;
+            width: 32px;
+            text-align: center;
+        }
+
+        /* ----- WINDOWS (draggable/resizable) ----- */
+        .window {
+            position: absolute;
+            min-width: 300px;
+            min-height: 200px;
+            background: rgba(28, 28, 48, 0.92);
+            backdrop-filter: blur(12px);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 20px 80px rgba(0,0,0,0.7);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            resize: both;
+            animation: fadeIn 0.2s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.96); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .window-header {
+            background: rgba(255, 255, 255, 0.04);
+            padding: 10px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: grab;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            flex-shrink: 0;
+        }
+        .window-header:active {
+            cursor: grabbing;
+        }
+        .window-title {
+            color: #eee;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .window-controls {
+            display: flex;
+            gap: 8px;
+        }
+        .window-controls button {
+            background: transparent;
+            border: none;
+            color: #aaa;
+            cursor: pointer;
+            font-size: 16px;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            transition: background 0.2s, color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .window-controls .close-btn:hover {
+            background: #e81123;
+            color: white;
+        }
+        .window-controls .max-btn:hover {
+            background: rgba(255,255,255,0.15);
+            color: white;
+        }
+        .window-controls .min-btn:hover {
+            background: rgba(255,255,255,0.15);
+            color: white;
+        }
+
+        .window-body {
+            flex: 1;
+            padding: 16px;
+            color: #ddd;
+            overflow: auto;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .window-body textarea {
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.3);
+            border: none;
+            color: #eee;
+            font-size: 14px;
+            padding: 10px;
+            border-radius: 6px;
+            resize: none;
+            outline: none;
+            font-family: 'Consolas', monospace;
+        }
+        .window-body .file-list {
+            list-style: none;
+        }
+        .window-body .file-list li {
+            padding: 6px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.1s;
+        }
+        .window-body .file-list li:hover {
+            background: rgba(255,255,255,0.08);
+        }
+
+        /* ----- SCROLLBAR STYLING ----- */
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- DESKTOP -->
+    <div id="desktop">
+        <button class="desktop-icon" data-app="explorer">
+            <span class="icon">📁</span>
+            <span class="label">My PC</span>
+        </button>
+        <button class="desktop-icon" data-app="notepad">
+            <span class="icon">📝</span>
+            <span class="label">Notepad</span>
+        </button>
+        <button class="desktop-icon" data-app="recycle">
+            <span class="icon">🗑️</span>
+            <span class="label">Recycle Bin</span>
+        </button>
+    </div>
+
+    <!-- START MENU -->
+    <div id="start-menu">
+        <h3>🪟 OpencoreOS</h3>
+        <div class="start-item" data-app="explorer"><span class="icon">📁</span> File Explorer</div>
+        <div class="start-item" data-app="notepad"><span class="icon">📝</span> Notepad</div>
+        <div class="start-item" data-app="terminal"><span class="icon">⚡</span> Terminal (simulated)</div>
+    </div>
+
+    <!-- TASKBAR -->
+    <div id="taskbar">
+        <button id="start-btn">🪟 Start</button>
+        <div class="taskbar-apps" id="taskbarApps">
+            <button class="taskbar-app" data-app="explorer">📁 Explorer</button>
+            <button class="taskbar-app" data-app="notepad">📝 Notepad</button>
+        </div>
+        <div id="clock">00:00</div>
+    </div>
+
+    <script>
+        // ================================================================
+        //  OPENCOREOS - Full JavaScript Engine
+        // ================================================================
+
+        // ---------- STATE ----------
+        const state = {
+            windows: [],
+            nextZIndex: 100,
+            windowCounter: 0,
+        };
+
+        // ---------- DOM REFS ----------
+        const desktop = document.getElementById('desktop');
+        const startMenu = document.getElementById('start-menu');
+        const startBtn = document.getElementById('start-btn');
+        const clockEl = document.getElementById('clock');
+        const taskbarApps = document.getElementById('taskbarApps');
+
+        // ---------- CLOCK ----------
+        function updateClock() {
+            const now = new Date();
+            clockEl.textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        }
+        updateClock();
+        setInterval(updateClock, 1000);
+
+        // ---------- START MENU TOGGLE ----------
+        startBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            startMenu.classList.toggle('open');
+        });
+        document.addEventListener('click', () => startMenu.classList.remove('open'));
+
+        // ---------- WINDOW MANAGER ----------
+        function createWindow(appId, title, icon, contentHTML, width = 520, height = 360) {
+            const id = `win-${++state.windowCounter}`;
+            const zIndex = ++state.nextZIndex;
+
+            const win = document.createElement('div');
+            win.className = 'window';
+            win.id = id;
+            win.style.width = width + 'px';
+            win.style.height = height + 'px';
+            win.style.left = (40 + (state.windows.length % 5) * 30) + 'px';
+            win.style.top = (40 + (state.windows.length % 5) * 25) + 'px';
+            win.style.zIndex = zIndex;
+
+            // Header
+            win.innerHTML = `
+                <div class="window-header">
+                    <span class="window-title">${icon} ${title}</span>
+                    <div class="window-controls">
+                        <button class="min-btn" title="Minimize">─</button>
+                        <button class="max-btn" title="Maximize">⬜</button>
+                        <button class="close-btn" title="Close">✕</button>
+                    </div>
+                </div>
+                <div class="window-body">${contentHTML}</div>
+            `;
+
+            document.body.appendChild(win);
+
+            // ---- DRAGGING ----
+            const header = win.querySelector('.window-header');
+            let isDragging = false, offsetX, offsetY;
+
+            header.addEventListener('mousedown', (e) => {
+                if (e.target.closest('.window-controls')) return;
+                isDragging = true;
+                const rect = win.getBoundingClientRect();
+                offsetX = e.clientX - rect.left;
+                offsetY = e.clientY - rect.top;
+                win.style.zIndex = ++state.nextZIndex;
+                win.style.cursor = 'grabbing';
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                let x = e.clientX - offsetX;
+                let y = e.clientY - offsetY;
+                x = Math.max(0, Math.min(window.innerWidth - 100, x));
+                y = Math.max(0, Math.min(window.innerHeight - 80, y));
+                win.style.left = x + 'px';
+                win.style.top = y + 'px';
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (isDragging) {
+                    isDragging = false;
+                    win.style.cursor = 'default';
+                }
+            });
+
+            // ---- CONTROLS ----
+            win.querySelector('.close-btn').addEventListener('click', () => closeWindow(id));
+            win.querySelector('.max-btn').addEventListener('click', () => toggleMaximize(id));
+            win.querySelector('.min-btn').addEventListener('click', () => minimizeWindow(id));
+
+            // Bring to front on click
+            win.addEventListener('mousedown', () => {
+                win.style.zIndex = ++state.nextZIndex;
+            });
+
+            // Store reference
+            state.windows.push({ id, appId, element: win, minimized: false });
+
+            // Update taskbar
+            updateTaskbar();
+            return win;
+        }
+
+        function closeWindow(id) {
+            const idx = state.windows.findIndex(w => w.id === id);
+            if (idx === -1) return;
+            const win = state.windows[idx].element;
+            win.remove();
+            state.windows.splice(idx, 1);
+            updateTaskbar();
+        }
+
+        function toggleMaximize(id) {
+            const win = state.windows.find(w => w.id === id);
+            if (!win) return;
+            const el = win.element;
+            if (el.style.width === window.innerWidth - 4 + 'px') {
+                el.style.width = '520px';
+                el.style.height = '360px';
+                el.style.left = '40px';
+                el.style.top = '40px';
+            } else {
+                el.style.width = window.innerWidth - 4 + 'px';
+                el.style.height = window.innerHeight - 54 + 'px';
+                el.style.left = '0px';
+                el.style.top = '0px';
+            }
+        }
+
+        function minimizeWindow(id) {
+            const win = state.windows.find(w => w.id === id);
+            if (!win) return;
+            win.minimized = !win.minimized;
+            win.element.style.display = win.minimized ? 'none' : 'flex';
+            updateTaskbar();
+        }
+
+        function focusWindow(id) {
+            const win = state.windows.find(w => w.id === id);
+            if (win) {
+                win.element.style.zIndex = ++state.nextZIndex;
+                if (win.minimized) {
+                    win.minimized = false;
+                    win.element.style.display = 'flex';
+                    updateTaskbar();
+                }
+            }
+        }
+
+        // ---------- TASKBAR ----------
+        function updateTaskbar() {
+            // Clear existing app buttons (keep clock and start)
+            const appsContainer = document.getElementById('taskbarApps');
+            appsContainer.innerHTML = '';
+            state.windows.forEach(w => {
+                const btn = document.createElement('button');
+                btn.className = 'taskbar-app' + (w.minimized ? '' : ' active');
+                btn.textContent = w.element.querySelector('.window-title')?.textContent || 'App';
+                btn.dataset.winId = w.id;
+                btn.addEventListener('click', () => {
+                    if (w.minimized) {
+                        w.minimized = false;
+                        w.element.style.display = 'flex';
+                        updateTaskbar();
+                    } else {
+                        minimizeWindow(w.id);
+                    }
+                    focusWindow(w.id);
+                });
+                appsContainer.appendChild(btn);
+            });
+        }
+
+        // ---------- LAUNCH APPS ----------
+        function launchApp(appId) {
+            // Check if already open, if so focus it
+            const existing = state.windows.find(w => w.appId === appId && !w.minimized);
+            if (existing) {
+                focusWindow(existing.id);
+                return;
+            }
+            const minimized = state.windows.find(w => w.appId === appId && w.minimized);
+            if (minimized) {
+                minimized.minimized = false;
+                minimized.element.style.display = 'flex';
+                focusWindow(minimized.id);
+                updateTaskbar();
+                return;
+            }
+
+            let title, icon, content;
+            switch (appId) {
+                case 'explorer':
+                    title = 'File Explorer';
+                    icon = '📁';
+                    content = `
+                        <ul class="file-list">
+                            <li>📄 Documents</li>
+                            <li>🖼️ Pictures</li>
+                            <li>🎵 Music</li>
+                            <li>💾 Downloads</li>
+                            <li style="margin-top:12px;color:#888;">📊 C: (Local Disk) - 23.4 GB free</li>
+                        </ul>
+                    `;
+                    createWindow(appId, title, icon, content, 560, 320);
+                    break;
+                case 'notepad':
+                    title = 'Notepad';
+                    icon = '📝';
+                    content = `<textarea placeholder="Write something...">Welcome to OpencoreOS! Type anything here.</textarea>`;
+                    createWindow(appId, title, icon, content, 500, 340);
+                    break;
+                case 'terminal':
+                    title = 'Terminal';
+                    icon = '⚡';
+                    content = `
+                        <div style="background:#0a0a1a;padding:12px;border-radius:6px;font-family:'Consolas',monospace;color:#0f0;font-size:13px;">
+                            > OpencoreOS v1.0<br>
+                            > Type 'help' for commands<br>
+                            > System ready.<br>
+                            <span style="display:block;margin-top:8px;color:#aaa;">[simulated terminal]</span>
+                        </div>
+                    `;
+                    createWindow(appId, title, icon, content, 480, 280);
+                    break;
+                case 'recycle':
+                    title = 'Recycle Bin';
+                    icon = '🗑️';
+                    content = `<p style="color:#888;text-align:center;padding:30px 0;">This bin is empty.</p>`;
+                    createWindow(appId, title, icon, content, 360, 200);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        // ---------- EVENT BINDINGS ----------
+        // Desktop icons
+        document.querySelectorAll('.desktop-icon').forEach(el => {
+            el.addEventListener('dblclick', () => {
+                const app = el.dataset.app;
+                if (app) launchApp(app);
+            });
+        });
+
+        // Start menu items
+        document.querySelectorAll('.start-item').forEach(el => {
+            el.addEventListener('click', () => {
+                const app = el.dataset.app;
+                if (app) {
+                    launchApp(app);
+                    startMenu.classList.remove('open');
+                }
+            });
+        });
+
+        // Taskbar pinned apps (pre-launch buttons)
+        document.querySelectorAll('.taskbar-app').forEach(el => {
+            el.addEventListener('click', () => {
+                const app = el.dataset.app;
+                if (app) launchApp(app);
+            });
+        });
+
+        // ---------- KEYBOARD SHORTCUTS (Easter egg) ----------
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.shiftKey && e.key === 'L') {
+                launchApp('terminal');
+            }
+        });
+
+        // ---------- BOOT MESSAGE ----------
+        console.log('🪟 OpencoreOS booted successfully!');
+        console.log('ℹ️  Double-click desktop icons or use Start Menu.');
+    </script>
+
+</body>
+</html>
