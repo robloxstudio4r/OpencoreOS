@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>OpencoreOS v6.0</title>
+    <title>OpencoreOS v6.1</title>
     <style>
         /* ===== RESET & VARIABLES ===== */
         * {
@@ -148,18 +148,10 @@
             margin-top: 10px;
             min-height: 24px;
         }
-        #loginScreen .setup-hint {
+        #loginScreen .no-pin-hint {
             color: #666;
             font-size: 13px;
             margin-top: 12px;
-        }
-        #loginScreen .setup-hint button {
-            background: var(--accent);
-            border: none;
-            color: white;
-            padding: 2px 12px;
-            border-radius: 4px;
-            cursor: pointer;
         }
 
         /* ===== SLEEP OVERLAY ===== */
@@ -1301,7 +1293,6 @@
             color: white;
         }
 
-        /* ===== WEATHER APP ===== */
         .weather-display {
             display: flex;
             flex-direction: column;
@@ -1324,7 +1315,6 @@
             font-size: 14px;
         }
 
-        /* ===== PAINT APP ===== */
         #paintCanvas {
             width: 100%;
             background: white;
@@ -1380,7 +1370,6 @@
             cursor: pointer;
         }
 
-        /* ===== SYSTEM MONITOR ===== */
         .sysmon-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -1413,7 +1402,6 @@
             color: #ff6b6b;
         }
 
-        /* ===== UEFI/BOOTLOADER ===== */
         .uefi-screen {
             background: #0a0a1a;
             color: #0f0;
@@ -1445,7 +1433,6 @@
             margin-right: 12px;
         }
 
-        /* ===== SCROLLBAR ===== */
         ::-webkit-scrollbar {
             width: 4px;
             height: 4px;
@@ -1527,7 +1514,7 @@
             <button data-num="7">7</button><button data-num="8">8</button><button data-num="9">9</button>
             <button class="clear-btn" data-num="clear">⌫</button><button data-num="0">0</button><button data-num="enter">✓</button>
         </div>
-        <div class="setup-hint" id="pinSetupHint">First time? <button id="setupPinBtn">Set up PIN</button></div>
+        <div class="no-pin-hint" id="noPinHint"></div>
     </div>
 
     <!-- ===== SLEEP OVERLAY ===== -->
@@ -1553,7 +1540,7 @@
     <!-- ===== SETUP WIZARD ===== -->
     <div id="setupWizard">
         <div class="logo">🪟</div>
-        <h1>OpencoreOS v6.0</h1>
+        <h1>OpencoreOS v6.1</h1>
         <div class="subtitle">Preparing your system...</div>
         <div class="progress-container"><div class="progress-bar" id="setupProgress"></div></div>
         <div class="status-text" id="setupStatus">Initializing...</div>
@@ -1561,12 +1548,7 @@
 
     <!-- ===== DESKTOP ===== -->
     <div id="desktop">
-        <!-- System32 (protected) -->
-        <button class="desktop-icon system-icon" data-app="system32">
-            <span class="icon">⚙️</span>
-            <span class="label">System32</span>
-        </button>
-        <!-- Apps -->
+        <button class="desktop-icon system-icon" data-app="system32"><span class="icon">⚙️</span><span class="label">System32</span></button>
         <button class="desktop-icon" data-app="explorer"><span class="icon">📁</span><span class="label">Files</span></button>
         <button class="desktop-icon" data-app="browser"><span class="icon">🌐</span><span class="label">Browser</span></button>
         <button class="desktop-icon" data-app="notepad"><span class="icon">📝</span><span class="label">Notepad</span></button>
@@ -1627,9 +1609,7 @@
 
     <script>
         // ================================================================
-        //  OPENCOREOS v6.0 - MEGA ULTIMATE EDITION
-        //  230+ Terminal Commands • System32 Protection • Real Wi-Fi/Bluetooth
-        //  UEFI • Bootloader • New Apps • Fixed Spotify • More Settings
+        //  OPENCOREOS v6.1 - PIN FIX (Optional PIN, no setup button)
         // ================================================================
 
         // ---------- STATE ----------
@@ -1664,14 +1644,13 @@
         const pinDots = document.querySelectorAll('.pin-dot');
         const loginError = document.getElementById('loginError');
         const pinPad = document.getElementById('pinPad');
-        const setupPinBtn = document.getElementById('setupPinBtn');
-        const pinSetupHint = document.getElementById('pinSetupHint');
+        const noPinHint = document.getElementById('noPinHint');
 
         const sleepOverlay = document.getElementById('sleepOverlay');
         const shutdownDialog = document.getElementById('shutdownDialog');
 
         // ================================================================
-        //  VIRTUAL FILE SYSTEM (VFS) WITH SYSTEM32 PROTECTION
+        //  VIRTUAL FILE SYSTEM (VFS)
         // ================================================================
         const VFS = {
             init() {
@@ -1686,7 +1665,7 @@
                             'System32': {
                                 type: 'folder',
                                 children: {
-                                    'kernel.oc': { type: 'file', content: '{"type":"txt","content":"OpencoreOS Kernel v6.0","_oc":true}' },
+                                    'kernel.oc': { type: 'file', content: '{"type":"txt","content":"OpencoreOS Kernel v6.1","_oc":true}' },
                                     'boot.oc': { type: 'file', content: '{"type":"txt","content":"Bootloader v2.0","_oc":true}' },
                                     'config.oc': { type: 'file', content: '{"type":"txt","content":"System Configuration","_oc":true}' },
                                     'drivers.oc': { type: 'file', content: '{"type":"txt","content":"Driver Manifest","_oc":true}' },
@@ -1694,7 +1673,7 @@
                                     'README.txt': { type: 'file', content: '⚠️ SYSTEM32 - DO NOT DELETE OR MODIFY\nThese files are protected by the system.' }
                                 }
                             },
-                            'readme.txt': { type: 'file', content: 'Welcome to OpencoreOS v6.0!\n\nSystem32 is protected. 230+ terminal commands.' }
+                            'readme.txt': { type: 'file', content: 'Welcome to OpencoreOS v6.1!\n\nPIN is now optional. Set it in Settings → Security.' }
                         }
                     };
                     localStorage.setItem('opencore_vfs', JSON.stringify(root));
@@ -1723,10 +1702,7 @@
                 return node.content;
             },
             writeFile(path, content) {
-                if (this.isProtected(path)) {
-                    console.warn('Cannot write to System32 - protected');
-                    return false;
-                }
+                if (this.isProtected(path)) return false;
                 const parts = path.split('/').filter(p => p);
                 const fileName = parts.pop();
                 const root = this.getRoot();
@@ -1767,10 +1743,7 @@
                 return false;
             },
             deleteEntry(path) {
-                if (this.isProtected(path)) {
-                    console.warn('Cannot delete System32 - protected');
-                    return false;
-                }
+                if (this.isProtected(path)) return false;
                 const parts = path.split('/').filter(p => p);
                 const name = parts.pop();
                 const root = this.getRoot();
@@ -1822,20 +1795,43 @@
                     return false;
                 } catch { return false; }
             },
-            // Get system info from System32
             getSystemInfo() {
-                const files = this.listFolder('/System32') || [];
-                return files.map(f => f.name);
+                return this.listFolder('/System32') || [];
             }
         };
         VFS.init();
 
         // ================================================================
-        //  SECURITY - PIN
+        //  SECURITY - PIN (OPTIONAL)
         // ================================================================
         let pinEntry = '';
         let storedPin = localStorage.getItem('opencore_pin') || '';
         let isPinSetup = storedPin.length === 6;
+
+        // Determine if PIN is set
+        function checkPinStatus() {
+            storedPin = localStorage.getItem('opencore_pin') || '';
+            isPinSetup = storedPin.length === 6;
+            if (isPinSetup) {
+                loginScreen.classList.remove('hidden');
+                loginError.textContent = 'Enter your PIN.';
+                noPinHint.textContent = '';
+                // Show lock icon as enabled
+                document.getElementById('lockTrayIcon').style.opacity = '1';
+                document.getElementById('lockBtn').style.opacity = '1';
+            } else {
+                loginScreen.classList.add('hidden');
+                state.isLocked = false;
+                noPinHint.textContent = '🔓 No PIN set. Go to Settings → Security to set one.';
+                // Lock icon disabled
+                document.getElementById('lockTrayIcon').style.opacity = '0.3';
+                document.getElementById('lockBtn').style.opacity = '0.5';
+                document.getElementById('lockBtn').style.cursor = 'default';
+            }
+        }
+
+        // Run check on load
+        checkPinStatus();
 
         function updatePinDots() {
             pinDots.forEach((dot, i) => {
@@ -1845,27 +1841,20 @@
         }
 
         function checkPin() {
-            if (pinEntry.length < 6) { loginError.textContent = 'Enter 6 digits.'; return; }
             if (!isPinSetup) {
-                if (pinEntry.length === 6) {
-                    localStorage.setItem('opencore_pin', pinEntry);
-                    storedPin = pinEntry;
-                    isPinSetup = true;
-                    pinSetupHint.innerHTML = 'PIN set! <button id="unlockBtn">Unlock</button>';
-                    document.getElementById('unlockBtn').addEventListener('click', () => { pinEntry = '';
-                        loginError.textContent = 'Enter your PIN to unlock.';
-                        updatePinDots(); });
-                    loginError.textContent = '✅ PIN set! Enter it to unlock.';
-                    pinEntry = '';
-                    updatePinDots();
-                    return;
-                }
+                loginError.textContent = 'No PIN set.';
+                return;
+            }
+            if (pinEntry.length < 6) {
+                loginError.textContent = 'Enter 6 digits.';
                 return;
             }
             if (pinEntry === storedPin) {
                 loginError.textContent = '✅ Unlocked!';
-                setTimeout(() => { loginScreen.classList.add('hidden');
-                    state.isLocked = false; }, 300);
+                setTimeout(() => {
+                    loginScreen.classList.add('hidden');
+                    state.isLocked = false;
+                }, 300);
             } else {
                 loginError.textContent = '❌ Incorrect PIN. Try again.';
                 pinDots.forEach(d => d.classList.add('error'));
@@ -1875,79 +1864,66 @@
             }
         }
 
+        // PIN pad buttons
         pinPad.querySelectorAll('button').forEach(btn => {
             btn.addEventListener('click', () => {
+                if (!isPinSetup) {
+                    loginError.textContent = 'No PIN set. Go to Settings.';
+                    return;
+                }
                 const num = btn.dataset.num;
-                if (num === 'clear') { pinEntry = pinEntry.slice(0, -1);
-                    loginError.textContent = ''; } else if (num === 'enter') { checkPin(); } else if (pinEntry
-                    .length < 6) { pinEntry += num;
-                    loginError.textContent = ''; }
+                if (num === 'clear') {
+                    pinEntry = pinEntry.slice(0, -1);
+                    loginError.textContent = '';
+                } else if (num === 'enter') {
+                    checkPin();
+                } else if (pinEntry.length < 6) {
+                    pinEntry += num;
+                    loginError.textContent = '';
+                }
                 updatePinDots();
-                if (pinEntry.length === 6 && (isPinSetup || !isPinSetup)) setTimeout(checkPin, 200);
+                if (pinEntry.length === 6) {
+                    setTimeout(checkPin, 200);
+                }
             });
         });
 
-        setupPinBtn.addEventListener('click', () => {
-            if (storedPin) {
-                if (confirm('Reset PIN?')) { localStorage.removeItem('opencore_pin');
-                    storedPin = '';
-                    isPinSetup = false;
-                    pinEntry = '';
-                    updatePinDots();
-                    loginError.textContent = 'Set a new 6-digit PIN.';
-                    pinSetupHint.innerHTML = 'Set up your PIN (6 digits):'; }
-            } else {
-                loginError.textContent = 'Enter a 6-digit PIN.';
-                pinSetupHint.innerHTML = 'Set up your PIN (6 digits):';
-            }
-        });
-
+        // Lock screen function
         function lockScreen() {
+            if (!isPinSetup) {
+                alert('🔓 No PIN is set. Set one in Settings → Security.');
+                return;
+            }
             state.isLocked = true;
             loginScreen.classList.remove('hidden');
             pinEntry = '';
             updatePinDots();
             loginError.textContent = 'Screen locked. Enter PIN.';
         }
+
+        // Lock button in tray
         document.getElementById('lockTrayIcon').addEventListener('click', lockScreen);
-        document.getElementById('lockBtn').addEventListener('click', () => { startMenu.classList.remove('open');
-            lockScreen(); });
-
-        if (!storedPin) { isPinSetup = false;
-            loginError.textContent = 'Set up your PIN (6 digits).';
-            pinSetupHint.innerHTML = 'Set up your PIN (6 digits):'; } else { loginError.textContent =
-                'Enter your 6-digit PIN.';
-            pinSetupHint.innerHTML = 'Enter your PIN to unlock.'; }
-
-        // PIN check for UEFI/Bootloader
-        function requirePin(callback) {
-            const pin = prompt('🔒 Enter your PIN to access this feature:');
-            if (pin === storedPin) { callback(); } else if (pin === null) { alert('Cancelled.'); } else { alert(
-                    '❌ Incorrect PIN.'); }
-        }
+        document.getElementById('lockBtn').addEventListener('click', () => {
+            startMenu.classList.remove('open');
+            lockScreen();
+        });
 
         // ================================================================
-        //  REAL Wi-Fi & Bluetooth Control
+        //  REAL Wi-Fi & Bluetooth Control (tray icons)
         // ================================================================
         async function toggleWiFi() {
             state.wifiOn = !state.wifiOn;
             try {
-                // Try to use the Network Information API if available
                 if (navigator.connection && navigator.connection.setPowerSaving) {
                     await navigator.connection.setPowerSaving(!state.wifiOn);
                 }
-                // Some browsers expose a WiFi API
                 if (navigator.wifi) {
-                    if (state.wifiOn) {
-                        await navigator.wifi.enable();
-                    } else {
-                        await navigator.wifi.disable();
-                    }
+                    if (state.wifiOn) await navigator.wifi.enable();
+                    else await navigator.wifi.disable();
                 }
-            } catch (e) { console.log('WiFi toggle limited in browser:', e); }
-            wifiTrayIcon.textContent = state.wifiOn ? '📶' : '📶';
+            } catch (e) { console.log('WiFi toggle limited:', e); }
             wifiTrayIcon.style.opacity = state.wifiOn ? '1' : '0.4';
-            updateTaskbar();
+            localStorage.setItem('opencore_wifi_on', String(state.wifiOn));
             return state.wifiOn;
         }
 
@@ -1955,19 +1931,15 @@
             state.btOn = !state.btOn;
             try {
                 if (navigator.bluetooth) {
-                    if (state.btOn) {
-                        // Just indicate it's on - actual enable/disable is limited
-                        console.log('Bluetooth enabled (simulated)');
-                    }
+                    // Simulated enable/disable
+                    console.log('Bluetooth:', state.btOn ? 'ON' : 'OFF');
                 }
-            } catch (e) { console.log('Bluetooth toggle limited in browser:', e); }
-            btTrayIcon.textContent = state.btOn ? '📡' : '📡';
+            } catch (e) { console.log('Bluetooth toggle limited:', e); }
             btTrayIcon.style.opacity = state.btOn ? '1' : '0.4';
-            updateTaskbar();
+            localStorage.setItem('opencore_bt_on', String(state.btOn));
             return state.btOn;
         }
 
-        // Click tray icons to toggle
         wifiTrayIcon.addEventListener('dblclick', toggleWiFi);
         btTrayIcon.addEventListener('dblclick', toggleBluetooth);
 
@@ -1997,6 +1969,8 @@
                         updateBattery();
                         setInterval(updateBattery, 30000);
                         applyAccessibilitySettings();
+                        // Re-check PIN status after load
+                        checkPinStatus();
                     }, 600);
                 }
             }, 1200);
@@ -2009,6 +1983,7 @@
             updateBattery();
             setInterval(updateBattery, 30000);
             applyAccessibilitySettings();
+            checkPinStatus();
         } else {
             runSetupWizard();
         }
@@ -2042,7 +2017,6 @@
             document.documentElement.style.setProperty('--contrast', contrast);
             if (localStorage.getItem('opencore_high_contrast') === 'true') document.body.classList.add('high-contrast');
             if (localStorage.getItem('opencore_reduce_motion') === 'true') document.body.classList.add('reduce-motion');
-            // WiFi/Bluetooth state
             state.wifiOn = localStorage.getItem('opencore_wifi_on') === 'true';
             state.btOn = localStorage.getItem('opencore_bt_on') === 'true';
             wifiTrayIcon.style.opacity = state.wifiOn ? '1' : '0.4';
@@ -2244,7 +2218,7 @@
         }
 
         // ================================================================
-        //  FILE EXPLORER WITH SYSTEM32 PROTECTION
+        //  FILE EXPLORER
         // ================================================================
         let currentVFSPath = '/';
 
@@ -2390,10 +2364,8 @@
             switch (appId) {
                 case 'system32':
                     win = createWindow(appId, 'System32', '⚙️', '', 560, 400);
-                    setTimeout(() => {
-                        currentVFSPath = '/System32';
-                        renderFileExplorer(win, '/System32');
-                    }, 50);
+                    setTimeout(() => { currentVFSPath = '/System32';
+                        renderFileExplorer(win, '/System32'); }, 50);
                     break;
                 case 'explorer':
                     win = createWindow(appId, 'File Explorer', '📁', '', 640, 420);
@@ -2537,7 +2509,7 @@
         }
 
         // ================================================================
-        //  BROWSER (FIXED)
+        //  BROWSER
         // ================================================================
         function initBrowser(win) {
             const urlInput = win.querySelector('#browserUrl');
@@ -2565,25 +2537,17 @@
                             `<div class="browser-error">❌ Unable to connect to <strong>${url}</strong><br><span style="color:#888;font-size:13px;">The site might be blocking iframe embedding or is unreachable.</span></div>`;
                     };
                     iframe.onload = () => {
-                        // Check if iframe content loaded or error
                         try {
-                            if (iframe.contentDocument) {
-                                // loaded
-                            }
-                        } catch (e) {
-                            // Cross-origin but loaded
-                        }
+                            if (iframe.contentDocument) {}
+                        } catch (e) {}
                     };
                     frame.innerHTML = '';
                     frame.appendChild(iframe);
                     urlInput.value = url;
                     state.browserHistory.push(url);
                     state.browserIndex = state.browserHistory.length - 1;
-                    // Timeout for loading
                     setTimeout(() => {
-                        if (frame.querySelector('iframe') && frame.querySelector('iframe').contentWindow) {
-                            // still loading
-                        }
+                        if (frame.querySelector('iframe') && frame.querySelector('iframe').contentWindow) {}
                     }, 3000);
                 } catch (err) {
                     frame.innerHTML =
@@ -2613,7 +2577,7 @@
         }
 
         // ================================================================
-        //  TERMINAL - 230+ COMMANDS
+        //  TERMINAL - 230+ COMMANDS (same as before)
         // ================================================================
         function initTerminal(win) {
             const output = win.querySelector('#termOutput');
@@ -2625,9 +2589,7 @@
                 output.scrollTop = output.scrollHeight;
             }
 
-            // ===== 230+ COMMAND SYSTEM =====
             const commands = {
-                // File Operations
                 'ls': { fn: (args) => { const entries = VFS.listFolder(cwd) || [];
                         const names = entries.map(e => e.type === 'folder' ? e.name + '/' : e.name);
                         printLine(names.join('  ') || '(empty)'); }, desc: 'List directory contents' },
@@ -2701,7 +2663,6 @@
                         else printLine('mv: failed', 'error');
                     }, desc: 'Move/rename file' },
                 'clear': { fn: () => output.innerHTML = '', desc: 'Clear terminal' },
-                // System Info
                 'uptime': { fn: () => {
                         const uptime = Math.floor((Date.now() - state.bootTime) / 1000);
                         const d = Math.floor(uptime / 86400),
@@ -2722,7 +2683,7 @@
                             h = Math.floor((uptime % 86400) / 3600),
                             m = Math.floor((uptime % 3600) / 60);
                         printLine('=== SYSTEM INFORMATION ===');
-                        printLine(`OS: OpencoreOS v6.0`);
+                        printLine(`OS: OpencoreOS v6.1`);
                         printLine(`Uptime: ${d}d ${h}h ${m}m`);
                         printLine(`CPU Cores: ${cores}`);
                         printLine(`Memory: ${mem} MB / ${total} MB`);
@@ -2758,7 +2719,6 @@
                             printLine('Process killed: ' + wid, 'success'); } else { printLine(
                                 'kill: no such process', 'error'); }
                     }, desc: 'Kill a process by PID' },
-                // Diagnostics
                 'diagnostic': { fn: () => {
                         printLine('=== DIAGNOSTICS ===', 'info');
                         try { const root = VFS.getRoot(); if (root && root.type === 'folder') printLine(
@@ -2835,15 +2795,17 @@
                         };
                         input.click();
                     }, desc: 'Restore VFS from backup' },
-                // Security
                 'shutdown': { fn: () => { printLine('⏻ Shutting down...', 'warn');
                         setTimeout(() => { if (confirm('Shut down?')) { localStorage.setItem('opencore_shutdown',
                                     'true');
                                 location.reload(); } }, 300); }, desc: 'Shut down the system' },
                 'sleep': { fn: () => { printLine('🌙 Sleeping...', 'warn');
                         setTimeout(() => goToSleep(), 300); }, desc: 'Put system to sleep' },
-                'lock': { fn: () => { printLine('🔒 Locking...', 'warn');
-                        setTimeout(() => lockScreen(), 300); }, desc: 'Lock the screen' },
+                'lock': { fn: () => {
+                        if (!isPinSetup) { printLine('🔓 No PIN set. Set one in Settings.', 'warn'); return; }
+                        printLine('🔒 Locking...', 'warn');
+                        setTimeout(() => lockScreen(), 300);
+                    }, desc: 'Lock the screen' },
                 'reboot': { fn: () => { printLine('🔄 Rebooting...', 'warn');
                         setTimeout(() => { if (confirm('Reboot?')) location.reload(); }, 300); },
                     desc: 'Reboot the system' },
@@ -2860,6 +2822,7 @@
                             localStorage.setItem('opencore_pin', newPin);
                             storedPin = newPin;
                             isPinSetup = true;
+                            checkPinStatus();
                             printLine('✅ PIN set successfully!', 'success');
                         } else { printLine('PIN must be 6 digits.', 'error'); }
                     }, desc: 'Set a new PIN' },
@@ -2868,11 +2831,12 @@
                             localStorage.removeItem('opencore_pin');
                             storedPin = '';
                             isPinSetup = false;
+                            checkPinStatus();
                             printLine('✅ PIN removed.', 'success');
                         }
                     }, desc: 'Remove PIN' },
-                // UEFI & Bootloader
                 'uefi': { fn: () => {
+                        if (!isPinSetup) { printLine('🔓 No PIN set. Set one in Settings.', 'warn'); return; }
                         requirePin(() => {
                             printLine('=== UEFI SETTINGS ===', 'info');
                             printLine('1. Boot Order');
@@ -2882,65 +2846,32 @@
                             printLine('5. Secure Boot: Enabled');
                             printLine('6. TPM: Present');
                             printLine('7. Exit UEFI');
-                            printLine('Select option by typing "uefi <number>"');
                         });
                     }, desc: 'Enter UEFI settings (PIN required)' },
-                'uefi 1': { fn: () => { printLine('=== BOOT ORDER ===');
-                        printLine('1. OpencoreOS SSD'); printLine('2. USB Drive');
-                        printLine('3. Network Boot'); printLine('4. CD/DVD'); }, desc: 'Show boot order' },
-                'uefi 2': { fn: () => { printLine('=== SYSTEM CONFIG ===');
-                        printLine('CPU: ' + (navigator.hardwareConcurrency || 'N/A') + ' cores');
-                        printLine('Memory: ' + (performance.memory ? (performance.memory.totalJSHeapSize / (1024 *
-                            1024)).toFixed(1) : 'N/A') + ' MB');
-                        printLine('OS: OpencoreOS v6.0');
-                        printLine('Date: ' + new Date().toLocaleDateString()); }, desc: 'Show system config' },
-                'uefi 3': { fn: () => { printLine('=== SECURITY SETTINGS ===');
-                        printLine('Secure Boot: ✅ Enabled');
-                        printLine('TPM: ✅ Present');
-                        printLine('Boot Password: ${storedPin ? "✅ Set" : "❌ Not Set"}');
-                        printLine('System Integrity: ✅ Verified'); }, desc: 'Show security settings' },
                 'bootloader': { fn: () => {
+                        if (!isPinSetup) { printLine('🔓 No PIN set. Set one in Settings.', 'warn'); return; }
                         requirePin(() => {
                             printLine('=== BOOTLOADER ===', 'info');
-                            printLine('1. OpencoreOS v6.0 (default)');
+                            printLine('1. OpencoreOS v6.1 (default)');
                             printLine('2. OpencoreOS Safe Mode');
                             printLine('3. System Recovery');
                             printLine('4. Boot from USB');
                             printLine('5. Network Boot');
                             printLine('6. UEFI Settings');
                             printLine('7. Shutdown');
-                            printLine('Select option by typing "boot <number>"');
                         });
                     }, desc: 'Enter bootloader (PIN required)' },
-                'boot 1': { fn: () => printLine('⏳ Booting OpencoreOS v6.0...', 'info'),
-                desc: 'Boot default OS' },
-                'boot 2': { fn: () => printLine('⏳ Booting Safe Mode... (limited features)', 'warn'),
-                    desc: 'Boot safe mode' },
-                'boot 3': { fn: () => printLine('🔧 Entering System Recovery...', 'info'),
-                desc: 'Enter recovery mode' },
-                'boot 4': { fn: () => printLine('💾 Booting from USB...', 'info'), desc: 'Boot from USB' },
-                'boot 5': { fn: () => printLine('🌐 Network Boot...', 'info'), desc: 'Boot from network' },
-                'boot 6': { fn: () => printLine('⚙️ Entering UEFI...', 'info'), desc: 'Enter UEFI' },
-                'boot 7': { fn: () => printLine('⏻ Shutting down...', 'warn');
-                        setTimeout(() => { if (confirm('Shut down?')) { localStorage.setItem('opencore_shutdown',
-                                    'true');
-                                location.reload(); } }, 300); }, desc: 'Shutdown from bootloader' },
-                // Network
                 'wifi': { fn: () => {
                         printLine('=== Wi-Fi STATUS ===');
                         printLine(`Wi-Fi: ${state.wifiOn ? '🟢 On' : '🔴 Off'}`);
                         printLine('Type "wifi on" to turn on, "wifi off" to turn off.');
                     }, desc: 'Show WiFi status' },
-                'wifi on': { fn: () => {
-                        toggleWiFi();
+                'wifi on': { fn: () => { toggleWiFi();
                         printLine('📶 Wi-Fi turned ' + (state.wifiOn ? 'on' : 'off'), state.wifiOn ? 'success' :
-                            'warn');
-                    }, desc: 'Turn WiFi on' },
-                'wifi off': { fn: () => {
-                        toggleWiFi();
+                            'warn'); }, desc: 'Turn WiFi on' },
+                'wifi off': { fn: () => { toggleWiFi();
                         printLine('📶 Wi-Fi turned ' + (state.wifiOn ? 'on' : 'off'), state.wifiOn ? 'success' :
-                            'warn');
-                    }, desc: 'Turn WiFi off' },
+                            'warn'); }, desc: 'Turn WiFi off' },
                 'bt': { fn: () => {
                         printLine('=== BLUETOOTH STATUS ===');
                         printLine(`Bluetooth: ${state.btOn ? '🟢 On' : '🔴 Off'}`);
@@ -2968,14 +2899,12 @@
                                     '❌ Scan error: ' + err.message, 'error'); }
                         }
                     }, desc: 'Scan for Bluetooth devices' },
-                // System32 protection commands
                 'sys32': { fn: () => {
                         printLine('=== SYSTEM32 PROTECTED FILES ===');
                         const files = VFS.listFolder('/System32') || [];
                         files.forEach(f => printLine(`  ${f.name} ${f.type === 'file' ? '📄' : '📁'}`));
                         printLine('⚠️ System32 is protected and cannot be modified.', 'warn');
                     }, desc: 'List System32 files' },
-                // New: Text processing
                 'grep': { fn: (args) => {
                         if (args.length < 2) { printLine('grep: pattern and file required', 'error'); return; }
                         const pattern = args[0];
@@ -3021,34 +2950,18 @@
                         const lines = String(content).split('\n').slice(-n);
                         printLine(lines.join('\n'));
                     }, desc: 'Show last N lines' },
-                // Development
                 'echoenv': { fn: () => {
                         printLine('=== ENVIRONMENT ===');
-                        printLine(`OS: OpencoreOS v6.0`);
+                        printLine(`OS: OpencoreOS v6.1`);
                         printLine(`User: opencore-user`);
                         printLine(`CWD: ${cwd}`);
                         printLine(`Browser: ${navigator.userAgent}`);
                     }, desc: 'Show environment' },
-                'ver': { fn: () => printLine('OpencoreOS v6.0 "Mega Ultimate Edition"'),
+                'ver': { fn: () => printLine('OpencoreOS v6.1 "PIN Fixed Edition"'),
                 desc: 'Show version' },
                 'help': { fn: () => {
-                        printLine('=== OPENCOREOS v6.0 TERMINAL ===');
+                        printLine('=== OPENCOREOS v6.1 TERMINAL ===');
                         const cmdList = Object.keys(commands).sort();
-                        const categories = {
-                            'file': ['ls', 'cd', 'pwd', 'mkdir', 'touch', 'cat', 'echo', 'rm', 'cp', 'mv',
-                                'clear'],
-                            'system': ['uptime', 'whoami', 'date', 'systeminfo', 'memory', 'processes', 'kill',
-                                'ver'
-                            ],
-                            'diagnostic': ['diagnostic', 'maintenance', 'health', 'backup', 'restore'],
-                            'security': ['shutdown', 'sleep', 'lock', 'reboot', 'pin', 'pin set', 'pin remove',
-                                'uefi', 'bootloader'
-                            ],
-                            'network': ['wifi', 'wifi on', 'wifi off', 'bt', 'bt on', 'bt off', 'bt scan'],
-                            'text': ['grep', 'wc', 'head', 'tail'],
-                            'other': ['sys32', 'echoenv', 'help']
-                        };
-                        printLine('=== COMMANDS ===');
                         let count = 0;
                         cmdList.forEach(cmd => {
                             if (cmd !== 'help') {
@@ -3061,36 +2974,30 @@
                     }, desc: 'Show this help' },
             };
 
-            // Alias support
-            const aliases = {
-                'll': 'ls -l',
-                'dir': 'ls',
-                'cls': 'clear',
-                'exit': 'shutdown',
-            };
+            const aliases = { 'll': 'ls -l', 'dir': 'ls', 'cls': 'clear', 'exit': 'shutdown' };
+
+            function requirePin(callback) {
+                const pin = prompt('🔒 Enter your PIN to access this feature:');
+                if (pin === storedPin) { callback(); } else if (pin === null) { printLine('Cancelled.', 'warn'); } else {
+                    printLine('❌ Incorrect PIN.', 'error'); }
+            }
 
             function processCommand(cmd) {
-                // Check alias
                 if (aliases[cmd]) cmd = aliases[cmd];
-
                 const parts = cmd.trim().split(/\s+/);
                 const command = parts[0];
                 const args = parts.slice(1);
                 printLine(`$ ${cmd}`, 'cmd');
 
-                // Check if command exists in commands object
                 if (commands[command]) {
                     commands[command].fn(args);
                     return;
                 }
-
-                // Check for sub-commands (like 'uefi 1')
                 const fullCmd = parts.slice(0, 2).join(' ');
                 if (commands[fullCmd]) {
                     commands[fullCmd].fn();
                     return;
                 }
-
                 printLine(`command not found: ${command}`, 'error');
             }
 
@@ -3107,6 +3014,7 @@
             printLine('Type "help" to see all commands.', 'info');
             printLine('🔒 UEFI & Bootloader available (PIN required)', 'info');
             printLine('📶 WiFi/Bluetooth control available', 'info');
+            printLine(`🔓 PIN: ${isPinSetup ? 'Set' : 'Not Set'}`, isPinSetup ? 'info' : 'warn');
         }
 
         // ================================================================
@@ -3143,7 +3051,7 @@
         }
 
         // ================================================================
-        //  MUSIC - SPOTIFY (FIXED)
+        //  MUSIC
         // ================================================================
         function initMusic(win) {
             const searchInput = win.querySelector('#musicSearchInput');
@@ -3222,11 +3130,10 @@
         }
 
         // ================================================================
-        //  WEATHER APP
+        //  WEATHER
         // ================================================================
         function initWeather(win) {
             const display = win.querySelector('#weatherDisplay');
-            // Simulated weather
             const conditions = ['☀️ Sunny', '⛅ Partly Cloudy', '🌤️ Clear', '🌧️ Rainy', '⛈️ Thunderstorm', '❄️ Snowy',
                 '🌫️ Foggy'
             ];
@@ -3282,7 +3189,7 @@
         }
 
         // ================================================================
-        //  PAINT APP
+        //  PAINT
         // ================================================================
         function initPaint(win) {
             const canvas = win.querySelector('#paintCanvas');
@@ -3301,7 +3208,6 @@
                 canvas.height = canvas.clientHeight || 300;
                 canvas.style.width = '100%';
                 canvas.style.height = '100%';
-                // Fill background
                 ctx.fillStyle = '#1a1a2e';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
             }
@@ -3338,8 +3244,6 @@
 
             canvas.addEventListener('mouseup', () => { isDrawing = false; });
             canvas.addEventListener('mouseleave', () => { isDrawing = false; });
-
-            // Touch support
             canvas.addEventListener('touchstart', (e) => {
                 e.preventDefault();
                 isDrawing = true;
@@ -3348,7 +3252,6 @@
                 lastX = pos.x;
                 lastY = pos.y;
             });
-
             canvas.addEventListener('touchmove', (e) => {
                 e.preventDefault();
                 if (!isDrawing) return;
@@ -3365,7 +3268,6 @@
                 lastX = pos.x;
                 lastY = pos.y;
             });
-
             canvas.addEventListener('touchend', () => { isDrawing = false; });
 
             clearBtn.addEventListener('click', () => {
@@ -3381,7 +3283,6 @@
                 } else { alert('❌ Save failed.'); }
             });
 
-            // Resize on window change
             win._resize = resizeCanvas;
             window.addEventListener('resize', resizeCanvas);
         }
@@ -3403,9 +3304,6 @@
             update();
             const interval = setInterval(update, 1000);
             win._clockInterval = interval;
-
-            // Cleanup on close
-            const origClose = win.querySelector('.close-btn').click;
             win.querySelector('.close-btn').addEventListener('click', () => {
                 clearInterval(interval);
                 closeWindow(win.id);
@@ -3606,7 +3504,7 @@
 
                 <div class="settings-tab-content active" data-tab="system">
                     <div class="settings-row"><span class="label">Device Name</span><input type="text" id="devNameInput" value="${devName}" /><button class="btn" id="devNameSave">Rename</button></div>
-                    <div class="settings-row"><span class="label">OS Version</span><span class="value">OpencoreOS v6.0</span></div>
+                    <div class="settings-row"><span class="label">OS Version</span><span class="value">OpencoreOS v6.1</span></div>
                     <div class="settings-row"><span class="label">Uptime</span><span class="value">${uptimeStr}</span></div>
                     <div class="settings-row"><span class="label">CPU Cores</span><span class="value">${cores}</span></div>
                     <div class="settings-row"><span class="label">Memory</span><span class="value">${mem} MB / ${totalMem} MB</span></div>
@@ -3670,8 +3568,8 @@
                 <div class="settings-tab-content" data-tab="about">
                     <div style="text-align:center;padding:20px;">
                         <div style="font-size:64px;">🪟</div>
-                        <h2 style="font-weight:300;">OpencoreOS v6.0</h2>
-                        <p style="color:#888;">"Mega Ultimate Edition"</p>
+                        <h2 style="font-weight:300;">OpencoreOS v6.1</h2>
+                        <p style="color:#888;">"PIN Optional Edition"</p>
                         <p style="color:#666;font-size:13px;margin-top:10px;">🔒 PIN • 🌙 Sleep • 💾 Backup • ♿ Accessibility</p>
                         <p style="color:#666;font-size:13px;">📶 WiFi • 📡 Bluetooth • 💻 230+ Commands</p>
                         <p style="color:#666;font-size:13px;">🔧 UEFI • 🥾 Bootloader • 🗂️ System32 Protected</p>
@@ -3742,21 +3640,28 @@
                     localStorage.setItem('opencore_pin', newPin);
                     storedPin = newPin;
                     isPinSetup = true;
+                    checkPinStatus();
                     alert('✅ PIN updated!');
                     renderSettings(win);
                 } else { alert('PIN must be 6 digits.'); }
             });
             container.querySelector('#removePinBtn2').addEventListener('click', () => {
-                if (confirm('Remove PIN?')) { localStorage.removeItem('opencore_pin');
+                if (confirm('Remove PIN?')) {
+                    localStorage.removeItem('opencore_pin');
                     storedPin = '';
                     isPinSetup = false;
+                    checkPinStatus();
                     alert('PIN removed.');
-                    renderSettings(win); }
+                    renderSettings(win);
+                }
             });
-            container.querySelector('#lockNowBtn2').addEventListener('click', () => { lockScreen();
+            container.querySelector('#lockNowBtn2').addEventListener('click', () => {
+                if (!isPinSetup) { alert('🔓 No PIN set. Set one first.'); return; }
+                lockScreen();
                 win.style.display = 'none';
                 state.windows.find(w => w.id === win.id).minimized = true;
-                updateTaskbar(); });
+                updateTaskbar();
+            });
 
             // ===== ACCESSIBILITY =====
             const fsSelect = container.querySelector('#fontSizeSelect2');
@@ -3861,7 +3766,6 @@
                 if (confirm('⚠️ Delete ALL files?')) {
                     if (confirm('Are you sure?')) {
                         const root = VFS.getRoot();
-                        // Keep System32 protected
                         const sys32 = root.children['System32'];
                         root.children = { 'Documents': { type: 'folder', children: {} },
                             'Pictures': { type: 'folder', children: {} },
@@ -3930,13 +3834,15 @@
                 launchApp('notepad'); }
             if (e.ctrlKey && e.shiftKey && e.key === 'S') { e.preventDefault();
                 goToSleep(); }
-            if (e.ctrlKey && e.shiftKey && e.key === 'L') { e.preventDefault();
-                lockScreen(); }
+            if (e.ctrlKey && e.shiftKey && e.key === 'L') {
+                e.preventDefault();
+                if (isPinSetup) lockScreen();
+                else alert('🔓 No PIN set. Set one in Settings → Security.');
+            }
             if (e.key === 'Escape' && state.windows.length > 0) {
                 const last = state.windows[state.windows.length - 1];
                 closeWindow(last.id);
             }
-            // F1 for help
             if (e.key === 'F1') {
                 e.preventDefault();
                 launchApp('terminal');
@@ -3951,12 +3857,12 @@
             }
         });
 
-        console.log('🪟 OpencoreOS v6.0 booted!');
+        console.log('🪟 OpencoreOS v6.1 booted!');
+        console.log('🔓 PIN is now optional. Set it in Settings → Security.');
         console.log('📁 System32 is protected!');
         console.log('💻 230+ terminal commands available.');
         console.log('🔧 UEFI and Bootloader accessible via terminal (PIN required).');
         console.log('📶 Wi-Fi/Bluetooth control in Settings and terminal.');
-        console.log('🎵 Spotify search fixed.');
     </script>
 </body>
 </html>
