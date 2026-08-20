@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>OpencoreOS v4.0</title>
+    <title>OpencoreOS v5.0</title>
     <style>
-        /* ===== RESET & VARIABLES ===== */
+        /* ===== RESET ===== */
         * {
             margin: 0;
             padding: 0;
@@ -22,6 +22,9 @@
             --text2: #aaa;
             --accent: #0078d4;
             --shadow: 0 20px 80px rgba(0, 0, 0, 0.6);
+            --font-size: 14px;
+            --contrast: 1;
+            --motion: 1;
         }
         body {
             width: 100vw;
@@ -29,9 +32,257 @@
             overflow: hidden;
             background: var(--bg);
             position: relative;
+            font-size: var(--font-size);
+            filter: contrast(var(--contrast));
+            transition: filter 0.3s;
+        }
+        body.reduce-motion * {
+            animation-duration: 0.01ms !important;
+            transition-duration: 0.01ms !important;
         }
 
-        /* ===== SETUP WIZARD ===== */
+        /* ===== LOGIN SCREEN ===== */
+        #loginScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(ellipse at center, #0a0a1a, #000);
+            z-index: 9999999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            transition: opacity 0.6s;
+        }
+        #loginScreen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        #loginScreen .avatar {
+            font-size: 72px;
+            margin-bottom: 10px;
+        }
+        #loginScreen h2 {
+            font-weight: 300;
+            font-size: 28px;
+            margin-bottom: 4px;
+        }
+        #loginScreen .sub {
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        #loginScreen .pin-dots {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        #loginScreen .pin-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 2px solid #555;
+            background: transparent;
+            transition: background 0.15s, border-color 0.15s;
+        }
+        #loginScreen .pin-dot.filled {
+            background: white;
+            border-color: white;
+        }
+        #loginScreen .pin-dot.error {
+            border-color: #ff6b6b;
+            animation: shake 0.3s;
+        }
+        @keyframes shake {
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+            25% {
+                transform: translateX(-8px);
+            }
+            75% {
+                transform: translateX(8px);
+            }
+        }
+        #loginScreen .pin-pad {
+            display: grid;
+            grid-template-columns: repeat(3, 60px);
+            gap: 10px;
+            margin-top: 10px;
+        }
+        #loginScreen .pin-pad button {
+            padding: 14px;
+            font-size: 22px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.04);
+            color: white;
+            cursor: pointer;
+            transition: background 0.15s;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #loginScreen .pin-pad button:hover {
+            background: rgba(255, 255, 255, 0.12);
+        }
+        #loginScreen .pin-pad button:active {
+            transform: scale(0.92);
+        }
+        #loginScreen .pin-pad .clear-btn {
+            background: rgba(255, 107, 107, 0.15);
+            color: #ff6b6b;
+        }
+        #loginScreen .pin-pad .clear-btn:hover {
+            background: rgba(255, 107, 107, 0.25);
+        }
+        #loginScreen .login-error {
+            color: #ff6b6b;
+            font-size: 14px;
+            margin-top: 10px;
+            min-height: 24px;
+        }
+        #loginScreen .setup-hint {
+            color: #666;
+            font-size: 13px;
+            margin-top: 12px;
+        }
+        #loginScreen .setup-hint button {
+            background: var(--accent);
+            border: none;
+            color: white;
+            padding: 2px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        /* ===== SLEEP OVERLAY ===== */
+        #sleepOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.92);
+            z-index: 9999998;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+        }
+        #sleepOverlay.show {
+            display: flex;
+        }
+        #sleepOverlay .icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%,
+            100% {
+                opacity: 0.6;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.05);
+            }
+        }
+        #sleepOverlay .label {
+            color: #888;
+            font-size: 16px;
+            font-weight: 300;
+        }
+
+        /* ===== SHUTDOWN DIALOG ===== */
+        #shutdownDialog {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 9999997;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+        #shutdownDialog.show {
+            display: flex;
+        }
+        #shutdownDialog .box {
+            background: var(--glass);
+            backdrop-filter: blur(16px);
+            padding: 30px 40px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            text-align: center;
+            max-width: 400px;
+            color: white;
+        }
+        #shutdownDialog .box .icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        #shutdownDialog .box h3 {
+            font-weight: 300;
+            font-size: 22px;
+            margin-bottom: 4px;
+        }
+        #shutdownDialog .box p {
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        #shutdownDialog .box .btns {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        #shutdownDialog .box .btns button {
+            padding: 8px 28px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.15s;
+        }
+        #shutdownDialog .box .btns .cancel {
+            background: rgba(255, 255, 255, 0.06);
+            color: #ccc;
+        }
+        #shutdownDialog .box .btns .cancel:hover {
+            background: rgba(255, 255, 255, 0.12);
+        }
+        #shutdownDialog .box .btns .shutdown {
+            background: #d43a3a;
+            color: white;
+        }
+        #shutdownDialog .box .btns .shutdown:hover {
+            background: #b02b2b;
+        }
+        #shutdownDialog .box .btns .sleep {
+            background: var(--accent);
+            color: white;
+        }
+        #shutdownDialog .box .btns .sleep:hover {
+            background: #106ebe;
+        }
+
+        /* ===== REST OF THE CSS (from previous version) ===== */
+        /* ---- SETUP WIZARD ---- */
         #setupWizard {
             position: fixed;
             top: 0;
@@ -85,7 +336,7 @@
             font-size: 14px;
         }
 
-        /* ===== DESKTOP ===== */
+        /* ---- DESKTOP ---- */
         #desktop {
             width: 100%;
             height: calc(100% - 50px);
@@ -131,7 +382,7 @@
             backdrop-filter: blur(4px);
         }
 
-        /* ===== TASKBAR ===== */
+        /* ---- TASKBAR ---- */
         #taskbar {
             height: 50px;
             background: rgba(20, 20, 40, 0.88);
@@ -210,13 +461,9 @@
             padding: 2px 6px;
             border-radius: 4px;
             transition: background 0.15s;
-            position: relative;
         }
         #systemTray .tray-icon:hover {
             background: rgba(255, 255, 255, 0.08);
-        }
-        #batteryIcon {
-            font-size: 18px;
         }
         #clock {
             color: white;
@@ -228,7 +475,7 @@
             font-variant-numeric: tabular-nums;
         }
 
-        /* ===== START MENU ===== */
+        /* ---- START MENU ---- */
         #start-menu {
             position: fixed;
             bottom: 56px;
@@ -295,8 +542,12 @@
             width: 28px;
             text-align: center;
         }
+        .start-divider {
+            border-top: 1px solid var(--border);
+            margin: 6px 0;
+        }
 
-        /* ===== WINDOWS ===== */
+        /* ---- WINDOWS ---- */
         .window {
             position: absolute;
             min-width: 340px;
@@ -385,7 +636,7 @@
             flex-direction: column;
         }
 
-        /* ===== BROWSER ===== */
+        /* ---- BROWSER ---- */
         .browser-toolbar {
             display: flex;
             gap: 6px;
@@ -436,7 +687,7 @@
             min-height: 300px;
         }
 
-        /* ===== TERMINAL ===== */
+        /* ---- TERMINAL ---- */
         .terminal-output {
             background: #0a0a1a;
             padding: 12px;
@@ -459,6 +710,9 @@
         }
         .terminal-output .info {
             color: #4dabf7;
+        }
+        .terminal-output .warn {
+            color: #ffd93d;
         }
         .terminal-input-row {
             display: flex;
@@ -486,7 +740,7 @@
             border-color: var(--accent);
         }
 
-        /* ===== TASK MANAGER ===== */
+        /* ---- TASK MANAGER ---- */
         .task-list {
             display: flex;
             flex-direction: column;
@@ -519,7 +773,7 @@
             background: #b02b2b;
         }
 
-        /* ===== MUSIC APP ===== */
+        /* ---- MUSIC ---- */
         .music-search-row {
             display: flex;
             gap: 8px;
@@ -606,7 +860,7 @@
             border: none;
         }
 
-        /* ===== SETTINGS (new network/bluetooth) ===== */
+        /* ---- SETTINGS ---- */
         .settings-tabs {
             display: flex;
             gap: 2px;
@@ -645,6 +899,7 @@
             gap: 12px;
             padding: 10px 0;
             border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
         }
         .settings-row .label {
             color: var(--text2);
@@ -665,7 +920,9 @@
             background: transparent;
             padding: 0;
         }
-        .settings-row input[type="text"] {
+        .settings-row input[type="text"],
+        .settings-row input[type="number"],
+        .settings-row select {
             background: rgba(0, 0, 0, 0.2);
             border: 1px solid var(--border);
             color: white;
@@ -673,9 +930,10 @@
             border-radius: 4px;
             outline: none;
             font-size: 14px;
-            width: 150px;
+            min-width: 120px;
         }
-        .settings-row input[type="text"]:focus {
+        .settings-row input:focus,
+        .settings-row select:focus {
             border-color: var(--accent);
         }
         .settings-row .btn {
@@ -704,6 +962,18 @@
         .settings-row .btn-secondary:hover {
             background: rgba(255, 255, 255, 0.12);
         }
+        .settings-row .btn-danger {
+            background: #d43a3a;
+            border: none;
+            color: white;
+            padding: 4px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .settings-row .btn-danger:hover {
+            background: #b02b2b;
+        }
         .settings-row .toggle {
             position: relative;
             width: 40px;
@@ -712,6 +982,7 @@
             border-radius: 11px;
             cursor: pointer;
             transition: background 0.3s;
+            flex-shrink: 0;
         }
         .settings-row .toggle.on {
             background: var(--accent);
@@ -729,8 +1000,15 @@
         .settings-row .toggle.on .slider {
             transform: translateX(18px);
         }
+        .settings-row .badge {
+            background: rgba(255, 255, 255, 0.04);
+            padding: 2px 10px;
+            border-radius: 10px;
+            font-size: 12px;
+            color: #888;
+        }
 
-        /* ===== FILE EXPLORER (VFS) ===== */
+        /* ---- FILE EXPLORER ---- */
         .file-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
@@ -811,7 +1089,170 @@
             white-space: nowrap;
         }
 
-        /* ===== SCROLLBAR ===== */
+        /* ---- CAMERA ---- */
+        #camVideo {
+            width: 100%;
+            background: #0a0a1a;
+            border-radius: 8px;
+            aspect-ratio: 4/3;
+            object-fit: cover;
+            border: 1px solid var(--border);
+        }
+        .cam-controls {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        .cam-controls button {
+            padding: 5px 14px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            background: rgba(255, 255, 255, 0.06);
+            color: white;
+            transition: background 0.15s;
+        }
+        .cam-controls button.primary {
+            background: var(--accent);
+        }
+        .cam-controls button.primary:hover {
+            background: #106ebe;
+        }
+        .cam-controls button.danger {
+            background: #d43a3a;
+        }
+        .cam-controls button.danger:hover {
+            background: #b02b2b;
+        }
+        .cam-gallery {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+            max-height: 100px;
+            overflow-y: auto;
+            padding: 4px;
+        }
+        .cam-gallery img {
+            width: 56px;
+            height: 56px;
+            object-fit: cover;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+            cursor: pointer;
+        }
+
+        /* ---- MICROPHONE ---- */
+        #audioVisualizer {
+            width: 100%;
+            height: 120px;
+            background: #0a0a1a;
+            border-radius: 8px;
+            display: block;
+            border: 1px solid var(--border);
+        }
+        .mic-status {
+            color: var(--text2);
+            margin-top: 8px;
+            font-size: 13px;
+        }
+
+        /* ---- CALCULATOR ---- */
+        .calc-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            margin-top: 8px;
+        }
+        .calc-grid button {
+            padding: 12px;
+            font-size: 18px;
+            border: none;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            cursor: pointer;
+            transition: background 0.12s;
+        }
+        .calc-grid button:hover {
+            background: rgba(255, 255, 255, 0.12);
+        }
+        .calc-grid .op {
+            background: rgba(0, 120, 212, 0.2);
+        }
+        .calc-grid .op:hover {
+            background: rgba(0, 120, 212, 0.35);
+        }
+        .calc-grid .eq {
+            background: var(--accent);
+        }
+        .calc-grid .eq:hover {
+            background: #106ebe;
+        }
+        #calcDisplay {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 14px;
+            border-radius: 6px;
+            text-align: right;
+            font-size: 26px;
+            font-weight: 300;
+            margin-bottom: 8px;
+            min-height: 50px;
+            color: white;
+            border: 1px solid var(--border);
+            width: 100%;
+            font-family: 'Consolas', monospace;
+        }
+
+        /* ---- APP STORE CARDS ---- */
+        .app-card {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 14px 16px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid var(--border);
+            transition: background 0.2s;
+            margin-bottom: 8px;
+        }
+        .app-card:hover {
+            background: rgba(255, 255, 255, 0.06);
+        }
+        .app-card .info {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .app-card .info .icon {
+            font-size: 28px;
+        }
+        .app-card .info .name {
+            font-weight: 600;
+            font-size: 15px;
+            color: var(--text);
+        }
+        .app-card .info .desc {
+            font-size: 13px;
+            color: #777;
+        }
+        .app-card .launch-btn {
+            background: var(--accent);
+            border: none;
+            color: white;
+            padding: 4px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        .app-card .launch-btn:hover {
+            background: #106ebe;
+        }
+
+        /* ---- SCROLLBAR ---- */
         ::-webkit-scrollbar {
             width: 4px;
             height: 4px;
@@ -826,9 +1267,101 @@
         ::-webkit-scrollbar-thumb:hover {
             background: rgba(255, 255, 255, 0.25);
         }
+
+        /* ---- ACCESSIBILITY: High contrast helper ---- */
+        .high-contrast {
+            --contrast: 1.2;
+        }
+        .high-contrast .window {
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+        .high-contrast .settings-row {
+            border-bottom-color: rgba(255, 255, 255, 0.15);
+        }
+
+        /* ---- RESPONSIVE ---- */
+        @media (max-width: 600px) {
+            #start-menu {
+                width: 300px;
+                left: 4px;
+            }
+            .window {
+                min-width: 280px;
+            }
+            .settings-tabs button {
+                padding: 6px 10px;
+                font-size: 12px;
+            }
+            .settings-row .label {
+                min-width: 70px;
+                font-size: 13px;
+            }
+            #loginScreen .pin-pad {
+                grid-template-columns: repeat(3, 50px);
+                gap: 8px;
+            }
+            #loginScreen .pin-pad button {
+                width: 50px;
+                height: 50px;
+                font-size: 18px;
+            }
+        }
     </style>
 </head>
 <body>
+
+    <!-- ===== LOGIN SCREEN ===== -->
+    <div id="loginScreen">
+        <div class="avatar">👤</div>
+        <h2>OpencoreOS</h2>
+        <div class="sub">Enter your PIN to unlock</div>
+        <div class="pin-dots" id="pinDots">
+            <div class="pin-dot"></div>
+            <div class="pin-dot"></div>
+            <div class="pin-dot"></div>
+            <div class="pin-dot"></div>
+            <div class="pin-dot"></div>
+            <div class="pin-dot"></div>
+        </div>
+        <div class="login-error" id="loginError"></div>
+        <div class="pin-pad" id="pinPad">
+            <button data-num="1">1</button>
+            <button data-num="2">2</button>
+            <button data-num="3">3</button>
+            <button data-num="4">4</button>
+            <button data-num="5">5</button>
+            <button data-num="6">6</button>
+            <button data-num="7">7</button>
+            <button data-num="8">8</button>
+            <button data-num="9">9</button>
+            <button class="clear-btn" data-num="clear">⌫</button>
+            <button data-num="0">0</button>
+            <button data-num="enter">✓</button>
+        </div>
+        <div class="setup-hint" id="pinSetupHint">
+            First time? <button id="setupPinBtn">Set up PIN</button>
+        </div>
+    </div>
+
+    <!-- ===== SLEEP OVERLAY ===== -->
+    <div id="sleepOverlay" class="show" style="display:none;">
+        <div class="icon">🌙</div>
+        <div class="label">Click anywhere to wake</div>
+    </div>
+
+    <!-- ===== SHUTDOWN DIALOG ===== -->
+    <div id="shutdownDialog">
+        <div class="box">
+            <div class="icon">⏻</div>
+            <h3>What would you like to do?</h3>
+            <p>Your session will be saved.</p>
+            <div class="btns">
+                <button class="cancel" id="shutdownCancel">Cancel</button>
+                <button class="sleep" id="shutdownSleep">🌙 Sleep</button>
+                <button class="shutdown" id="shutdownPower">⏻ Turn Off</button>
+            </div>
+        </div>
+    </div>
 
     <!-- ===== SETUP WIZARD ===== -->
     <div id="setupWizard">
@@ -871,7 +1404,9 @@
         <div class="start-item" data-app="appstore"><span class="icon">🛒</span> App Store</div>
         <div class="start-item" data-app="calculator"><span class="icon">🧮</span> Calculator</div>
         <div class="start-item" data-app="settings"><span class="icon">⚙️</span> Settings</div>
-        <div class="start-item" id="shutdownBtn"><span class="icon">⏻</span> Restart OS</div>
+        <div class="start-divider"></div>
+        <div class="start-item" id="shutdownBtn"><span class="icon">⏻</span> Shutdown / Sleep</div>
+        <div class="start-item" id="lockBtn"><span class="icon">🔒</span> Lock Screen</div>
     </div>
 
     <!-- ===== TASKBAR ===== -->
@@ -882,15 +1417,18 @@
             <span class="tray-icon" id="batteryIcon">🔋</span>
             <span class="tray-icon" title="Network">📶</span>
             <span class="tray-icon" title="Sound">🔊</span>
+            <span class="tray-icon" id="lockTrayIcon" title="Lock">🔒</span>
         </div>
         <div id="clock">00:00:00</div>
     </div>
 
     <script>
         // ================================================================
-        //  OPENCOREOS v4.0 - THE MEGA ULTIMATE EDITION
-        //  Features: Browser, Terminal, Task Manager, .oc files, Battery,
-        //  Network/Bluetooth management, Music app with Spotify
+        //  OPENCOREOS v5.0 - SECURITY, BACKUP, ACCESSIBILITY
+        //  Features: Login PIN, Sleep, Shutdown, Backup/Restore,
+        //  Accessibility (font size, contrast, reduce motion),
+        //  Advanced Terminal: diagnostic, maintenance, backup, restore,
+        //  health, systeminfo, memory, processes, shutdown, sleep
         // ================================================================
 
         // ---------- STATE ----------
@@ -902,6 +1440,8 @@
             terminalHistory: [],
             browserHistory: [],
             browserIndex: -1,
+            isSleeping: false,
+            isLocked: false,
         };
 
         // ---------- DOM REFS ----------
@@ -915,8 +1455,20 @@
         const setupProgress = document.getElementById('setupProgress');
         const setupStatus = document.getElementById('setupStatus');
 
+        // Login
+        const loginScreen = document.getElementById('loginScreen');
+        const pinDots = document.querySelectorAll('.pin-dot');
+        const loginError = document.getElementById('loginError');
+        const pinPad = document.getElementById('pinPad');
+        const setupPinBtn = document.getElementById('setupPinBtn');
+        const pinSetupHint = document.getElementById('pinSetupHint');
+
+        // Sleep & Shutdown
+        const sleepOverlay = document.getElementById('sleepOverlay');
+        const shutdownDialog = document.getElementById('shutdownDialog');
+
         // ================================================================
-        //  VIRTUAL FILE SYSTEM (VFS) WITH .oc SUPPORT
+        //  VIRTUAL FILE SYSTEM (VFS)
         // ================================================================
         const VFS = {
             init() {
@@ -928,21 +1480,15 @@
                             'Pictures': { type: 'folder', children: {} },
                             'Recordings': { type: 'folder', children: {} },
                             'Desktop': { type: 'folder', children: {} },
-                            'readme.txt': {
-                                type: 'file',
-                                content: 'Welcome to OpencoreOS v4.0!\n\n.oc files are wrappers that store any file type.'
-                            }
+                            'readme.txt': { type: 'file',
+                            content: 'Welcome to OpencoreOS v5.0!\n\nSecurity, Backup, Accessibility.' }
                         }
                     };
                     localStorage.setItem('opencore_vfs', JSON.stringify(root));
                 }
             },
-            getRoot() {
-                return JSON.parse(localStorage.getItem('opencore_vfs'));
-            },
-            saveRoot(root) {
-                localStorage.setItem('opencore_vfs', JSON.stringify(root));
-            },
+            getRoot() { return JSON.parse(localStorage.getItem('opencore_vfs')); },
+            saveRoot(root) { localStorage.setItem('opencore_vfs', JSON.stringify(root)); },
             getNode(path) {
                 const parts = path.split('/').filter(p => p);
                 let node = this.getRoot();
@@ -955,14 +1501,8 @@
             readFile(path) {
                 const node = this.getNode(path);
                 if (!node || node.type !== 'file') return null;
-                // Check if .oc file
                 if (path.endsWith('.oc')) {
-                    try {
-                        const parsed = JSON.parse(node.content);
-                        return parsed; // { type, content, metadata }
-                    } catch {
-                        return node.content;
-                    }
+                    try { return JSON.parse(node.content); } catch { return node.content; }
                 }
                 return node.content;
             },
@@ -972,32 +1512,21 @@
                 const root = this.getRoot();
                 let node = root;
                 for (const part of parts) {
-                    if (!node.children[part]) {
-                        node.children[part] = { type: 'folder', children: {} };
-                    }
+                    if (!node.children[part]) node.children[part] = { type: 'folder', children: {} };
                     node = node.children[part];
                 }
                 node.children[fileName] = { type: 'file', content: content };
                 this.saveRoot(root);
                 return true;
             },
-            // Write a .oc wrapper file
             writeOCFile(path, originalType, data, metadata = {}) {
-                const wrapper = JSON.stringify({
-                    type: originalType,
-                    content: data,
-                    metadata: metadata,
-                    _oc: true
-                });
+                const wrapper = JSON.stringify({ type: originalType, content: data, metadata: metadata, _oc: true });
                 return this.writeFile(path, wrapper);
             },
             listFolder(path) {
                 const node = this.getNode(path);
                 if (!node || node.type !== 'folder') return null;
-                return Object.keys(node.children).map(name => ({
-                    name,
-                    ...node.children[name]
-                }));
+                return Object.keys(node.children).map(name => ({ name, ...node.children[name] }));
             },
             createFolder(path) {
                 const parts = path.split('/').filter(p => p);
@@ -1005,9 +1534,7 @@
                 const root = this.getRoot();
                 let node = root;
                 for (const part of parts) {
-                    if (!node.children[part]) {
-                        node.children[part] = { type: 'folder', children: {} };
-                    }
+                    if (!node.children[part]) node.children[part] = { type: 'folder', children: {} };
                     node = node.children[part];
                 }
                 if (!node.children[folderName]) {
@@ -1037,14 +1564,8 @@
                 const root = this.getRoot();
                 const calc = (node) => {
                     let size = 0;
-                    if (node.type === 'file') {
-                        return new Blob([node.content || '']).size;
-                    }
-                    if (node.children) {
-                        for (const key in node.children) {
-                            size += calc(node.children[key]);
-                        }
-                    }
+                    if (node.type === 'file') return new Blob([node.content || '']).size;
+                    if (node.children) { for (const key in node.children) size += calc(node.children[key]); }
                     return size;
                 };
                 return calc(root);
@@ -1054,32 +1575,220 @@
                 let count = 0;
                 const walk = (node) => {
                     if (node.type === 'file') count++;
-                    if (node.children) {
-                        for (const key in node.children) {
-                            walk(node.children[key]);
-                        }
-                    }
+                    if (node.children) { for (const key in node.children) walk(node.children[key]); }
                 };
                 walk(root);
                 return count;
             },
-            // Resolve .oc file to original content and type
             resolveOCFile(path) {
                 const data = this.readFile(path);
-                if (typeof data === 'object' && data._oc) {
-                    return data;
-                }
+                if (typeof data === 'object' && data._oc) return data;
                 return null;
+            },
+            // Export entire VFS as JSON
+            exportVFS() {
+                return JSON.stringify(this.getRoot());
+            },
+            // Import VFS from JSON
+            importVFS(data) {
+                try {
+                    const parsed = JSON.parse(data);
+                    if (parsed.type === 'folder' && parsed.children) {
+                        localStorage.setItem('opencore_vfs', JSON.stringify(parsed));
+                        return true;
+                    }
+                    return false;
+                } catch { return false; }
             }
         };
         VFS.init();
 
         // ================================================================
+        //  SECURITY - PIN MANAGEMENT
+        // ================================================================
+        let pinEntry = '';
+        let storedPin = localStorage.getItem('opencore_pin') || '';
+        let isPinSetup = storedPin.length === 6;
+
+        function updatePinDots() {
+            pinDots.forEach((dot, i) => {
+                dot.classList.toggle('filled', i < pinEntry.length);
+                dot.classList.remove('error');
+            });
+        }
+
+        function checkPin() {
+            if (pinEntry.length < 6) {
+                loginError.textContent = 'Enter 6 digits.';
+                return;
+            }
+            if (!isPinSetup) {
+                // Setup mode
+                if (pinEntry.length === 6) {
+                    localStorage.setItem('opencore_pin', pinEntry);
+                    storedPin = pinEntry;
+                    isPinSetup = true;
+                    pinSetupHint.innerHTML = 'PIN set! <button id="unlockBtn">Unlock</button>';
+                    document.getElementById('unlockBtn').addEventListener('click', () => {
+                        pinEntry = '';
+                        loginError.textContent = 'Enter your PIN to unlock.';
+                        updatePinDots();
+                    });
+                    loginError.textContent = '✅ PIN set! Enter it to unlock.';
+                    pinEntry = '';
+                    updatePinDots();
+                    return;
+                }
+                return;
+            }
+            if (pinEntry === storedPin) {
+                loginError.textContent = '✅ Unlocked!';
+                setTimeout(() => {
+                    loginScreen.classList.add('hidden');
+                    state.isLocked = false;
+                }, 300);
+            } else {
+                loginError.textContent = '❌ Incorrect PIN. Try again.';
+                pinDots.forEach(d => d.classList.add('error'));
+                setTimeout(() => {
+                    pinDots.forEach(d => d.classList.remove('error'));
+                }, 400);
+                pinEntry = '';
+                updatePinDots();
+            }
+        }
+
+        // PIN pad
+        pinPad.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const num = btn.dataset.num;
+                if (num === 'clear') {
+                    pinEntry = pinEntry.slice(0, -1);
+                    loginError.textContent = '';
+                } else if (num === 'enter') {
+                    checkPin();
+                } else if (pinEntry.length < 6) {
+                    pinEntry += num;
+                    loginError.textContent = '';
+                }
+                updatePinDots();
+                if (pinEntry.length === 6 && isPinSetup) {
+                    setTimeout(checkPin, 200);
+                }
+                if (pinEntry.length === 6 && !isPinSetup) {
+                    setTimeout(checkPin, 200);
+                }
+            });
+        });
+
+        // Setup PIN button
+        setupPinBtn.addEventListener('click', () => {
+            if (storedPin) {
+                if (confirm('Reset PIN? This will clear your current PIN.')) {
+                    localStorage.removeItem('opencore_pin');
+                    storedPin = '';
+                    isPinSetup = false;
+                    pinEntry = '';
+                    updatePinDots();
+                    loginError.textContent = 'Set a new 6-digit PIN.';
+                    pinSetupHint.innerHTML = 'Set up your PIN (6 digits):';
+                }
+            } else {
+                loginError.textContent = 'Enter a 6-digit PIN.';
+                pinSetupHint.innerHTML = 'Set up your PIN (6 digits):';
+            }
+        });
+
+        // Lock screen
+        function lockScreen() {
+            state.isLocked = true;
+            loginScreen.classList.remove('hidden');
+            pinEntry = '';
+            updatePinDots();
+            loginError.textContent = 'Screen locked. Enter PIN.';
+            // Close all windows?
+            // No, keep them open but behind login
+        }
+
+        document.getElementById('lockTrayIcon').addEventListener('click', lockScreen);
+        document.getElementById('lockBtn').addEventListener('click', () => {
+            startMenu.classList.remove('open');
+            lockScreen();
+        });
+
+        // Check if PIN exists, if not show setup mode
+        if (!storedPin) {
+            isPinSetup = false;
+            loginError.textContent = 'Set up your PIN (6 digits).';
+            pinSetupHint.innerHTML = 'Set up your PIN (6 digits):';
+        } else {
+            loginError.textContent = 'Enter your 6-digit PIN.';
+            pinSetupHint.innerHTML = 'Enter your PIN to unlock.';
+        }
+
+        // ================================================================
+        //  SLEEP & SHUTDOWN
+        // ================================================================
+        function goToSleep() {
+            state.isSleeping = true;
+            sleepOverlay.style.display = 'flex';
+            sleepOverlay.classList.add('show');
+        }
+
+        function wakeFromSleep() {
+            state.isSleeping = false;
+            sleepOverlay.classList.remove('show');
+            sleepOverlay.style.display = 'none';
+        }
+
+        sleepOverlay.addEventListener('click', wakeFromSleep);
+
+        function showShutdownDialog() {
+            shutdownDialog.classList.add('show');
+            startMenu.classList.remove('open');
+        }
+
+        document.getElementById('shutdownCancel').addEventListener('click', () => {
+            shutdownDialog.classList.remove('show');
+        });
+
+        document.getElementById('shutdownSleep').addEventListener('click', () => {
+            shutdownDialog.classList.remove('show');
+            goToSleep();
+        });
+
+        document.getElementById('shutdownPower').addEventListener('click', () => {
+            shutdownDialog.classList.remove('show');
+            if (confirm('Shut down OpencoreOS? All windows will close.')) {
+                // Save everything
+                localStorage.setItem('opencore_shutdown', 'true');
+                location.reload();
+            }
+        });
+
+        document.getElementById('shutdownBtn').addEventListener('click', () => {
+            startMenu.classList.remove('open');
+            showShutdownDialog();
+        });
+
+        // Keyboard shortcut: Ctrl+Shift+S for sleep
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.shiftKey && e.key === 'S') {
+                e.preventDefault();
+                goToSleep();
+            }
+            if (e.ctrlKey && e.shiftKey && e.key === 'L') {
+                e.preventDefault();
+                lockScreen();
+            }
+        });
+
+        // ================================================================
         //  SETUP WIZARD
         // ================================================================
         function runSetupWizard() {
-            const steps = ['Formatting virtual drive...', 'Creating system folders...', 'Installing core components...',
-                'Configuring user settings...', 'Optimizing performance...', 'Finalizing setup...'
+            const steps = ['Formatting virtual drive...', 'Creating system folders...', 'Installing security modules...',
+                'Configuring accessibility...', 'Optimizing performance...', 'Finalizing setup...'
             ];
             let progress = 0;
             const interval = setInterval(() => {
@@ -1099,6 +1808,7 @@
                         setInterval(updateClock, 1000);
                         updateBattery();
                         setInterval(updateBattery, 30000);
+                        applyAccessibilitySettings();
                     }, 600);
                 }
             }, 1200);
@@ -1110,6 +1820,7 @@
             setInterval(updateClock, 1000);
             updateBattery();
             setInterval(updateBattery, 30000);
+            applyAccessibilitySettings();
         } else {
             runSetupWizard();
         }
@@ -1137,6 +1848,34 @@
             if (wallpaper) desktop.style.background = wallpaper;
             const devName = localStorage.getItem('opencore_device_name') || 'Opencore-PC';
             document.querySelector('.user-name').textContent = devName;
+            // Accessibility
+            const fontSize = localStorage.getItem('opencore_font_size') || '14';
+            document.documentElement.style.setProperty('--font-size', fontSize + 'px');
+            const contrast = localStorage.getItem('opencore_contrast') || '1';
+            document.documentElement.style.setProperty('--contrast', contrast);
+            if (localStorage.getItem('opencore_high_contrast') === 'true') {
+                document.body.classList.add('high-contrast');
+            }
+            if (localStorage.getItem('opencore_reduce_motion') === 'true') {
+                document.body.classList.add('reduce-motion');
+            }
+        }
+
+        function applyAccessibilitySettings() {
+            const fontSize = localStorage.getItem('opencore_font_size') || '14';
+            document.documentElement.style.setProperty('--font-size', fontSize + 'px');
+            const contrast = localStorage.getItem('opencore_contrast') || '1';
+            document.documentElement.style.setProperty('--contrast', contrast);
+            if (localStorage.getItem('opencore_high_contrast') === 'true') {
+                document.body.classList.add('high-contrast');
+            } else {
+                document.body.classList.remove('high-contrast');
+            }
+            if (localStorage.getItem('opencore_reduce_motion') === 'true') {
+                document.body.classList.add('reduce-motion');
+            } else {
+                document.body.classList.remove('reduce-motion');
+            }
         }
 
         // ================================================================
@@ -1153,12 +1892,9 @@
         startBtn.addEventListener('click', (e) => { e.stopPropagation();
             startMenu.classList.toggle('open'); });
         document.addEventListener('click', () => startMenu.classList.remove('open'));
-        document.getElementById('shutdownBtn').addEventListener('click', () => {
-            if (confirm('Restart OpencoreOS?')) location.reload();
-        });
 
         // ================================================================
-        //  WINDOW MANAGER (SINGLE INSTANCE)
+        //  WINDOW MANAGER
         // ================================================================
         function createWindow(appId, title, icon, contentHTML, width = 520, height = 360) {
             const existing = state.windows.find(w => w.appId === appId);
@@ -1294,7 +2030,7 @@
         }
 
         // ================================================================
-        //  VFS FILE EXPLORER (with .oc support)
+        //  FILE EXPLORER (VFS)
         // ================================================================
         let currentVFSPath = '/';
 
@@ -1308,7 +2044,7 @@
                     <button id="vfsHomeBtn">🏠 Home</button>
                     <button id="vfsNewFolderBtn">📁 New Folder</button>
                     <button id="vfsNewFileBtn">📄 New File</button>
-                    <button id="vfsNewOCBtn">📦 New .oc File</button>
+                    <button id="vfsNewOCBtn">📦 New .oc</button>
                     <span class="path-display">📂 ${displayPath}</span>
                 </div>
                 <div class="file-grid" id="vfsGrid">
@@ -1383,7 +2119,7 @@
                 if (name && name.endsWith('.oc')) {
                     const newPath = path === '/' ? '/' + name : path + '/' + name;
                     const originalType = prompt('Original file type (txt, png, jpg, wav, etc.):') || 'txt';
-                    const content = prompt('Content (text for txt, or base64 for images):') || 'Sample content';
+                    const content = prompt('Content:') || 'Sample content';
                     if (VFS.writeOCFile(newPath, originalType, content)) {
                         renderFileExplorer(win, path);
                         alert('✅ .oc file created!');
@@ -1394,29 +2130,22 @@
 
         function openFileByExtension(win, path, name) {
             const ext = name.split('.').pop().toLowerCase();
-            // Check if .oc file
             if (ext === 'oc') {
                 const resolved = VFS.resolveOCFile(path);
                 if (resolved) {
                     const { type, content } = resolved;
-                    // Open based on original type
-                    if (type === 'txt' || type === 'text' || type === 'md' || type === 'json' || type === 'js' || type ===
-                        'html' || type === 'css' || type === 'xml') {
+                    if (['txt', 'text', 'md', 'json', 'js', 'html', 'css', 'xml'].includes(type)) {
                         launchApp('notepad', { path, content });
                     } else if (['png', 'jpg', 'jpeg', 'gif', 'bmp', 'svg', 'webp'].includes(type)) {
                         launchApp('imageviewer', content);
                     } else if (['wav', 'mp3', 'ogg'].includes(type)) {
-                        alert('🎵 Audio .oc file: would play here.');
+                        alert('🎵 Audio .oc: would play here.');
                     } else {
                         alert(`📦 .oc file (${type}): ${content.slice(0, 100)}`);
                     }
-                } else {
-                    alert('Invalid .oc file.');
-                }
+                } else { alert('Invalid .oc file.'); }
                 return;
             }
-
-            // Regular file
             const content = VFS.readFile(path);
             if (content === null) { alert('Could not read file.'); return; }
             if (['png', 'jpg', 'jpeg', 'gif', 'bmp', 'svg', 'webp'].includes(ext)) {
@@ -1426,33 +2155,16 @@
             } else if (['wav', 'mp3', 'ogg'].includes(ext)) {
                 alert('🎵 Audio: ' + name);
             } else {
-                alert('📄 File: ' + name + '\nContent length: ' + content.length);
+                alert('📄 File: ' + name + '\nSize: ' + (content.length || 'unknown'));
             }
         }
 
         function getVFSFileIcon(name) {
             const ext = name.split('.').pop().toLowerCase();
             if (ext === 'oc') return '📦';
-            const icons = {
-                'png': '🖼️',
-                'jpg': '🖼️',
-                'jpeg': '🖼️',
-                'gif': '🖼️',
-                'svg': '🖼️',
-                'webp': '🖼️',
-                'txt': '📄',
-                'md': '📄',
-                'json': '📄',
-                'js': '📄',
-                'html': '🌐',
-                'css': '🎨',
-                'xml': '📄',
-                'pdf': '📕',
-                'doc': '📘',
-                'mp3': '🎵',
-                'wav': '🎵',
-                'mp4': '🎬',
-            };
+            const icons = { 'png': '🖼️', 'jpg': '🖼️', 'jpeg': '🖼️', 'gif': '🖼️', 'svg': '🖼️', 'webp': '🖼️', 'txt': '📄',
+                'md': '📄', 'json': '📄', 'js': '📄', 'html': '🌐', 'css': '🎨', 'xml': '📄', 'pdf': '📕', 'doc': '📘',
+                'mp3': '🎵', 'wav': '🎵', 'mp4': '🎬' };
             return icons[ext] || '📄';
         }
 
@@ -1468,7 +2180,6 @@
                 focusWindow(existing.id);
                 return;
             }
-
             let win;
             switch (appId) {
                 case 'explorer':
@@ -1476,72 +2187,41 @@
                     setTimeout(() => { currentVFSPath = '/';
                         renderFileExplorer(win, '/'); }, 50);
                     break;
-
                 case 'browser':
-                    win = createWindow(appId, 'Browser', '🌐', `
-                        <div class="browser-toolbar">
-                            <button id="browserBack">◀</button>
-                            <button id="browserForward">▶</button>
-                            <button id="browserRefresh">⟳</button>
-                            <button id="browserHome">🏠</button>
-                            <input type="text" id="browserUrl" placeholder="Enter URL (https://...)" value="https://example.com" />
-                            <button id="browserGo">Go</button>
-                        </div>
-                        <iframe class="browser-frame" id="browserFrame" src="https://example.com" sandbox="allow-scripts allow-forms allow-same-origin allow-popups"></iframe>
-                    `, 780, 520);
+                    win = createWindow(appId, 'Browser', '🌐',
+                        `<div class="browser-toolbar"><button id="browserBack">◀</button><button id="browserForward">▶</button><button id="browserRefresh">⟳</button><button id="browserHome">🏠</button><input type="text" id="browserUrl" placeholder="Enter URL" value="https://example.com" /><button id="browserGo">Go</button></div><iframe class="browser-frame" id="browserFrame" src="https://example.com" sandbox="allow-scripts allow-forms allow-same-origin allow-popups"></iframe>`,
+                        780, 520);
                     initBrowser(win);
                     break;
-
                 case 'terminal':
-                    win = createWindow(appId, 'Terminal', '💻', `
-                        <div class="terminal-output" id="termOutput"></div>
-                        <div class="terminal-input-row">
-                            <span>$</span>
-                            <input type="text" id="termInput" placeholder="Enter command..." autofocus />
-                        </div>
-                    `, 600, 400);
+                    win = createWindow(appId, 'Terminal', '💻',
+                        `<div class="terminal-output" id="termOutput"></div><div class="terminal-input-row"><span>$</span><input type="text" id="termInput" placeholder="Enter command..." autofocus /></div>`,
+                        620, 420);
                     initTerminal(win);
                     break;
-
                 case 'taskmanager':
-                    win = createWindow(appId, 'Task Manager', '📊', `
-                        <div style="display:flex;gap:20px;padding-bottom:12px;border-bottom:1px solid var(--border);margin-bottom:12px;">
-                            <div><span style="color:#888;">CPU: </span><span id="tmCpu">0%</span></div>
-                            <div><span style="color:#888;">Memory: </span><span id="tmMem">0 MB</span></div>
-                            <div><span style="color:#888;">Apps: </span><span id="tmCount">0</span></div>
-                        </div>
-                        <div class="task-list" id="taskList"></div>
-                    `, 540, 420);
+                    win = createWindow(appId, 'Task Manager', '📊',
+                        `<div style="display:flex;gap:20px;padding-bottom:12px;border-bottom:1px solid var(--border);margin-bottom:12px;"><div><span style="color:#888;">CPU: </span><span id="tmCpu">0%</span></div><div><span style="color:#888;">Memory: </span><span id="tmMem">0 MB</span></div><div><span style="color:#888;">Apps: </span><span id="tmCount">0</span></div></div><div class="task-list" id="taskList"></div>`,
+                        540, 420);
                     initTaskManager(win);
                     break;
-
                 case 'music':
-                    win = createWindow(appId, 'Music', '🎵', `
-                        <div class="music-search-row">
-                            <input type="text" id="musicSearchInput" placeholder="Search Spotify (e.g., song name)" />
-                            <button id="musicSearchBtn">🔍 Search</button>
-                        </div>
-                        <div class="music-results" id="musicResults"></div>
-                        <div class="music-player-embed" id="musicPlayer"></div>
-                        <p style="color:#666;font-size:12px;margin-top:8px;">Requires Spotify Client ID & Secret (set in Settings). Paste a track link or search.</p>
-                    `, 560, 480);
+                    win = createWindow(appId, 'Music', '🎵',
+                        `<div class="music-search-row"><input type="text" id="musicSearchInput" placeholder="Search Spotify..." /><button id="musicSearchBtn">🔍 Search</button></div><div class="music-results" id="musicResults"></div><div class="music-player-embed" id="musicPlayer"></div><p style="color:#666;font-size:12px;margin-top:8px;">Set Spotify credentials in Settings.</p>`,
+                        560, 480);
                     initMusic(win);
                     break;
-
                 case 'notepad': {
                     let path = '/Documents/note.txt';
                     let content = '';
-                    if (extraData && extraData.path) {
-                        path = extraData.path;
-                        content = extraData.content || VFS.readFile(path) || '';
-                    } else {
-                        content = VFS.readFile(path) || 'Write something...';
-                    }
+                    if (extraData && extraData.path) { path = extraData.path;
+                        content = extraData.content || VFS.readFile(path) || ''; } else { content = VFS.readFile(path) ||
+                            'Write something...'; }
                     const fileName = path.split('/').pop();
                     win = createWindow(appId, 'Notepad - ' + fileName, '📝',
                         `<textarea id="notepadText">${content}</textarea>
                         <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
-                            <button id="npSaveBtn" style="background:#0078d4;border:none;color:white;padding:4px 16px;border-radius:4px;cursor:pointer;">💾 Save to OS</button>
+                            <button id="npSaveBtn" style="background:var(--accent);border:none;color:white;padding:4px 16px;border-radius:4px;cursor:pointer;">💾 Save to OS</button>
                             <button id="npExportBtn" style="background:rgba(255,255,255,0.06);border:none;color:#ccc;padding:4px 16px;border-radius:4px;cursor:pointer;">📥 Export</button>
                             <button id="npSaveOCBtn" style="background:#ffd700;border:none;color:#000;padding:4px 16px;border-radius:4px;cursor:pointer;">📦 Save as .oc</button>
                         </div>`,
@@ -1570,78 +2250,46 @@
                     });
                     break;
                 }
-
                 case 'camera':
                     win = createWindow(appId, 'Camera', '📷',
-                        `<video id="camVideo" autoplay playsinline></video>
-                        <div class="cam-controls">
-                            <button class="primary" id="camCaptureBtn">📸 Capture</button>
-                            <button id="camFlipBtn">🔄 Flip</button>
-                            <button class="danger" id="camCloseBtn">✕ Close</button>
-                        </div>
-                        <div class="cam-gallery" id="camGallery"></div>`,
+                        `<video id="camVideo" autoplay playsinline></video><div class="cam-controls"><button class="primary" id="camCaptureBtn">📸 Capture</button><button id="camFlipBtn">🔄 Flip</button><button class="danger" id="camCloseBtn">✕ Close</button></div><div class="cam-gallery" id="camGallery"></div>`,
                         560, 480);
                     initCamera(win);
                     break;
-
                 case 'microphone':
                     win = createWindow(appId, 'Microphone', '🎤',
-                        `<canvas id="audioVisualizer"></canvas>
-                        <div class="cam-controls">
-                            <button class="primary" id="micStartBtn">▶ Start</button>
-                            <button class="danger" id="micStopBtn">⏹ Stop</button>
-                            <button id="micSaveBtn" style="background:#0078d4;border:none;color:white;padding:4px 16px;border-radius:4px;cursor:pointer;">💾 Save to Recordings</button>
-                        </div>
-                        <div class="mic-status" id="micStatus">Click "Start" to record.</div>`,
+                        `<canvas id="audioVisualizer"></canvas><div class="cam-controls"><button class="primary" id="micStartBtn">▶ Start</button><button class="danger" id="micStopBtn">⏹ Stop</button><button id="micSaveBtn" style="background:var(--accent);border:none;color:white;padding:4px 16px;border-radius:4px;cursor:pointer;">💾 Save</button></div><div class="mic-status" id="micStatus">Click "Start" to record.</div>`,
                         500, 340);
                     initMicrophone(win);
                     break;
-
                 case 'appstore':
                     win = createWindow(appId, 'App Store', '🛒',
-                        `<div style="flex:1;">
-                            <div class="app-card"><div class="info"><span class="icon">🎬</span><div><div class="name">Videohub</div><div class="desc">Streaming platform</div></div></div><button class="launch-btn" id="launchVideohubBtn">Launch</button></div>
-                            <div class="app-card"><div class="info"><span class="icon">🌐</span><div><div class="name">Browser</div><div class="desc">Web browser</div></div></div><button class="launch-btn" id="launchBrowserBtn">Launch</button></div>
-                            <div class="app-card"><div class="info"><span class="icon">🎵</span><div><div class="name">Music</div><div class="desc">Spotify player</div></div></div><button class="launch-btn" id="launchMusicBtn">Launch</button></div>
-                            <p style="color:#555;font-size:12px;margin-top:12px;">All apps are single-instance.</p>
-                        </div>`,
+                        `<div style="flex:1;"><div class="app-card"><div class="info"><span class="icon">🎬</span><div><div class="name">Videohub</div><div class="desc">Streaming</div></div></div><button class="launch-btn" id="launchVideohubBtn">Launch</button></div><div class="app-card"><div class="info"><span class="icon">🌐</span><div><div class="name">Browser</div><div class="desc">Web browser</div></div></div><button class="launch-btn" id="launchBrowserBtn">Launch</button></div><div class="app-card"><div class="info"><span class="icon">🎵</span><div><div class="name">Music</div><div class="desc">Spotify</div></div></div><button class="launch-btn" id="launchMusicBtn">Launch</button></div><p style="color:#555;font-size:12px;margin-top:12px;">All apps are single-instance.</p></div>`,
                         480, 340);
                     win.querySelector('#launchVideohubBtn').addEventListener('click', () => launchApp('videohub'));
                     win.querySelector('#launchBrowserBtn').addEventListener('click', () => launchApp('browser'));
                     win.querySelector('#launchMusicBtn').addEventListener('click', () => launchApp('music'));
                     break;
-
                 case 'videohub':
                     win = createWindow(appId, 'Videohub', '🎬',
                         `<iframe src="https://videohubpro.lovable.app" style="width:100%;height:100%;border:none;border-radius:4px;background:white;"></iframe>`,
                         820, 620);
                     break;
-
                 case 'imageviewer':
                     win = createWindow('imageviewer', 'Image Viewer', '🖼️',
                         `<div class="image-viewer"><img src="${extraData}" alt="Image" style="max-width:100%;max-height:100%;object-fit:contain;" /></div>`,
                         540, 420);
                     break;
-
                 case 'calculator':
                     win = createWindow(appId, 'Calculator', '🧮',
-                        `<input type="text" id="calcDisplay" readonly value="0" />
-                        <div class="calc-grid">
-                            <button data-val="7">7</button><button data-val="8">8</button><button data-val="9">9</button><button class="op" data-val="/">÷</button>
-                            <button data-val="4">4</button><button data-val="5">5</button><button data-val="6">6</button><button class="op" data-val="*">×</button>
-                            <button data-val="1">1</button><button data-val="2">2</button><button data-val="3">3</button><button class="op" data-val="-">−</button>
-                            <button data-val="0">0</button><button data-val=".">.</button><button class="eq" data-val="=">=</button><button class="op" data-val="+">+</button>
-                            <button style="grid-column:span 4;background:#d43a3a;" data-val="C">C</button>
-                        </div>`,
+                        `<input type="text" id="calcDisplay" readonly value="0" /><div class="calc-grid"><button data-val="7">7</button><button data-val="8">8</button><button data-val="9">9</button><button class="op" data-val="/">÷</button><button data-val="4">4</button><button data-val="5">5</button><button data-val="6">6</button><button class="op" data-val="*">×</button><button data-val="1">1</button><button data-val="2">2</button><button data-val="3">3</button><button class="op" data-val="-">−</button><button data-val="0">0</button><button data-val=".">.</button><button class="eq" data-val="=">=</button><button class="op" data-val="+">+</button><button style="grid-column:span 4;background:#d43a3a;" data-val="C">C</button></div>`,
                         320, 400);
                     initCalculator(win);
                     break;
-
                 case 'settings':
-                    win = createWindow(appId, 'Settings', '⚙️', `<div id="settingsContainer" style="flex:1;"></div>`, 580, 500);
+                    win = createWindow(appId, 'Settings', '⚙️', `<div id="settingsContainer" style="flex:1;"></div>`, 620, 540);
                     setTimeout(() => renderSettings(win), 50);
                     break;
-
                 default:
                     win = createWindow('unknown', 'Unknown', '❓', '<p>App not found.</p>', 300, 150);
             }
@@ -1661,45 +2309,33 @@
             const goBtn = win.querySelector('#browserGo');
 
             function loadUrl(url) {
-                if (!url.startsWith('http://') && !url.startsWith('https://')) {
-                    url = 'https://' + url;
-                }
-                try {
-                    frame.src = url;
+                if (!url.startsWith('http://') && !url.startsWith('https://')) url = 'https://' + url;
+                try { frame.src = url;
                     urlInput.value = url;
                     state.browserHistory.push(url);
-                    state.browserIndex = state.browserHistory.length - 1;
-                } catch {
-                    alert('Invalid URL');
-                }
+                    state.browserIndex = state.browserHistory.length - 1; } catch { alert('Invalid URL'); }
             }
-
             goBtn.addEventListener('click', () => loadUrl(urlInput.value));
             urlInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') loadUrl(urlInput.value); });
             backBtn.addEventListener('click', () => {
-                if (state.browserIndex > 0) {
-                    state.browserIndex--;
+                if (state.browserIndex > 0) { state.browserIndex--;
                     const url = state.browserHistory[state.browserIndex];
                     frame.src = url;
-                    urlInput.value = url;
-                }
+                    urlInput.value = url; }
             });
             forwardBtn.addEventListener('click', () => {
-                if (state.browserIndex < state.browserHistory.length - 1) {
-                    state.browserIndex++;
+                if (state.browserIndex < state.browserHistory.length - 1) { state.browserIndex++;
                     const url = state.browserHistory[state.browserIndex];
                     frame.src = url;
-                    urlInput.value = url;
-                }
+                    urlInput.value = url; }
             });
             refreshBtn.addEventListener('click', () => { frame.src = frame.src; });
             homeBtn.addEventListener('click', () => loadUrl('https://example.com'));
-            // Load default
             setTimeout(() => loadUrl('https://example.com'), 100);
         }
 
         // ================================================================
-        //  TERMINAL
+        //  TERMINAL - ADVANCED COMMANDS
         // ================================================================
         function initTerminal(win) {
             const output = win.querySelector('#termOutput');
@@ -1719,7 +2355,11 @@
 
                 switch (command) {
                     case 'help':
-                        printLine('Available commands: ls, cd, mkdir, touch, cat, echo, rm, clear, uptime, whoami, date, pwd, help');
+                        printLine('Available commands:');
+                        printLine('  ls, cd, mkdir, touch, cat, echo, rm, clear, pwd');
+                        printLine('  uptime, whoami, date, systeminfo, memory, processes');
+                        printLine('  diagnostic, maintenance, backup, restore, health');
+                        printLine('  shutdown, sleep, lock');
                         break;
                     case 'ls': {
                         const entries = VFS.listFolder(cwd) || [];
@@ -1729,19 +2369,17 @@
                     }
                     case 'cd': {
                         const target = args[0] || '/';
-                        if (target === '..') {
-                            const parts2 = cwd.split('/').filter(Boolean);
-                            parts2.pop();
-                            cwd = '/' + parts2.join('/') || '/';
-                        } else if (target.startsWith('/')) {
+                        if (target === '..') { const p = cwd.split('/').filter(Boolean);
+                            p.pop();
+                            cwd = '/' + p.join('/') || '/'; } else if (target.startsWith('/')) {
                             const node = VFS.getNode(target);
                             if (node && node.type === 'folder') cwd = target;
-                            else printLine('cd: no such directory: ' + target, 'error');
+                            else printLine('cd: no such directory', 'error');
                         } else {
                             const newPath = cwd === '/' ? '/' + target : cwd + '/' + target;
                             const node = VFS.getNode(newPath);
                             if (node && node.type === 'folder') cwd = newPath;
-                            else printLine('cd: no such directory: ' + target, 'error');
+                            else printLine('cd: no such directory', 'error');
                         }
                         break;
                     }
@@ -1752,7 +2390,7 @@
                         if (!args[0]) { printLine('mkdir: missing operand', 'error'); break; }
                         const path = cwd === '/' ? '/' + args[0] : cwd + '/' + args[0];
                         if (VFS.createFolder(path)) printLine('Created: ' + path, 'success');
-                        else printLine('mkdir: failed to create', 'error');
+                        else printLine('mkdir: failed', 'error');
                         break;
                     }
                     case 'touch': {
@@ -1777,7 +2415,7 @@
                         if (!args[0]) { printLine('rm: missing operand', 'error'); break; }
                         const path = cwd === '/' ? '/' + args[0] : cwd + '/' + args[0];
                         if (VFS.deleteEntry(path)) printLine('Removed: ' + path, 'success');
-                        else printLine('rm: failed to remove', 'error');
+                        else printLine('rm: failed', 'error');
                         break;
                     }
                     case 'clear':
@@ -1797,6 +2435,203 @@
                     case 'date':
                         printLine(new Date().toString());
                         break;
+
+                    // ===== NEW ADVANCED COMMANDS =====
+                    case 'systeminfo': {
+                        const mem = performance.memory ? (performance.memory.usedJSHeapSize / (1024 * 1024)).toFixed(1) :
+                            'N/A';
+                        const total = performance.memory ? (performance.memory.totalJSHeapSize / (1024 * 1024)).toFixed(1) :
+                            'N/A';
+                        const cores = navigator.hardwareConcurrency || 'N/A';
+                        const uptime = Math.floor((Date.now() - state.bootTime) / 1000);
+                        const d = Math.floor(uptime / 86400),
+                            h = Math.floor((uptime % 86400) / 3600),
+                            m = Math.floor((uptime % 3600) / 60);
+                        printLine('=== SYSTEM INFORMATION ===');
+                        printLine(`OS: OpencoreOS v5.0`);
+                        printLine(`Uptime: ${d}d ${h}h ${m}m`);
+                        printLine(`CPU Cores: ${cores}`);
+                        printLine(`Memory: ${mem} MB / ${total} MB`);
+                        printLine(`Display: ${window.innerWidth}x${window.innerHeight} @ ${window.devicePixelRatio}x`);
+                        printLine(`User Agent: ${navigator.userAgent}`);
+                        break;
+                    }
+                    case 'memory': {
+                        const mem = performance.memory ? (performance.memory.usedJSHeapSize / (1024 * 1024)).toFixed(1) :
+                            'N/A';
+                        const total = performance.memory ? (performance.memory.totalJSHeapSize / (1024 * 1024)).toFixed(1) :
+                            'N/A';
+                        const limit = performance.memory ? (performance.memory.jsHeapSizeLimit / (1024 * 1024)).toFixed(
+                            1) : 'N/A';
+                        printLine('=== MEMORY USAGE ===');
+                        printLine(`Used: ${mem} MB`);
+                        printLine(`Total: ${total} MB`);
+                        printLine(`Limit: ${limit} MB`);
+                        printLine(`Files in VFS: ${VFS.getFileCount()}`);
+                        printLine(`VFS Size: ${(VFS.getTotalSize()/1024).toFixed(1)} KB`);
+                        break;
+                    }
+                    case 'processes': {
+                        printLine('=== RUNNING PROCESSES ===');
+                        if (state.windows.length === 0) { printLine('No apps running.'); break; }
+                        state.windows.forEach(w => {
+                            const title = w.element.querySelector('.window-title')?.textContent || 'Unknown';
+                            printLine(`  ${title} (PID: ${w.id})`);
+                        });
+                        break;
+                    }
+                    case 'diagnostic': {
+                        printLine('=== RUNNING DIAGNOSTICS ===', 'info');
+                        // Check VFS health
+                        try {
+                            const root = VFS.getRoot();
+                            if (root && root.type === 'folder') {
+                                printLine('✅ VFS: Healthy', 'success');
+                            } else { printLine('❌ VFS: Corrupt', 'error'); }
+                        } catch { printLine('❌ VFS: Error reading', 'error'); }
+                        // Check localStorage
+                        try { localStorage.getItem('test');
+                            printLine('✅ localStorage: Accessible', 'success'); } catch { printLine(
+                                '❌ localStorage: Not accessible', 'error'); }
+                        // Check performance
+                        if (performance.memory) {
+                            const used = (performance.memory.usedJSHeapSize / (1024 * 1024)).toFixed(1);
+                            printLine(`✅ Memory: ${used} MB used`, 'success');
+                        } else { printLine('⚠️ Memory API: Not available', 'warn'); }
+                        // Check windows
+                        printLine(`ℹ️ Open windows: ${state.windows.length}`, 'info');
+                        printLine('✅ Diagnostic complete.', 'success');
+                        break;
+                    }
+                    case 'maintenance': {
+                        printLine('=== RUNNING MAINTENANCE ===', 'info');
+                        // Clean up empty folders in VFS
+                        const root = VFS.getRoot();
+                        let cleaned = 0;
+                        const cleanFolders = (node) => {
+                            if (!node.children) return;
+                            for (const key in node.children) {
+                                if (node.children[key].type === 'folder') {
+                                    cleanFolders(node.children[key]);
+                                    if (Object.keys(node.children[key].children || {}).length === 0) {
+                                        delete node.children[key];
+                                        cleaned++;
+                                    }
+                                }
+                            }
+                        };
+                        cleanFolders(root);
+                        VFS.saveRoot(root);
+                        printLine(`✅ Cleaned ${cleaned} empty folders.`, 'success');
+                        // Check for large files
+                        printLine(`ℹ️ VFS Size: ${(VFS.getTotalSize()/1024).toFixed(1)} KB`, 'info');
+                        printLine(`ℹ️ Total files: ${VFS.getFileCount()}`, 'info');
+                        printLine('✅ Maintenance complete.', 'success');
+                        break;
+                    }
+                    case 'backup': {
+                        printLine('=== CREATING BACKUP ===', 'info');
+                        try {
+                            const data = VFS.exportVFS();
+                            const blob = new Blob([data], { type: 'application/json' });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = 'opencore_backup_' + new Date().toISOString().slice(0, 10) + '.json';
+                            a.click();
+                            URL.revokeObjectURL(url);
+                            printLine('✅ Backup exported successfully!', 'success');
+                            printLine(`📦 Size: ${(blob.size/1024).toFixed(1)} KB`, 'info');
+                        } catch (err) {
+                            printLine('❌ Backup failed: ' + err.message, 'error');
+                        }
+                        break;
+                    }
+                    case 'restore': {
+                        printLine('=== RESTORE FROM BACKUP ===', 'info');
+                        printLine('⚠️ This will replace your current VFS.', 'warn');
+                        printLine('📥 Please select a backup JSON file to restore.', 'info');
+                        const input = document.createElement('input');
+                        input.type = 'file';
+                        input.accept = '.json';
+                        input.onchange = (e) => {
+                            const file = e.target.files[0];
+                            if (!file) return;
+                            const reader = new FileReader();
+                            reader.onload = (ev) => {
+                                try {
+                                    const data = ev.target.result;
+                                    if (VFS.importVFS(data)) {
+                                        printLine('✅ VFS restored successfully!', 'success');
+                                        printLine('🔄 Refreshing explorer...', 'info');
+                                        // Refresh explorer if open
+                                        const exp = state.windows.find(w => w.appId === 'explorer');
+                                        if (exp) {
+                                            currentVFSPath = '/';
+                                            renderFileExplorer(exp.element, '/');
+                                        }
+                                    } else {
+                                        printLine('❌ Invalid backup file.', 'error');
+                                    }
+                                } catch (err) {
+                                    printLine('❌ Restore failed: ' + err.message, 'error');
+                                }
+                            };
+                            reader.readAsText(file);
+                        };
+                        input.click();
+                        break;
+                    }
+                    case 'health': {
+                        printLine('=== SYSTEM HEALTH CHECK ===', 'info');
+                        const checks = [
+                            { name: 'VFS Integrity', pass: true },
+                            { name: 'localStorage', pass: true },
+                            { name: 'Memory Usage', pass: true },
+                            { name: 'Window Manager', pass: true },
+                        ];
+                        // Check VFS
+                        try { VFS.getRoot(); } catch { checks[0].pass = false; }
+                        // Check localStorage
+                        try { localStorage.getItem('test'); } catch { checks[1].pass = false; }
+                        // Check memory
+                        if (performance.memory) {
+                            const used = performance.memory.usedJSHeapSize / (1024 * 1024);
+                            const limit = performance.memory.jsHeapSizeLimit / (1024 * 1024);
+                            if (used / limit > 0.8) checks[2].pass = false;
+                        }
+                        // Check windows
+                        if (state.windows.length > 20) checks[3].pass = false;
+
+                        let allPass = true;
+                        checks.forEach(c => {
+                            printLine(`${c.pass ? '✅' : '❌'} ${c.name}`, c.pass ? 'success' : 'error');
+                            if (!c.pass) allPass = false;
+                        });
+                        printLine(allPass ? '✅ System is healthy!' : '⚠️ Some issues found.', allPass ? 'success' :
+                            'warn');
+                        break;
+                    }
+                    case 'shutdown': {
+                        printLine('⏻ Shutting down...', 'warn');
+                        setTimeout(() => {
+                            if (confirm('Shut down OpencoreOS?')) {
+                                localStorage.setItem('opencore_shutdown', 'true');
+                                location.reload();
+                            }
+                        }, 300);
+                        break;
+                    }
+                    case 'sleep': {
+                        printLine('🌙 Going to sleep...', 'warn');
+                        setTimeout(() => goToSleep(), 300);
+                        break;
+                    }
+                    case 'lock': {
+                        printLine('🔒 Locking screen...', 'warn');
+                        setTimeout(() => lockScreen(), 300);
+                        break;
+                    }
                     default:
                         printLine(`command not found: ${command}`, 'error');
                 }
@@ -1809,11 +2644,11 @@
                     processCommand(cmd);
                 }
             });
-            // Focus
             input.focus();
             win.addEventListener('click', () => input.focus());
-            printLine('Welcome to OpencoreOS Terminal v1.0', 'success');
+            printLine('OpencoreOS Terminal v2.0', 'success');
             printLine('Type "help" for commands.');
+            printLine('New: diagnostic, maintenance, backup, restore, health, systeminfo, memory, processes, shutdown, sleep, lock');
         }
 
         // ================================================================
@@ -1826,14 +2661,10 @@
             const listEl = win.querySelector('#taskList');
 
             function updateTasks() {
-                // CPU (simulated)
                 cpuEl.textContent = Math.round(Math.random() * 20 + 5) + '%';
-                // Memory
                 const mem = performance.memory ? (performance.memory.usedJSHeapSize / (1024 * 1024)).toFixed(1) : 'N/A';
                 memEl.textContent = mem + ' MB';
-                // Count
                 countEl.textContent = state.windows.length;
-                // List
                 listEl.innerHTML = '';
                 state.windows.forEach(w => {
                     const title = w.element.querySelector('.window-title')?.textContent || 'Unknown';
@@ -1856,7 +2687,7 @@
         }
 
         // ================================================================
-        //  MUSIC (Spotify Search + Embed)
+        //  MUSIC
         // ================================================================
         function initMusic(win) {
             const searchInput = win.querySelector('#musicSearchInput');
@@ -1864,31 +2695,25 @@
             const resultsDiv = win.querySelector('#musicResults');
             const playerDiv = win.querySelector('#musicPlayer');
 
-            // Load Spotify Client ID from localStorage
             const clientId = localStorage.getItem('opencore_spotify_client_id') || '';
             const clientSecret = localStorage.getItem('opencore_spotify_client_secret') || '';
 
             async function searchSpotify(query) {
                 if (!clientId || !clientSecret) {
                     resultsDiv.innerHTML =
-                        `<p style="color:#ff6b6b;">❌ Please set your Spotify Client ID & Secret in Settings first.</p>`;
+                        `<p style="color:#ff6b6b;">❌ Set Spotify credentials in Settings.</p>`;
                     return;
                 }
                 try {
-                    // Get token
                     const tokenResp = await fetch('https://accounts.spotify.com/api/token', {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                            'Authorization': 'Basic ' + btoa(clientId + ':' + clientSecret)
-                        },
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Authorization': 'Basic ' +
+                                btoa(clientId + ':' + clientSecret) },
                         body: 'grant_type=client_credentials'
                     });
                     const tokenData = await tokenResp.json();
-                    if (!tokenData.access_token) { throw new Error('Invalid credentials'); }
+                    if (!tokenData.access_token) throw new Error('Invalid credentials');
                     const token = tokenData.access_token;
-
-                    // Search
                     const searchResp = await fetch(
                         `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=8`, {
                             headers: { 'Authorization': 'Bearer ' + token }
@@ -1904,35 +2729,25 @@
                         div.className = 'music-result-item';
                         const img = track.album.images[0]?.url || '';
                         div.innerHTML = `
-                            <div class="info">
-                                ${img ? `<img src="${img}" />` : ''}
-                                <div><div class="title">${track.name}</div><div class="artist">${track.artists.map(a => a.name).join(', ')}</div></div>
-                            </div>
+                            <div class="info">${img ? `<img src="${img}" />` : ''}<div><div class="title">${track.name}</div><div class="artist">${track.artists.map(a => a.name).join(', ')}</div></div></div>
                             <button class="launch-btn" style="background:#1db954;" data-uri="${track.uri}">▶ Play</button>
                         `;
                         resultsDiv.appendChild(div);
                     });
                     resultsDiv.querySelectorAll('[data-uri]').forEach(btn => {
                         btn.addEventListener('click', () => {
-                            const uri = btn.dataset.uri;
-                            const trackId = uri.split(':')[2];
+                            const trackId = btn.dataset.uri.split(':')[2];
                             playerDiv.innerHTML =
                                 `<iframe src="https://open.spotify.com/embed/track/${trackId}" style="width:100%;height:80px;border:none;"></iframe>`;
                         });
                     });
                 } catch (err) {
                     resultsDiv.innerHTML =
-                        `<p style="color:#ff6b6b;">❌ Search error: ${err.message}. Check your Spotify credentials in Settings.</p>`;
+                        `<p style="color:#ff6b6b;">❌ Search error: ${err.message}</p>`;
                 }
             }
-
-            searchBtn.addEventListener('click', () => {
-                const q = searchInput.value.trim();
-                if (q) searchSpotify(q);
-            });
+            searchBtn.addEventListener('click', () => { const q = searchInput.value.trim(); if (q) searchSpotify(q); });
             searchInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') searchBtn.click(); });
-
-            // Handle direct link paste: if user pastes a Spotify track link, extract ID
             searchInput.addEventListener('paste', () => {
                 setTimeout(() => {
                     const val = searchInput.value;
@@ -1983,9 +2798,9 @@
             const gallery = win.querySelector('#camGallery');
             const photos = VFS.listFolder('/Pictures') || [];
             photos.filter(f => f.type === 'file' && ['png', 'jpg', 'jpeg'].some(e => f.name.endsWith(e))).forEach(f => {
-                const img = document.createElement('img');
                 const data = VFS.readFile('/Pictures/' + f.name);
-                if (data) { img.src = data;
+                if (data) { const img = document.createElement('img');
+                    img.src = data;
                     gallery.appendChild(img); }
             });
 
@@ -2084,7 +2899,7 @@
                 if (audioCtx) audioCtx.close();
                 if (micStream) micStream.getTracks().forEach(t => t.stop());
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                status.textContent = '⏹ Stopped. Click "Save to Recordings".';
+                status.textContent = '⏹ Stopped. Click "Save".';
             });
 
             win.querySelector('#micSaveBtn').addEventListener('click', () => {
@@ -2104,7 +2919,7 @@
         }
 
         // ================================================================
-        //  SETTINGS - MEGA WITH NETWORK/BLUETOOTH
+        //  SETTINGS - MEGA WITH SECURITY, BACKUP, ACCESSIBILITY
         // ================================================================
         function renderSettings(win) {
             const container = win.querySelector('#settingsContainer');
@@ -2120,55 +2935,97 @@
             const wallpaper = localStorage.getItem('opencore_wallpaper') || '#16213e';
             const clientId = localStorage.getItem('opencore_spotify_client_id') || '';
             const clientSecret = localStorage.getItem('opencore_spotify_client_secret') || '';
+            const fontSize = localStorage.getItem('opencore_font_size') || '14';
+            const highContrast = localStorage.getItem('opencore_high_contrast') === 'true';
+            const reduceMotion = localStorage.getItem('opencore_reduce_motion') === 'true';
+            const pinSet = localStorage.getItem('opencore_pin') !== null && localStorage.getItem('opencore_pin').length === 6;
 
             container.innerHTML = `
                 <div class="settings-tabs">
                     <button class="active" data-tab="system">💻 System</button>
+                    <button data-tab="security">🛡️ Security</button>
+                    <button data-tab="accessibility">♿ Accessibility</button>
+                    <button data-tab="backup">💾 Backup</button>
                     <button data-tab="network">📶 Network</button>
-                    <button data-tab="bluetooth">📡 Bluetooth</button>
                     <button data-tab="personalize">🎨 Personalize</button>
                     <button data-tab="storage">💾 Storage</button>
                     <button data-tab="about">ℹ️ About</button>
                 </div>
+
+                <!-- SYSTEM -->
                 <div class="settings-tab-content active" data-tab="system">
                     <div class="settings-row"><span class="label">Device Name</span><input type="text" id="devNameInput" value="${devName}" /><button class="btn" id="devNameSave">Rename</button></div>
-                    <div class="settings-row"><span class="label">OS Version</span><span class="value">OpencoreOS v4.0</span></div>
+                    <div class="settings-row"><span class="label">OS Version</span><span class="value">OpencoreOS v5.0</span></div>
                     <div class="settings-row"><span class="label">Uptime</span><span class="value">${uptimeStr}</span></div>
                     <div class="settings-row"><span class="label">CPU Cores</span><span class="value">${cores}</span></div>
                     <div class="settings-row"><span class="label">Memory</span><span class="value">${mem} MB / ${totalMem} MB</span></div>
                     <div class="settings-row"><span class="label">Display</span><span class="value">${window.innerWidth}x${window.innerHeight} (${window.devicePixelRatio}x)</span></div>
                     <div class="settings-row"><span class="label">Battery</span><span class="value" id="settingsBattery">Checking...</span></div>
+                    <div class="settings-row"><span class="label">Windows</span><span class="value">${state.windows.length} open</span></div>
                 </div>
+
+                <!-- SECURITY -->
+                <div class="settings-tab-content" data-tab="security">
+                    <div class="settings-row"><span class="label">PIN Status</span><span class="value">${pinSet ? '✅ Set' : '❌ Not Set'}</span></div>
+                    <div class="settings-row"><button class="btn" id="changePinBtn">${pinSet ? '🔄 Change PIN' : '🔑 Set PIN'}</button></div>
+                    <div class="settings-row"><button class="btn-danger" id="removePinBtn" ${pinSet ? '' : 'disabled'}>🗑️ Remove PIN</button></div>
+                    <div class="settings-row"><span class="label">Lock Screen</span><button class="btn" id="lockNowBtn">🔒 Lock Now</button></div>
+                    <div class="settings-row"><span class="label">Sleep</span><button class="btn" id="sleepNowBtn">🌙 Sleep Now</button></div>
+                </div>
+
+                <!-- ACCESSIBILITY -->
+                <div class="settings-tab-content" data-tab="accessibility">
+                    <div class="settings-row"><span class="label">Font Size</span><select id="fontSizeSelect"><option value="12">Small</option><option value="14" selected>Medium</option><option value="18">Large</option><option value="24">X-Large</option></select></div>
+                    <div class="settings-row"><span class="label">High Contrast</span><div class="toggle ${highContrast?'on':''}" id="highContrastToggle"><div class="slider"></div></div></div>
+                    <div class="settings-row"><span class="label">Reduce Motion</span><div class="toggle ${reduceMotion?'on':''}" id="reduceMotionToggle"><div class="slider"></div></div></div>
+                    <div class="settings-row"><span class="label">Screen Reader</span><span class="value">ℹ️ Use browser's built-in reader</span></div>
+                </div>
+
+                <!-- BACKUP -->
+                <div class="settings-tab-content" data-tab="backup">
+                    <div class="settings-row"><span class="label">Backup</span><button class="btn" id="backupNowBtn">📦 Export Backup</button></div>
+                    <div class="settings-row"><span class="label">Restore</span><button class="btn" id="restoreNowBtn">📥 Import Backup</button></div>
+                    <div class="settings-row"><span class="label">Files</span><span class="value">${VFS.getFileCount()} files</span></div>
+                    <div class="settings-row"><span class="label">Size</span><span class="value">${(VFS.getTotalSize()/1024).toFixed(1)} KB</span></div>
+                    <div class="settings-row"><span class="label">Last Backup</span><span class="value">${localStorage.getItem('opencore_last_backup') || 'Never'}</span></div>
+                </div>
+
+                <!-- NETWORK -->
                 <div class="settings-tab-content" data-tab="network">
                     <div class="settings-row"><span class="label">Wi-Fi</span><div class="toggle" id="wifiToggle"><div class="slider"></div></div><span id="wifiStatus">Off</span></div>
-                    <div class="settings-row"><span class="label">Network Type</span><span class="value" id="netType">${navigator.connection ? navigator.connection.effectiveType : 'Unknown'}</span></div>
+                    <div class="settings-row"><span class="label">Network Type</span><span class="value">${navigator.connection ? navigator.connection.effectiveType : 'Unknown'}</span></div>
                     <div class="settings-row"><span class="label">IP (simulated)</span><span class="value">192.168.1.100</span></div>
-                </div>
-                <div class="settings-tab-content" data-tab="bluetooth">
                     <div class="settings-row"><span class="label">Bluetooth</span><div class="toggle" id="btToggle"><div class="slider"></div></div><span id="btStatus">Off</span></div>
-                    <div class="settings-row"><span class="label">Devices</span><button class="btn" id="btScanBtn">🔍 Scan</button></div>
-                    <div id="btDevices" style="color:#888;font-size:13px;">No devices scanned. Click "Scan".</div>
+                    <div class="settings-row"><button class="btn" id="btScanBtn">🔍 Scan Devices</button></div>
+                    <div id="btDevices" style="color:#888;font-size:13px;padding:8px 0;">No devices scanned.</div>
                 </div>
+
+                <!-- PERSONALIZE -->
                 <div class="settings-tab-content" data-tab="personalize">
                     <div class="settings-row"><span class="label">Wallpaper</span><input type="color" id="wallColor" value="${wallpaper.replace('#','')}" /><button class="btn" id="wallApply">Apply</button><button class="btn-secondary" id="wallReset">Reset</button></div>
                     <div class="settings-row"><span class="label">Spotify Client ID</span><input type="text" id="spotifyId" value="${clientId}" style="flex:1;min-width:120px;" /></div>
                     <div class="settings-row"><span class="label">Spotify Secret</span><input type="text" id="spotifySecret" value="${clientSecret}" style="flex:1;min-width:120px;" /></div>
                     <div class="settings-row"><button class="btn" id="spotifySave">Save Spotify Credentials</button></div>
                 </div>
+
+                <!-- STORAGE -->
                 <div class="settings-tab-content" data-tab="storage">
                     <div class="settings-row"><span class="label">Total Files</span><span class="value">${VFS.getFileCount()}</span></div>
                     <div class="settings-row"><span class="label">Storage Used</span><span class="value">${(VFS.getTotalSize()/1024).toFixed(1)} KB</span></div>
                     <div class="settings-row"><button class="btn-secondary" id="clearNotepad">🗑️ Clear Documents</button></div>
                     <div class="settings-row"><button class="btn-secondary" id="clearPhotos">🗑️ Clear Pictures</button></div>
                     <div class="settings-row"><button class="btn-secondary" id="clearRecordings">🗑️ Clear Recordings</button></div>
-                    <div class="settings-row"><button class="btn" id="clearAllVFS" style="background:#d43a3a;">⚠️ Delete ALL Files</button></div>
+                    <div class="settings-row"><button class="btn-danger" id="clearAllVFS">⚠️ Delete ALL Files</button></div>
                 </div>
+
+                <!-- ABOUT -->
                 <div class="settings-tab-content" data-tab="about">
                     <div style="text-align:center;padding:20px;">
                         <div style="font-size:64px;">🪟</div>
-                        <h2 style="font-weight:300;">OpencoreOS v4.0</h2>
-                        <p style="color:#888;">"The Ultimate Edition"</p>
-                        <p style="color:#666;font-size:13px;margin-top:10px;">Browser • Terminal • Task Manager • .oc Files • Music • Network</p>
+                        <h2 style="font-weight:300;">OpencoreOS v5.0</h2>
+                        <p style="color:#888;">"Security & Accessibility Edition"</p>
+                        <p style="color:#666;font-size:13px;margin-top:10px;">🔒 PIN Lock • 🌙 Sleep • 💾 Backup • ♿ Accessibility</p>
+                        <p style="color:#666;font-size:13px;">💻 Terminal • 🌐 Browser • 📊 Task Manager • 🎵 Music</p>
                         <p style="color:#444;font-size:12px;margin-top:20px;">© 2026 OpencoreOS</p>
                     </div>
                 </div>
@@ -2181,11 +3038,11 @@
                     tab.classList.add('active');
                     container.querySelectorAll('.settings-tab-content').forEach(c => c.classList.remove('active'));
                     container.querySelector(`.settings-tab-content[data-tab="${tab.dataset.tab}"]`).classList.add(
-                    'active');
+                        'active');
                 });
             });
 
-            // Device Name
+            // --- System ---
             container.querySelector('#devNameSave').addEventListener('click', () => {
                 const name = container.querySelector('#devNameInput').value.trim() || 'Opencore-PC';
                 localStorage.setItem('opencore_device_name', name);
@@ -2193,7 +3050,129 @@
                 alert('Renamed to ' + name);
             });
 
-            // Wallpaper
+            // --- Security ---
+            container.querySelector('#changePinBtn').addEventListener('click', () => {
+                const newPin = prompt('Enter a new 6-digit PIN:');
+                if (newPin && newPin.length === 6 && /^\d+$/.test(newPin)) {
+                    localStorage.setItem('opencore_pin', newPin);
+                    storedPin = newPin;
+                    isPinSetup = true;
+                    alert('✅ PIN updated!');
+                    renderSettings(win);
+                } else {
+                    alert('PIN must be 6 digits.');
+                }
+            });
+            container.querySelector('#removePinBtn').addEventListener('click', () => {
+                if (confirm('Remove PIN? This will disable the lock screen.')) {
+                    localStorage.removeItem('opencore_pin');
+                    storedPin = '';
+                    isPinSetup = false;
+                    alert('PIN removed.');
+                    renderSettings(win);
+                }
+            });
+            container.querySelector('#lockNowBtn').addEventListener('click', () => {
+                lockScreen();
+                win.style.display = 'none';
+                state.windows.find(w => w.id === win.id).minimized = true;
+                updateTaskbar();
+            });
+            container.querySelector('#sleepNowBtn').addEventListener('click', goToSleep);
+
+            // --- Accessibility ---
+            const fontSizeSelect = container.querySelector('#fontSizeSelect');
+            fontSizeSelect.value = fontSize;
+            fontSizeSelect.addEventListener('change', () => {
+                const val = fontSizeSelect.value;
+                localStorage.setItem('opencore_font_size', val);
+                document.documentElement.style.setProperty('--font-size', val + 'px');
+            });
+
+            const hcToggle = container.querySelector('#highContrastToggle');
+            hcToggle.classList.toggle('on', highContrast);
+            hcToggle.addEventListener('click', function() {
+                this.classList.toggle('on');
+                const on = this.classList.contains('on');
+                localStorage.setItem('opencore_high_contrast', on ? 'true' : 'false');
+                document.body.classList.toggle('high-contrast', on);
+            });
+
+            const rmToggle = container.querySelector('#reduceMotionToggle');
+            rmToggle.classList.toggle('on', reduceMotion);
+            rmToggle.addEventListener('click', function() {
+                this.classList.toggle('on');
+                const on = this.classList.contains('on');
+                localStorage.setItem('opencore_reduce_motion', on ? 'true' : 'false');
+                document.body.classList.toggle('reduce-motion', on);
+            });
+
+            // --- Backup ---
+            container.querySelector('#backupNowBtn').addEventListener('click', () => {
+                const data = VFS.exportVFS();
+                const blob = new Blob([data], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'opencore_backup_' + new Date().toISOString().slice(0, 10) + '.json';
+                a.click();
+                URL.revokeObjectURL(url);
+                localStorage.setItem('opencore_last_backup', new Date().toLocaleString());
+                alert('✅ Backup exported!');
+                renderSettings(win);
+            });
+            container.querySelector('#restoreNowBtn').addEventListener('click', () => {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.json';
+                input.onchange = (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        try {
+                            if (VFS.importVFS(ev.target.result)) {
+                                alert('✅ VFS restored!');
+                                const exp = state.windows.find(w => w.appId === 'explorer');
+                                if (exp) { currentVFSPath = '/';
+                                    renderFileExplorer(exp.element, '/'); }
+                                renderSettings(win);
+                            } else { alert('❌ Invalid backup.'); }
+                        } catch (err) { alert('❌ Restore failed: ' + err.message); }
+                    };
+                    reader.readAsText(file);
+                };
+                input.click();
+            });
+
+            // --- Network ---
+            let wifiOn = false;
+            container.querySelector('#wifiToggle').addEventListener('click', function() {
+                wifiOn = !wifiOn;
+                this.classList.toggle('on', wifiOn);
+                container.querySelector('#wifiStatus').textContent = wifiOn ? 'On' : 'Off';
+            });
+            let btOn = false;
+            container.querySelector('#btToggle').addEventListener('click', function() {
+                btOn = !btOn;
+                this.classList.toggle('on', btOn);
+                container.querySelector('#btStatus').textContent = btOn ? 'On' : 'Off';
+                if (!btOn) container.querySelector('#btDevices').textContent = 'Bluetooth disabled.';
+            });
+            container.querySelector('#btScanBtn').addEventListener('click', () => {
+                if (!btOn) { alert('Turn on Bluetooth first!'); return; }
+                const devices = ['Headphones 🎧', 'Keyboard ⌨️', 'Mouse 🖱️', 'Speaker 🔊', 'Phone 📱'];
+                const list = devices.map(d =>
+                    `<div style="padding:4px 0;">🔵 ${d} <button style="background:var(--accent);border:none;color:white;padding:0 12px;border-radius:4px;cursor:pointer;font-size:12px;">Connect</button></div>`
+                    ).join('');
+                container.querySelector('#btDevices').innerHTML = list;
+                container.querySelectorAll('#btDevices button').forEach(b => {
+                    b.addEventListener('click', () => { b.textContent = 'Connected ✓';
+                        b.style.background = '#4caf50'; });
+                });
+            });
+
+            // --- Personalize ---
             container.querySelector('#wallApply').addEventListener('click', () => {
                 const color = '#' + container.querySelector('#wallColor').value;
                 const grad = `radial-gradient(ellipse at 20% 20%, ${color}, #0a0a1a)`;
@@ -2206,8 +3185,6 @@
                 localStorage.setItem('opencore_wallpaper', grad);
                 container.querySelector('#wallColor').value = '16213e';
             });
-
-            // Spotify credentials
             container.querySelector('#spotifySave').addEventListener('click', () => {
                 const id = container.querySelector('#spotifyId').value.trim();
                 const secret = container.querySelector('#spotifySecret').value.trim();
@@ -2215,55 +3192,10 @@
                     localStorage.setItem('opencore_spotify_client_id', id);
                     localStorage.setItem('opencore_spotify_client_secret', secret);
                     alert('✅ Spotify credentials saved!');
-                } else {
-                    alert('Please enter both Client ID and Secret.');
-                }
+                } else { alert('Enter both Client ID and Secret.'); }
             });
 
-            // Network Toggle (simulated)
-            let wifiOn = false;
-            container.querySelector('#wifiToggle').addEventListener('click', function() {
-                wifiOn = !wifiOn;
-                this.classList.toggle('on', wifiOn);
-                container.querySelector('#wifiStatus').textContent = wifiOn ? 'On' : 'Off';
-            });
-
-            // Bluetooth Toggle + Scan
-            let btOn = false;
-            container.querySelector('#btToggle').addEventListener('click', function() {
-                btOn = !btOn;
-                this.classList.toggle('on', btOn);
-                container.querySelector('#btStatus').textContent = btOn ? 'On' : 'Off';
-                if (!btOn) container.querySelector('#btDevices').textContent = 'Bluetooth disabled.';
-            });
-            container.querySelector('#btScanBtn').addEventListener('click', () => {
-                if (!btOn) { alert('Turn on Bluetooth first!'); return; }
-                const devices = ['Headphones 🎧', 'Keyboard ⌨️', 'Mouse 🖱️', 'Speaker 🔊', 'Phone 📱'];
-                const list = devices.map(d => `<div style="padding:4px 0;">🔵 ${d} <button style="background:#0078d4;border:none;color:white;padding:0 12px;border-radius:4px;cursor:pointer;font-size:12px;">Connect</button></div>`)
-                    .join('');
-                container.querySelector('#btDevices').innerHTML = list;
-                // Connect buttons just simulate
-                container.querySelectorAll('#btDevices button').forEach(b => {
-                    b.addEventListener('click', () => {
-                        b.textContent = 'Connected ✓';
-                        b.style.background = '#4caf50';
-                    });
-                });
-            });
-
-            // Battery update
-            async function updateBatterySettings() {
-                if ('getBattery' in navigator) {
-                    try {
-                        const bat = await navigator.getBattery();
-                        const el = container.querySelector('#settingsBattery');
-                        if (el) el.textContent = `${Math.round(bat.level*100)}% ${bat.charging ? '⚡' : ''}`;
-                    } catch {}
-                }
-            }
-            updateBatterySettings();
-
-            // Storage clear
+            // --- Storage ---
             const clearFolder = (folder, msg) => {
                 if (confirm(`Delete all files in /${folder}?`)) {
                     const entries = VFS.listFolder('/' + folder) || [];
@@ -2275,7 +3207,7 @@
             container.querySelector('#clearNotepad').addEventListener('click', () => clearFolder('Documents',
                 'Documents cleared.'));
             container.querySelector('#clearPhotos').addEventListener('click', () => clearFolder('Pictures',
-            'Pictures cleared.'));
+                'Pictures cleared.'));
             container.querySelector('#clearRecordings').addEventListener('click', () => clearFolder('Recordings',
                 'Recordings cleared.'));
             container.querySelector('#clearAllVFS').addEventListener('click', () => {
@@ -2292,6 +3224,18 @@
                     }
                 }
             });
+
+            // Battery
+            async function updateBatterySettings() {
+                if ('getBattery' in navigator) {
+                    try {
+                        const bat = await navigator.getBattery();
+                        const el = container.querySelector('#settingsBattery');
+                        if (el) el.textContent = `${Math.round(bat.level*100)}% ${bat.charging ? '⚡' : ''}`;
+                    } catch {}
+                }
+            }
+            updateBatterySettings();
         }
 
         // ================================================================
@@ -2318,28 +3262,31 @@
             }, 200);
         });
 
-        // Keyboard
+        // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
             if (e.ctrlKey && e.key === 'e') { e.preventDefault();
                 launchApp('explorer'); }
-            if (e.ctrlKey && e.key === 'n') { e.preventDefault();
-                launchApp('notepad'); }
             if (e.ctrlKey && e.key === 'b') { e.preventDefault();
                 launchApp('browser'); }
             if (e.ctrlKey && e.key === 't') { e.preventDefault();
                 launchApp('terminal'); }
+            if (e.ctrlKey && e.key === 'n') { e.preventDefault();
+                launchApp('notepad'); }
+            if (e.ctrlKey && e.shiftKey && e.key === 'S') { e.preventDefault();
+                goToSleep(); }
+            if (e.ctrlKey && e.shiftKey && e.key === 'L') { e.preventDefault();
+                lockScreen(); }
             if (e.key === 'Escape' && state.windows.length > 0) {
                 const last = state.windows[state.windows.length - 1];
                 closeWindow(last.id);
             }
         });
 
-        console.log('🪟 OpencoreOS v4.0 booted!');
-        console.log('🌐 Browser: load any website');
-        console.log('💻 Terminal: ls, cd, mkdir, touch, cat, echo, rm, clear, uptime, whoami, date, pwd');
-        console.log('📦 .oc files: wrappers for any file type');
-        console.log('🎵 Music: Spotify search & embed');
-        console.log('📶 Network & Bluetooth management in Settings');
+        console.log('🪟 OpencoreOS v5.0 booted!');
+        console.log('🔒 Security: PIN, Sleep, Shutdown');
+        console.log('♿ Accessibility: Font size, Contrast, Reduce Motion');
+        console.log('💾 Backup: Export/Import VFS');
+        console.log('💻 Terminal: diagnostic, maintenance, backup, restore, health, systeminfo, memory, processes, shutdown, sleep, lock');
     </script>
 </body>
 </html>
