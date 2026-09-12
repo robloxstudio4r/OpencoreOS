@@ -43,6 +43,22 @@
 <div id="sleepOverlay"><div class="moon">🌙</div><div class="txt">Click anywhere to wake</div></div>
 <div id="screensaver"><div class="logo">🪟</div><div class="sub">OpencoreOS v10.4</div></div>
 
+<!-- MINI PLAYER -->
+<div id="miniPlayer">
+  <img id="miniPlayerArt" src="" alt="" />
+  <div class="mp-info">
+    <div class="mp-title" id="miniPlayerTitle">Not playing</div>
+    <div class="mp-artist" id="miniPlayerArtist">—</div>
+  </div>
+  <div class="mp-time" id="miniPlayerTime">0:00</div>
+  <div class="mp-controls">
+    <button id="miniPlayerPrev" title="Previous">⏮</button>
+    <button class="mp-play-btn" id="miniPlayerPlay" title="Play/Pause">⏸</button>
+    <button id="miniPlayerNext" title="Next">⏭</button>
+    <button class="mp-close" id="miniPlayerClose" title="Close">✕</button>
+  </div>
+</div>
+
 <div id="dt"></div>
 
 <div id="appEditor">
@@ -127,6 +143,7 @@
 <script defer src="js/apps/iframes.js"></script>
 <script defer src="js/launcher.js"></script>
 <script defer src="js/spotify-auth.js"></script>
+<script defer src="js/mini-player.js"></script>
 <script defer src="js/boot.js"></script>
 
 </body>
