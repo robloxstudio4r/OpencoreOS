@@ -35,6 +35,21 @@ body{width:100vw;height:100vh;overflow:hidden;background:#1a1a2e;color:#eee;font
 #login .pp button:hover{background:rgba(255,255,255,0.15)}
 #login .er{color:#ff6b6b;font-size:13px;min-height:20px;margin-bottom:10px}
 
+/* SLEEP OVERLAY */
+#sleepOverlay{position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:99996;display:none;flex-direction:column;align-items:center;justify-content:center;color:#fff;cursor:pointer;backdrop-filter:blur(12px)}
+#sleepOverlay.on{display:flex}
+#sleepOverlay .moon{font-size:72px;margin-bottom:16px;animation:moonPulse 3s infinite}
+@keyframes moonPulse{0%,100%{opacity:0.6;transform:scale(1)}50%{opacity:1;transform:scale(1.08)}}
+#sleepOverlay .txt{color:#888;font-size:15px;font-weight:300}
+
+/* SCREENSAVER */
+#screensaver{position:fixed;inset:0;background:radial-gradient(ellipse at center,#0f3460,#000);z-index:99995;display:none;align-items:center;justify-content:center;flex-direction:column;color:#fff}
+#screensaver.on{display:flex}
+#screensaver .logo{font-size:80px;animation:floaty 6s ease-in-out infinite;text-shadow:0 0 40px rgba(0,180,216,0.3)}
+@keyframes floaty{0%,100%{transform:translate(0,0) rotate(0)}25%{transform:translate(30px,-20px) rotate(2deg)}50%{transform:translate(-20px,30px) rotate(-2deg)}75%{transform:translate(-30px,-10px) rotate(1deg)}}
+#screensaver .sub{color:#888;font-size:18px;margin-top:12px;animation:subPulse 3s infinite;opacity:0.6}
+@keyframes subPulse{0%,100%{opacity:0.4}50%{opacity:0.9}}
+
 /* DESKTOP */
 #dt{width:100%;height:calc(100% - 50px);padding:16px;background:radial-gradient(ellipse at 20% 20%,#16213e,#1a1a2e);overflow:hidden;position:relative}
 .di{position:absolute;width:80px;display:flex;flex-direction:column;align-items:center;padding:8px 4px;border-radius:8px;cursor:pointer;background:transparent;border:none;color:#fff;font-size:11px;transition:background .15s,transform .1s}
@@ -43,7 +58,7 @@ body{width:100vw;height:100vh;overflow:hidden;background:#1a1a2e;color:#eee;font
 .di .ic{font-size:36px;margin-bottom:2px;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.5));pointer-events:none}
 .di .lb{text-align:center;word-wrap:break-word;line-height:1.2;pointer-events:none}
 
-/* APP EDITOR POPUP */
+/* APP EDITOR */
 #appEditor{position:fixed;background:rgba(28,28,48,0.98);backdrop-filter:blur(20px);border-radius:12px;border:1px solid rgba(255,255,255,0.08);box-shadow:0 20px 60px rgba(0,0,0,0.8);padding:16px;z-index:99997;display:none;min-width:280px}
 #appEditor.on{display:block}
 #appEditor h3{font-size:14px;font-weight:500;color:#fff;margin-bottom:12px}
@@ -70,7 +85,7 @@ body{width:100vw;height:100vh;overflow:hidden;background:#1a1a2e;color:#eee;font
 #clk{color:#fff;font-size:13px;padding:0 10px;min-width:80px;text-align:center;font-variant-numeric:tabular-nums}
 
 /* START MENU */
-#sm{position:fixed;bottom:56px;left:8px;width:340px;background:rgba(22,22,40,0.98);backdrop-filter:blur(24px);border-radius:10px;border:1px solid rgba(255,255,255,0.06);padding:14px;display:none;z-index:10000;box-shadow:0 12px 40px rgba(0,0,0,0.7);max-height:500px;overflow-y:auto}
+#sm{position:fixed;bottom:56px;left:8px;width:340px;background:rgba(22,22,40,0.98);backdrop-filter:blur(24px);border-radius:10px;border:1px solid rgba(255,255,255,0.06);padding:14px;display:none;z-index:10000;box-shadow:0 12px 40px rgba(0,0,0,0.7);max-height:520px;overflow-y:auto}
 #sm.on{display:block}
 #sm .hd{display:flex;align-items:center;gap:10px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,0.06);margin-bottom:10px}
 #sm .hd .ui{font-size:28px}
@@ -243,6 +258,9 @@ audio{max-width:100%;height:34px}
   </div>
 </div>
 
+<div id="sleepOverlay"><div class="moon">🌙</div><div class="txt">Click anywhere to wake</div></div>
+<div id="screensaver"><div class="logo">🪟</div><div class="sub">OpencoreOS v10.4</div></div>
+
 <div id="dt"></div>
 
 <div id="appEditor">
@@ -280,11 +298,12 @@ audio{max-width:100%;height:34px}
   <div class="smi" data-a="vapor"><span class="ic">💨</span>Vapor</div>
   <div class="smi" data-a="science"><span class="ic">🔬</span>Science</div>
   <div class="smi" data-a="infinity"><span class="ic">🥤</span>Infinity Drink</div>
+  <div class="smi" data-a="recovery"><span class="ic">🛠️</span>Recovery</div>
   <div class="smi" data-a="settings"><span class="ic">⚙️</span>Settings</div>
   <div class="sd"></div>
   <div class="smi" id="mlk"><span class="ic">🔒</span>Lock</div>
+  <div class="smi" id="msleep"><span class="ic">🌙</span>Sleep</div>
   <div class="smi" id="mrs"><span class="ic">🔄</span>Restart</div>
-  <div class="smi" id="mrr"><span class="ic">🛠️</span>Re-run Setup</div>
 </div>
 
 <div id="tb">
@@ -322,18 +341,11 @@ var LS = (function(){
   }
 })();
 
-// ============================================================
-//  2. ERROR HANDLERS
-// ============================================================
 window.onerror = function(m,u,l,c,e){
   var box = document.getElementById('err');
   var msg = document.getElementById('errm');
   var st = document.getElementById('errs');
-  if(box){
-    box.style.display = 'block';
-    if(msg) msg.textContent = m + ' (line ' + l + ':' + c + ')';
-    if(st) st.textContent = (e && e.stack) ? e.stack : '';
-  }
+  if(box){ box.style.display='block'; if(msg) msg.textContent = m + ' (line ' + l + ':' + c + ')'; if(st) st.textContent = (e && e.stack) ? e.stack : ''; }
   return false;
 };
 
@@ -341,7 +353,7 @@ var $ = function(id){ return document.getElementById(id); };
 var $$ = function(s){ return document.querySelectorAll(s); };
 
 // ============================================================
-//  3. VFS
+//  2. VFS (supports .oc files with optional password)
 // ============================================================
 var VFS = {
   root: null,
@@ -356,30 +368,31 @@ var VFS = {
             Documents:{type:'folder',children:{}},
             Pictures:{type:'folder',children:{}},
             Audio:{type:'folder',children:{}},
-            System32:{type:'folder',children:{
-              'kernel.oc':{type:'file',content:'OpencoreOS Kernel v10.4'},
-              'kernel32.oc':{type:'file',content:'Kernel32 Subsystem'},
-              'boot.oc':{type:'file',content:'Bootloader v10.4'},
-              'config.oc':{type:'file',content:'System Configuration'},
-              'drivers.oc':{type:'file',content:'Driver Manifest'},
-              'system.oc':{type:'file',content:'Core system files'},
-              'registry.oc':{type:'file',content:'System Registry'},
-              'hal.oc':{type:'file',content:'Hardware Abstraction Layer'},
-              'ntdll.oc':{type:'file',content:'NT Layer DLL'},
-              'win32k.oc':{type:'file',content:'Win32 Kernel Driver'},
-              'svchost.oc':{type:'file',content:'Service Host Process'},
-              'user32.oc':{type:'file',content:'User32 Core Library'},
-              'gdi32.oc':{type:'file',content:'GDI32 Subsystem'},
-              'README.txt':{type:'file',content:'PROTECTED. Admin PIN: devil.9oce'}
-            }},
+            System32:{type:'folder',children:this.defaultSystem32()},
             'readme.txt':{type:'file',content:'Welcome to OpencoreOS v10.4!\n\nUse the Terminal and type "help".'}
           }
         };
         this.save();
       }
-    } catch(e) {
-      this.root = {type:'folder',children:{}};
-    }
+    } catch(e) { this.root = {type:'folder',children:{}}; }
+  },
+  defaultSystem32: function(){
+    return {
+      'kernel.oc':{type:'file',content:JSON.stringify({type:'txt',content:'OpencoreOS Kernel v10.4',_oc:true})},
+      'kernel32.oc':{type:'file',content:JSON.stringify({type:'txt',content:'Kernel32 Subsystem',_oc:true})},
+      'boot.oc':{type:'file',content:JSON.stringify({type:'txt',content:'Bootloader v10.4',_oc:true})},
+      'config.oc':{type:'file',content:JSON.stringify({type:'txt',content:'System Configuration',_oc:true})},
+      'drivers.oc':{type:'file',content:JSON.stringify({type:'txt',content:'Driver Manifest',_oc:true})},
+      'system.oc':{type:'file',content:JSON.stringify({type:'txt',content:'Core system files',_oc:true})},
+      'registry.oc':{type:'file',content:JSON.stringify({type:'txt',content:'System Registry',_oc:true})},
+      'hal.oc':{type:'file',content:JSON.stringify({type:'txt',content:'Hardware Abstraction Layer',_oc:true})},
+      'ntdll.oc':{type:'file',content:JSON.stringify({type:'txt',content:'NT Layer DLL',_oc:true})},
+      'win32k.oc':{type:'file',content:JSON.stringify({type:'txt',content:'Win32 Kernel Driver',_oc:true})},
+      'svchost.oc':{type:'file',content:JSON.stringify({type:'txt',content:'Service Host Process',_oc:true})},
+      'user32.oc':{type:'file',content:JSON.stringify({type:'txt',content:'User32 Core Library',_oc:true})},
+      'gdi32.oc':{type:'file',content:JSON.stringify({type:'txt',content:'GDI32 Subsystem',_oc:true})},
+      'README.txt':{type:'file',content:'PROTECTED. Admin PIN: devil.9oce'}
+    };
   },
   save: function(){ try { LS.setItem('oc_vfs', JSON.stringify(this.root)); } catch(e){} },
   getNode: function(path){
@@ -395,7 +408,7 @@ var VFS = {
     var n = this.getNode(path);
     if(!n || n.type !== 'folder') return null;
     var out = [];
-    for(var k in n.children) out.push({name:k, type:n.children[k].type, content:n.children[k].content});
+    for(var k in n.children) out.push({name:k, type:n.children[k].type, content:n.children[k].content, locked:n.children[k].locked});
     return out;
   },
   read: function(path){
@@ -403,7 +416,20 @@ var VFS = {
     if(!n || n.type !== 'file') return null;
     return n.content;
   },
-  write: function(path, content){
+  isLocked: function(path){
+    var n = this.getNode(path);
+    return !!(n && n.locked);
+  },
+  checkPassword: function(path){
+    var n = this.getNode(path);
+    if(!n || !n.locked) return true;
+    var pw = prompt('🔒 This file is password protected.\n\nEnter password:');
+    if(pw === null) return false;
+    if(pw === n.locked) return true;
+    alert('❌ Incorrect password');
+    return false;
+  },
+  write: function(path, content, password){
     if(path.indexOf('/System32') === 0) return false;
     var parts = path.split('/').filter(function(p){return p;});
     var name = parts.pop();
@@ -412,7 +438,10 @@ var VFS = {
       if(!n.children[parts[i]]) n.children[parts[i]] = {type:'folder',children:{}};
       n = n.children[parts[i]];
     }
+    var existing = n.children[name];
+    var locked = (password && password.length) ? password : (existing && existing.locked);
     n.children[name] = {type:'file', content:content};
+    if(locked) n.children[name].locked = locked;
     this.save();
     return true;
   },
@@ -446,37 +475,55 @@ var VFS = {
   },
   count: function(){
     var c = 0;
-    var walk = function(n){
-      if(n.type === 'file') c++;
-      if(n.children) for(var k in n.children) walk(n.children[k]);
-    };
+    var walk = function(n){ if(n.type === 'file') c++; if(n.children) for(var k in n.children) walk(n.children[k]); };
     walk(this.root);
     return c;
   },
   size: function(){
     var s = 0;
-    var walk = function(n){
-      if(n.type === 'file') s += (n.content || '').length;
-      if(n.children) for(var k in n.children) walk(n.children[k]);
-    };
+    var walk = function(n){ if(n.type === 'file') s += (n.content || '').length; if(n.children) for(var k in n.children) walk(n.children[k]); };
     walk(this.root);
     return s;
+  },
+  // Recovery: restore System32 if missing
+  restoreSystem32: function(){
+    if(!this.root.children.System32){
+      this.root.children.System32 = {type:'folder', children:this.defaultSystem32()};
+    } else {
+      var def = this.defaultSystem32();
+      for(var k in def){
+        if(!this.root.children.System32.children[k]){
+          this.root.children.System32.children[k] = def[k];
+        }
+      }
+    }
+    // Ensure core folders exist
+    var folders = ['Documents','Pictures','Audio'];
+    for(var i=0; i<folders.length; i++){
+      if(!this.root.children[folders[i]]){
+        this.root.children[folders[i]] = {type:'folder', children:{}};
+      }
+    }
+    this.save();
   }
 };
 VFS.init();
 
 // ============================================================
-//  4. STATE
+//  3. STATE
 // ============================================================
 var ST = {
   windows: [], z: 100, counter: 0, bootTime: Date.now(),
   wifiOn: LS.getItem('oc_wifi') === 'true',
   btOn: LS.getItem('oc_bt') === 'true',
-  btDevice: null
+  btDevice: null,
+  screensaverActive: false,
+  idleTimeout: 60000,
+  lastActivity: Date.now()
 };
 
 // ============================================================
-//  5. DESKTOP ICONS (draggable + editable)
+//  4. DESKTOP ICONS
 // ============================================================
 var DEFAULT_ICONS = [
   {id:'system32', name:'System32', icon:'⚙️', x:0, y:0},
@@ -495,12 +542,13 @@ var DEFAULT_ICONS = [
   {id:'calendar', name:'Calendar', icon:'📅', x:1, y:6},
   {id:'sysinfo', name:'System', icon:'ℹ️', x:2, y:0},
   {id:'appstore', name:'App Store', icon:'🛒', x:2, y:1},
-  {id:'kernel0', name:'Kernel0', icon:'🧠', x:2, y:2},
-  {id:'videohub', name:'VideoHub', icon:'🎬', x:2, y:3},
-  {id:'vapor', name:'Vapor', icon:'💨', x:2, y:4},
-  {id:'science', name:'Science', icon:'🔬', x:2, y:5},
-  {id:'infinity', name:'Infinity Drink', icon:'🥤', x:2, y:6},
-  {id:'settings', name:'Settings', icon:'⚙️', x:3, y:0}
+  {id:'recovery', name:'Recovery', icon:'🛠️', x:2, y:2},
+  {id:'kernel0', name:'Kernel0', icon:'🧠', x:2, y:3},
+  {id:'videohub', name:'VideoHub', icon:'🎬', x:2, y:4},
+  {id:'vapor', name:'Vapor', icon:'💨', x:2, y:5},
+  {id:'science', name:'Science', icon:'🔬', x:2, y:6},
+  {id:'infinity', name:'Infinity Drink', icon:'🥤', x:3, y:0},
+  {id:'settings', name:'Settings', icon:'⚙️', x:3, y:1}
 ];
 
 var icons = [];
@@ -510,97 +558,56 @@ function loadIcons(){
     var saved = LS.getItem('oc_icons_v1');
     if(saved){
       icons = JSON.parse(saved);
-      // Ensure all default icons exist (in case we added new ones)
       for(var i=0; i<DEFAULT_ICONS.length; i++){
         var found = false;
-        for(var j=0; j<icons.length; j++){
-          if(icons[j].id === DEFAULT_ICONS[i].id){ found = true; break; }
-        }
-        if(!found){
-          icons.push(JSON.parse(JSON.stringify(DEFAULT_ICONS[i])));
-        }
+        for(var j=0; j<icons.length; j++){ if(icons[j].id === DEFAULT_ICONS[i].id){ found = true; break; } }
+        if(!found) icons.push(JSON.parse(JSON.stringify(DEFAULT_ICONS[i])));
       }
     } else {
       icons = JSON.parse(JSON.stringify(DEFAULT_ICONS));
     }
-  } catch(e){
-    icons = JSON.parse(JSON.stringify(DEFAULT_ICONS));
-  }
+  } catch(e){ icons = JSON.parse(JSON.stringify(DEFAULT_ICONS)); }
 }
 
-function saveIcons(){
-  try { LS.setItem('oc_icons_v1', JSON.stringify(icons)); } catch(e){}
-}
+function saveIcons(){ try { LS.setItem('oc_icons_v1', JSON.stringify(icons)); } catch(e){} }
 
-var ICON_W = 80;
-var ICON_H = 90;
-var ICON_PAD = 10;
-var ICON_TOP_PAD = 8;
-var ICON_LEFT_PAD = 8;
+var ICON_W = 80, ICON_H = 90, ICON_PAD = 10, ICON_TOP_PAD = 8, ICON_LEFT_PAD = 8;
 
-function positionToXY(pos){
-  return {
-    x: ICON_LEFT_PAD + pos.x * (ICON_W + ICON_PAD),
-    y: ICON_TOP_PAD + pos.y * (ICON_H + ICON_PAD)
-  };
-}
-
-function xyToPosition(x, y){
-  return {
-    x: Math.round((x - ICON_LEFT_PAD) / (ICON_W + ICON_PAD)),
-    y: Math.round((y - ICON_TOP_PAD) / (ICON_H + ICON_PAD))
-  };
-}
+function positionToXY(pos){ return { x: ICON_LEFT_PAD + pos.x * (ICON_W + ICON_PAD), y: ICON_TOP_PAD + pos.y * (ICON_H + ICON_PAD) }; }
+function xyToPosition(x, y){ return { x: Math.round((x - ICON_LEFT_PAD) / (ICON_W + ICON_PAD)), y: Math.round((y - ICON_TOP_PAD) / (ICON_H + ICON_PAD)) }; }
 
 function renderDesktop(){
-  var dt = $('dt');
-  if(!dt) return;
+  var dt = $('dt'); if(!dt) return;
   dt.innerHTML = '';
-
-  var cols = Math.max(1, Math.floor((dt.clientWidth - ICON_LEFT_PAD) / (ICON_W + ICON_PAD)));
-  var rows = Math.max(1, Math.floor((dt.clientHeight - ICON_TOP_PAD) / (ICON_H + ICON_PAD)));
-
   for(var i=0; i<icons.length; i++){
     if(icons[i].removed) continue;
     var icon = icons[i];
     var pos = positionToXY(icon);
-
     var btn = document.createElement('button');
     btn.className = 'di';
     btn.style.left = pos.x + 'px';
     btn.style.top = pos.y + 'px';
-    btn.setAttribute('data-icon-id', icon.id);
     btn.innerHTML = '<span class="ic">' + icon.icon + '</span><span class="lb">' + icon.name + '</span>';
-
     attachIconHandlers(btn, icon);
     dt.appendChild(btn);
   }
 }
 
 function attachIconHandlers(btn, icon){
-  var holdTimer = null;
-  var holdFired = false;
-  var dragMode = false;
-  var startX = 0, startY = 0;
-  var startLeft = 0, startTop = 0;
-  var moved = false;
+  var holdTimer = null, holdFired = false, dragMode = false, moved = false;
+  var startX = 0, startY = 0, startLeft = 0, startTop = 0;
 
   btn.onmousedown = function(e){
     if(e.button !== 0) return;
     e.preventDefault();
-
     var rect = btn.getBoundingClientRect();
-    startX = e.clientX;
-    startY = e.clientY;
-    startLeft = rect.left;
-    startTop = rect.top;
-    moved = false;
-    holdFired = false;
+    startX = e.clientX; startY = e.clientY;
+    startLeft = rect.left; startTop = rect.top;
+    moved = false; holdFired = false;
 
     holdTimer = setTimeout(function(){
       holdFired = true;
       dragMode = false;
-      // Open editor
       openAppEditor(icon, btn, e.clientX, e.clientY);
     }, 650);
 
@@ -609,8 +616,7 @@ function attachIconHandlers(btn, icon){
   };
 
   function onMove(e){
-    var dx = e.clientX - startX;
-    var dy = e.clientY - startY;
+    var dx = e.clientX - startX, dy = e.clientY - startY;
     if(!moved && (Math.abs(dx) > 5 || Math.abs(dy) > 5)){
       moved = true;
       if(!holdFired){
@@ -636,7 +642,6 @@ function attachIconHandlers(btn, icon){
       var newLeft = parseFloat(btn.style.left) - dtRect.left;
       var newTop = parseFloat(btn.style.top) - dtRect.top;
       var newPos = xyToPosition(newLeft, newTop);
-      // Clamp
       var dt2 = $('dt');
       var cols = Math.max(1, Math.floor((dt2.clientWidth - ICON_LEFT_PAD) / (ICON_W + ICON_PAD)));
       var rows = Math.max(1, Math.floor((dt2.clientHeight - ICON_TOP_PAD) / (ICON_H + ICON_PAD)));
@@ -648,74 +653,50 @@ function attachIconHandlers(btn, icon){
       renderDesktop();
       dragMode = false;
     } else if(!holdFired && !moved){
-      // Normal click -> launch
       launch(icon.id);
     }
   }
 }
 
-// App editor popup
 var editorTargetIcon = null;
-var editorTargetBtn = null;
-
 function openAppEditor(icon, btn, mx, my){
   editorTargetIcon = icon;
-  editorTargetBtn = btn;
   var ed = $('appEditor');
-  var nameInput = $('ae-name');
-  nameInput.value = icon.name;
+  $('ae-name').value = icon.name;
   ed.style.left = Math.min(window.innerWidth - 300, mx) + 'px';
   ed.style.top = Math.min(window.innerHeight - 200, my) + 'px';
   ed.classList.add('on');
-  setTimeout(function(){ nameInput.focus(); }, 50);
+  setTimeout(function(){ $('ae-name').focus(); }, 50);
 }
+function closeAppEditor(){ $('appEditor').classList.remove('on'); editorTargetIcon = null; }
 
-function closeAppEditor(){
-  $('appEditor').classList.remove('on');
-  editorTargetIcon = null;
-  editorTargetBtn = null;
-}
-
-var aeSave = $('ae-save');
-if(aeSave) aeSave.onclick = function(){
+$('ae-save').onclick = function(){
   if(editorTargetIcon){
     var newName = $('ae-name').value.trim();
     if(newName) editorTargetIcon.name = newName;
-    saveIcons();
-    renderDesktop();
+    saveIcons(); renderDesktop();
   }
   closeAppEditor();
 };
-
-var aeRemove = $('ae-remove');
-if(aeRemove) aeRemove.onclick = function(){
+$('ae-remove').onclick = function(){
   if(editorTargetIcon){
-    if(confirm('Remove "' + editorTargetIcon.name + '" from home screen?\n\nIt will still be available in the Start menu.')){
+    if(confirm('Remove "' + editorTargetIcon.name + '" from home screen?\n\nIt will still appear in the Start menu.')){
       editorTargetIcon.removed = true;
-      saveIcons();
-      renderDesktop();
+      saveIcons(); renderDesktop();
     }
   }
   closeAppEditor();
 };
-
-var aeCancel = $('ae-cancel');
-if(aeCancel) aeCancel.onclick = function(){
-  closeAppEditor();
-};
-
-// Close editor on outside click
+$('ae-cancel').onclick = closeAppEditor;
 document.addEventListener('mousedown', function(e){
   var ed = $('appEditor');
   if(ed && ed.classList.contains('on')){
-    if(!ed.contains(e.target) && !e.target.closest('.di')){
-      closeAppEditor();
-    }
+    if(!ed.contains(e.target) && !e.target.closest('.di')) closeAppEditor();
   }
 });
 
 // ============================================================
-//  6. CLOCK
+//  5. CLOCK / IDLE / SLEEP / SCREENSAVER
 // ============================================================
 function tickClock(){
   var now = new Date();
@@ -727,18 +708,53 @@ function tickClock(){
 setInterval(tickClock, 1000);
 tickClock();
 
+function resetIdle(){
+  ST.lastActivity = Date.now();
+  if(ST.screensaverActive){
+    $('screensaver').classList.remove('on');
+    ST.screensaverActive = false;
+  }
+}
+
+function checkIdle(){
+  if($('sleepOverlay').classList.contains('on')) return;
+  if($('login').classList.contains('on')) return;
+  if(Date.now() - ST.lastActivity > ST.idleTimeout){
+    if(!ST.screensaverActive){
+      $('screensaver').classList.add('on');
+      ST.screensaverActive = true;
+    }
+  }
+}
+setInterval(checkIdle, 2000);
+document.addEventListener('mousemove', resetIdle);
+document.addEventListener('keydown', resetIdle);
+document.addEventListener('click', function(){
+  resetIdle();
+  if(ST.screensaverActive){
+    $('screensaver').classList.remove('on');
+    ST.screensaverActive = false;
+  }
+});
+
+function goToSleep(){
+  $('sleepOverlay').classList.add('on');
+}
+$('sleepOverlay').addEventListener('click', function(){
+  $('sleepOverlay').classList.remove('on');
+  resetIdle();
+});
+var msleep = $('msleep');
+if(msleep) msleep.onclick = function(){
+  var sm = $('sm'); if(sm) sm.classList.remove('on');
+  goToSleep();
+};
+
 // ============================================================
-//  7. SETUP WIZARD — 1 minute
+//  6. SETUP WIZARD — 1 minute
 // ============================================================
 function runSetup(){
-  var steps = [
-    'Formatting virtual drive...',
-    'Creating System32...',
-    'Installing core files...',
-    'Configuring drivers...',
-    'Configuring Spotify SDK...',
-    'Finalizing setup...'
-  ];
+  var steps = ['Formatting virtual drive...','Creating System32...','Installing core files...','Configuring drivers...','Configuring Spotify SDK...','Finalizing setup...'];
   var p = 0;
   var iv = setInterval(function(){
     p += Math.random() * 2.5 + 1.5;
@@ -762,7 +778,7 @@ function runSetup(){
 }
 
 // ============================================================
-//  8. USER WIZARD
+//  7. USER WIZARD
 // ============================================================
 var uStep = 0;
 var uData = {name:'', lang:'en', kb:'us', pw:'', pwSkipped:true};
@@ -779,13 +795,8 @@ var kbs = [
 ];
 
 function runUserWizard(){
-  uStep = 0;
-  uData.name = '';
-  uData.lang = 'en';
-  uData.kb = 'us';
-  uData.pw = '';
-  uData.pwSkipped = true;
-  var el = $('uwiz'); if(el) el.classList.remove('hide');
+  uStep = 0; uData.name = ''; uData.lang = 'en'; uData.kb = 'us'; uData.pw = ''; uData.pwSkipped = true;
+  $('uwiz').classList.remove('hide');
   renderUserStep();
 }
 
@@ -799,11 +810,8 @@ function dotsHTML(active){
 }
 
 function renderUserStep(){
-  var c = $('uwc');
-  if(!c) return;
-  var html = '';
-  var i, j;
-
+  var c = $('uwc'); if(!c) return;
+  var html = '', i, j;
   if(uStep === 0){
     html = '<div style="font-size:64px;">👋</div><h2>Welcome!</h2><p>What should we call this device?</p>'
       + '<input id="un" placeholder="My Opencore PC" value="' + (uData.name || '') + '"/>'
@@ -836,11 +844,9 @@ function renderUserStep(){
       + '<div style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05);"><span style="color:#888">Language:</span> ' + langName + '</div>'
       + '<div style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05);"><span style="color:#888">Keyboard:</span> ' + kbName + '</div>'
       + '<div style="padding:6px 0;"><span style="color:#888">Password:</span> ' + (uData.pwSkipped ? 'Skipped' : 'Set') + '</div>'
-      + '</div>'
-      + '<button id="uf" style="width:100%">Get Started</button>' + dotsHTML(4);
+      + '</div><button id="uf" style="width:100%">Get Started</button>' + dotsHTML(4);
   }
   c.innerHTML = html;
-
   var nextBtn = $('unx'); if(nextBtn) nextBtn.onclick = nextUserStep;
   var backBtn = $('ub'); if(backBtn) backBtn.onclick = function(){ uStep--; renderUserStep(); };
   var skipBtn2 = $('usk'); if(skipBtn2) skipBtn2.onclick = function(){ uData.pw = ''; uData.pwSkipped = true; uStep++; renderUserStep(); };
@@ -854,17 +860,14 @@ function nextUserStep(){
     var v = n.value.trim();
     if(!v){ alert('Please enter a name.'); return; }
     uData.name = v;
-  } else if(uStep === 1){
-    var l = $('ul'); if(l) uData.lang = l.value;
-  } else if(uStep === 2){
-    var k = $('uk'); if(k) uData.kb = k.value;
-  } else if(uStep === 3){
+  } else if(uStep === 1){ var l = $('ul'); if(l) uData.lang = l.value; }
+  else if(uStep === 2){ var k = $('uk'); if(k) uData.kb = k.value; }
+  else if(uStep === 3){
     var p1 = $('up'); var p2 = $('up2');
     if(p1 && p1.value){
       if(p1.value.length < 6){ alert('Password must be 6+ chars.'); return; }
       if(p2 && p1.value !== p2.value){ alert('Passwords do not match.'); return; }
-      uData.pw = p1.value;
-      uData.pwSkipped = false;
+      uData.pw = p1.value; uData.pwSkipped = false;
       if(/^\d{6}$/.test(p1.value)) LS.setItem('oc_pin', p1.value);
     }
   }
@@ -877,27 +880,24 @@ function finishUserWizard(){
   LS.setItem('oc_lang', uData.lang);
   LS.setItem('oc_kb', uData.kb);
   LS.setItem('oc_user_done','true');
-  var el = $('uwiz'); if(el) el.classList.add('hide');
+  $('uwiz').classList.add('hide');
   loadSettings();
   showLogin();
   setTimeout(function(){ alert('Welcome, ' + (uData.name || 'Opencore User') + '!'); }, 300);
 }
 
 // ============================================================
-//  9. LOGIN
+//  8. LOGIN
 // ============================================================
 var pin = '';
 
 function showLogin(){
   var storedPin = LS.getItem('oc_pin') || '';
-  var el = $('login');
-  if(!el) return;
+  var el = $('login'); if(!el) return;
   if(storedPin.length === 6){
     el.classList.add('on');
     var le = $('le'); if(le) le.textContent = 'Enter your PIN';
-  } else {
-    el.classList.remove('on');
-  }
+  } else { el.classList.remove('on'); }
 }
 
 function updatePins(){
@@ -922,23 +922,18 @@ for(var pi=0; pi<pinButtons.length; pi++){
 function checkPin(){
   var storedPin = LS.getItem('oc_pin') || '';
   var le = $('le');
-  if(!storedPin){ var el = $('login'); if(el) el.classList.remove('on'); return; }
+  if(!storedPin){ $('login').classList.remove('on'); return; }
   if(pin === storedPin){
     if(le) le.textContent = '✓ Unlocked';
-    setTimeout(function(){
-      var el2 = $('login'); if(el2) el2.classList.remove('on');
-      pin = '';
-      updatePins();
-    }, 300);
+    setTimeout(function(){ $('login').classList.remove('on'); pin = ''; updatePins(); }, 300);
   } else {
     if(le) le.textContent = '❌ Wrong PIN';
-    pin = '';
-    updatePins();
+    pin = ''; updatePins();
   }
 }
 
 // ============================================================
-//  10. WINDOW MANAGER
+//  9. WINDOW MANAGER
 // ============================================================
 function makeWindow(appId, title, icon, html, w, h){
   w = w || 500; h = h || 350;
@@ -989,15 +984,12 @@ function makeWindow(appId, title, icon, html, w, h){
   win.querySelector('.min').onclick = function(){ minimizeWindow(id); };
   win.querySelector('.max').onclick = function(){
     if(win.style.width === (window.innerWidth - 4) + 'px'){
-      win.style.width = w + 'px';
-      win.style.height = h + 'px';
-      win.style.left = '40px';
-      win.style.top = '40px';
+      win.style.width = w + 'px'; win.style.height = h + 'px';
+      win.style.left = '40px'; win.style.top = '40px';
     } else {
       win.style.width = (window.innerWidth - 4) + 'px';
       win.style.height = (window.innerHeight - 54) + 'px';
-      win.style.left = '0';
-      win.style.top = '0';
+      win.style.left = '0'; win.style.top = '0';
     }
   };
   win.onmousedown = function(){ win.style.zIndex = ++ST.z; };
@@ -1031,8 +1023,7 @@ function minimizeWindow(id){
 }
 
 function updateTaskbar(){
-  var tb = $('ta');
-  if(!tb) return;
+  var tb = $('ta'); if(!tb) return;
   tb.innerHTML = '';
   for(var i=0; i<ST.windows.length; i++){
     (function(w){
@@ -1051,7 +1042,7 @@ function updateTaskbar(){
 }
 
 // ============================================================
-//  11. APP LAUNCHER
+//  10. APP LAUNCHER
 // ============================================================
 function launch(appId, extra){
   if(appId === 'system32') return openFiles('/System32');
@@ -1070,17 +1061,18 @@ function launch(appId, extra){
   if(appId === 'calendar') return openCalendar();
   if(appId === 'sysinfo') return openSysInfo();
   if(appId === 'appstore') return openAppStore();
-  if(appId === 'kernel0') return openKernel0();
-  if(appId === 'videohub') return openVideoHub();
-  if(appId === 'vapor') return openVapor();
-  if(appId === 'science') return openScience();
-  if(appId === 'infinity') return openInfinity();
+  if(appId === 'recovery') return openRecovery();
+  if(appId === 'kernel0') return makeIframeApp('kernel0', 'Kernel0', '🧠', 'https://kernel0.lovable.app');
+  if(appId === 'videohub') return makeIframeApp('videohub', 'VideoHub', '🎬', 'https://videohubpro.lovable.app');
+  if(appId === 'vapor') return makeIframeApp('vapor', 'Vapor', '💨', 'https://vapor.freetls.fastly.net/');
+  if(appId === 'science') return makeIframeApp('science', 'Science', '🔬', 'https://fastly-science-883451.josiah-wilke77.workers.dev/');
+  if(appId === 'infinity') return makeIframeApp('infinity', 'Infinity Drink', '🥤', 'https://infinity-drink-order.textaway2.workers.dev/');
   if(appId === 'settings') return openSettings();
   if(appId === 'imageviewer') return openImageViewer(extra);
 }
 
 // ============================================================
-//  12. FILE EXPLORER
+//  11. FILE EXPLORER (with .oc password protection)
 // ============================================================
 function openFiles(path){
   var win = makeWindow('files', 'Files', '📁', '', 640, 440);
@@ -1089,13 +1081,12 @@ function openFiles(path){
 
 function fileIcon(name){
   var e = name.split('.').pop().toLowerCase();
-  var m = {png:'🖼️',jpg:'🖼️',jpeg:'🖼️',gif:'🖼️',webp:'🖼️',txt:'📄',md:'📄',json:'📄',js:'📄',html:'🌐',css:'🎨',mp3:'🎵',wav:'🎵',webm:'🔊',mp4:'🎬'};
+  var m = {png:'🖼️',jpg:'🖼️',jpeg:'🖼️',gif:'🖼️',webp:'🖼️',txt:'📄',md:'📄',json:'📄',js:'📄',html:'🌐',css:'🎨',mp3:'🎵',wav:'🎵',webm:'🔊',mp4:'🎬',oc:'📦'};
   return m[e] || '📄';
 }
 
 function renderFiles(win, path){
-  var body = win.querySelector('.wb');
-  if(!body) return;
+  var body = win.querySelector('.wb'); if(!body) return;
   var items = VFS.list(path) || [];
   items.sort(function(a,b){
     if(a.type === 'folder' && b.type !== 'folder') return -1;
@@ -1108,14 +1099,15 @@ function renderFiles(win, path){
     + '<button data-a="home">🏠 Home</button>'
     + '<button data-a="mkdir">📁 New Folder</button>'
     + '<button data-a="newfile">📄 New File</button>'
+    + '<button data-a="newoc">📦 New .oc</button>'
     + (isSys ? '<span style="color:#ff6b6b;font-size:11px;font-weight:bold;">PROTECTED</span>' : '')
     + '<span style="color:#666;font-size:11px;margin-left:auto;">' + path + '</span>'
     + '</div><div class="fg">';
-
   for(var i=0; i<items.length; i++){
     var item = items[i];
     var ic = item.type === 'folder' ? '📁' : fileIcon(item.name);
-    html += '<div class="fi" data-name="' + item.name + '" data-type="' + item.type + '"><span class="ic">' + ic + '</span><span>' + item.name + '</span></div>';
+    var lockIcon = item.locked ? ' 🔒' : '';
+    html += '<div class="fi" data-name="' + item.name + '" data-type="' + item.type + '"><span class="ic">' + ic + '</span><span>' + item.name + lockIcon + '</span></div>';
   }
   if(items.length === 0) html += '<p style="color:#666;padding:20px;">Empty folder</p>';
   html += '</div>';
@@ -1129,20 +1121,24 @@ function renderFiles(win, path){
         if(a === 'back' && path !== '/'){
           var parent = path.split('/').slice(0,-1).join('/') || '/';
           renderFiles(win, parent);
-        } else if(a === 'home'){
-          renderFiles(win, '/');
-        } else if(a === 'mkdir'){
-          var n = prompt('Folder name:');
-          if(n){
-            var p = (path === '/' ? '' : path) + '/' + n;
-            if(VFS.mkdir(p)) renderFiles(win, path);
-          }
+        } else if(a === 'home'){ renderFiles(win, '/'); }
+        else if(a === 'mkdir'){
+          var n = prompt('Folder name:'); if(!n) return;
+          var p = (path === '/' ? '' : path) + '/' + n;
+          if(VFS.mkdir(p)) renderFiles(win, path);
         } else if(a === 'newfile'){
-          var n2 = prompt('File name:');
-          if(n2){
-            var p2 = (path === '/' ? '' : path) + '/' + n2;
-            if(VFS.write(p2, '')) renderFiles(win, path);
-          }
+          var n2 = prompt('File name:'); if(!n2) return;
+          var p2 = (path === '/' ? '' : path) + '/' + n2;
+          if(VFS.write(p2, '')) renderFiles(win, path);
+        } else if(a === 'newoc'){
+          var n3 = prompt('New .oc file name (must end in .oc):'); if(!n3) return;
+          if(n3.indexOf('.oc') === -1) n3 += '.oc';
+          var pw = prompt('Password for this file (leave empty for none):') || '';
+          var content = prompt('Content (text or base64):') || 'Sample .oc content';
+          var typeOfContent = prompt('Original file type (txt/png/jpg/wav):') || 'txt';
+          var wrapper = JSON.stringify({type:typeOfContent, content:content, _oc:true});
+          var p3 = (path === '/' ? '' : path) + '/' + n3;
+          if(VFS.write(p3, wrapper, pw)) renderFiles(win, path);
         }
       };
     })(barButtons[j]);
@@ -1162,13 +1158,25 @@ function renderFiles(win, path){
           }
           renderFiles(win, newPath);
         } else {
+          if(!VFS.checkPassword(newPath)) return;
           var c = VFS.read(newPath);
-          if(newPath.indexOf('.txt') !== -1 || newPath.indexOf('.') === -1){
+          if(name.indexOf('.oc') !== -1){
+            try {
+              var parsed = JSON.parse(c);
+              if(parsed._oc){
+                if(parsed.type === 'txt') launch('notepad', {path:newPath, content:parsed.content || ''});
+                else if(/^(png|jpg|jpeg|gif|webp)$/.test(parsed.type)) openImageViewer(parsed.content);
+                else alert('📦 .oc file (' + parsed.type + '):\n\n' + String(parsed.content).substring(0,500));
+                return;
+              }
+            } catch(e){}
+          }
+          if(name.indexOf('.txt') !== -1 || name.indexOf('.') === -1){
             launch('notepad', {path:newPath, content:c || ''});
-          } else if(/\.(png|jpg|jpeg|gif|webp)$/i.test(newPath)){
+          } else if(/\.(png|jpg|jpeg|gif|webp)$/i.test(name)){
             openImageViewer(c);
           } else {
-            alert('File: ' + name + '\n\n' + (c || '').substring(0, 300));
+            alert('File: ' + name + '\n\n' + (c || '').substring(0, 500));
           }
         }
       };
@@ -1177,7 +1185,7 @@ function renderFiles(win, path){
 }
 
 // ============================================================
-//  13. TERMINAL
+//  12. TERMINAL
 // ============================================================
 function openTerminal(){
   var win = makeWindow('terminal', 'Terminal', '💻',
@@ -1192,23 +1200,20 @@ function initTerminal(win){
   if(!out || !inp) return;
   var cwd = '/';
 
-  function p(t, c){
-    out.innerHTML += '<div class="' + (c || '') + '">' + t + '</div>';
-    out.scrollTop = out.scrollHeight;
-  }
+  function p(t, c){ out.innerHTML += '<div class="' + (c || '') + '">' + t + '</div>'; out.scrollTop = out.scrollHeight; }
 
   var cmds = {
     help:{d:'Show all commands',f:function(){
       p('=== OPENCOREOS v10.4 TERMINAL ===', 'ok');
       var cats = {
-        'FILE':['ls','cd','pwd','mkdir','touch','cat','rm','cp','mv','tree','stat','wc','head','tail','clear'],
+        'FILE':['ls','cd','pwd','mkdir','touch','cat','rm','cp','mv','tree','stat','wc','clear'],
         'SYSTEM':['uptime','whoami','date','time','systeminfo','memory','processes','kill','ver','os','arch','cpu','hostname','env'],
         'POWER':['shutdown','reboot','sleep','lock','pin'],
         'NETWORK':['wifi','netinfo','bt','bt on','bt off','bt scan','ping'],
-        'SPOTIFY':['spotify','spotify login','spotify logout','spotify search','spotify play'],
-        'SETTINGS':['theme','wallpaper','langs','keyboard','devicename','user'],
-        'UTIL':['echo','calc','base64','hex','reverse','random','uuid','repeat','banner','weather','count'],
-        'DIAG':['diagnostic','health','backup','restore','sys32','vfs','apps','update'],
+        'SPOTIFY':['spotify','spotify login','spotify logout','spotify search'],
+        'SETTINGS':['wallpaper','devicename'],
+        'UTIL':['echo','calc','base64','reverse','random','uuid','weather'],
+        'DIAG':['diagnostic','health','sys32','vfs','apps','recovery','restore-system'],
         'FUN':['cowsay','fortune','8ball','joke','matrix','ascii']
       };
       var n = 0;
@@ -1222,105 +1227,80 @@ function initTerminal(win){
       p('\nTotal: ' + n + ' commands', 'ok');
     }},
     ls:{d:'List directory',f:function(){
-      var i = VFS.list(cwd);
-      if(!i) return p('Not a dir', 'err');
+      var i = VFS.list(cwd); if(!i) return p('Not a dir', 'err');
       if(!i.length) return p('(empty)');
-      for(var k=0; k<i.length; k++) p((i[k].type === 'folder' ? '📁 ' : '📄 ') + i[k].name);
+      for(var k=0; k<i.length; k++) p((i[k].type === 'folder' ? '📁 ' : '📄 ') + i[k].name + (i[k].locked ? ' 🔒' : ''));
     }},
     cd:{d:'Change directory',f:function(a){
       var t = a[0] || '/';
-      if(t === '..'){
-        var s = cwd.split('/').filter(function(x){return x;});
-        s.pop();
-        cwd = '/' + s.join('/') || '/';
-        return;
-      }
+      if(t === '..'){ var s = cwd.split('/').filter(function(x){return x;}); s.pop(); cwd = '/' + s.join('/') || '/'; return; }
       var np = t.indexOf('/') === 0 ? t : (cwd === '/' ? '/' + t : cwd + '/' + t);
       var n = VFS.getNode(np);
-      if(n && n.type === 'folder') cwd = np;
-      else p('cd: not found', 'err');
+      if(n && n.type === 'folder') cwd = np; else p('cd: not found', 'err');
     }},
     pwd:{d:'Print dir',f:function(){ p(cwd); }},
     mkdir:{d:'Create folder',f:function(a){ if(!a[0]) return p('mkdir: need name', 'err'); var x = cwd === '/' ? '/' + a[0] : cwd + '/' + a[0]; if(VFS.mkdir(x)) p('Created', 'ok'); else p('Failed', 'err'); }},
     touch:{d:'Create file',f:function(a){ if(!a[0]) return p('touch: need name', 'err'); var x = cwd === '/' ? '/' + a[0] : cwd + '/' + a[0]; if(VFS.write(x, '')) p('Created', 'ok'); else p('Failed', 'err'); }},
-    cat:{d:'Show file',f:function(a){ if(!a[0]) return p('cat: need file', 'err'); var x = a[0].indexOf('/') === 0 ? a[0] : cwd + '/' + a[0]; var c = VFS.read(x); if(c !== null) p(c || '(empty)'); else p('Not found', 'err'); }},
+    cat:{d:'Show file',f:function(a){ if(!a[0]) return p('cat: need file', 'err'); var x = a[0].indexOf('/') === 0 ? a[0] : cwd + '/' + a[0]; if(!VFS.checkPassword(x)) return; var c = VFS.read(x); if(c !== null) p(c || '(empty)'); else p('Not found', 'err'); }},
     rm:{d:'Delete file',f:function(a){ if(!a[0]) return p('rm: need file', 'err'); var x = a[0].indexOf('/') === 0 ? a[0] : cwd + '/' + a[0]; if(VFS.del(x)) p('Deleted', 'ok'); else p('Failed', 'err'); }},
-    cp:{d:'Copy file',f:function(a){ if(a.length < 2) return p('cp: need 2 args', 'err'); var s = a[0].indexOf('/') === 0 ? a[0] : cwd + '/' + a[0]; var d = a[1].indexOf('/') === 0 ? a[1] : cwd + '/' + a[1]; var c = VFS.read(s); if(c === null) return p('Source not found', 'err'); if(VFS.write(d, c)) p('Copied', 'ok'); else p('Failed', 'err'); }},
-    mv:{d:'Move file',f:function(a){ if(a.length < 2) return p('mv: need 2 args', 'err'); var s = a[0].indexOf('/') === 0 ? a[0] : cwd + '/' + a[0]; var d = a[1].indexOf('/') === 0 ? a[1] : cwd + '/' + a[1]; var c = VFS.read(s); if(c === null) return p('Source not found', 'err'); if(VFS.write(d, c) && VFS.del(s)) p('Moved', 'ok'); else p('Failed', 'err'); }},
+    cp:{d:'Copy file',f:function(a){ if(a.length < 2) return p('cp: need 2 args', 'err'); var s = a[0].indexOf('/') === 0 ? a[0] : cwd + '/' + a[0]; var d = a[1].indexOf('/') === 0 ? a[1] : cwd + '/' + a[1]; if(!VFS.checkPassword(s)) return; var c = VFS.read(s); if(c === null) return p('Source not found', 'err'); if(VFS.write(d, c)) p('Copied', 'ok'); else p('Failed', 'err'); }},
+    mv:{d:'Move file',f:function(a){ if(a.length < 2) return p('mv: need 2 args', 'err'); var s = a[0].indexOf('/') === 0 ? a[0] : cwd + '/' + a[0]; var d = a[1].indexOf('/') === 0 ? a[1] : cwd + '/' + a[1]; if(!VFS.checkPassword(s)) return; var c = VFS.read(s); if(c === null) return p('Source not found', 'err'); if(VFS.write(d, c) && VFS.del(s)) p('Moved', 'ok'); else p('Failed', 'err'); }},
     tree:{d:'Show tree',f:function(){ function w(n, pre){ p(pre + (n.name || '/')); if(n.children) for(var k in n.children) w(n.children[k], pre + '  '); } w({name:'/', children:VFS.root.children}, ''); }},
-    stat:{d:'File info',f:function(a){ if(!a[0]) return p('stat: need file', 'err'); var x = a[0].indexOf('/') === 0 ? a[0] : cwd + '/' + a[0]; var n = VFS.getNode(x); if(!n) return p('Not found', 'err'); p('Type: ' + n.type); if(n.type === 'file') p('Size: ' + (n.content || '').length + ' bytes'); }},
-    wc:{d:'Word count',f:function(a){ if(!a[0]) return p('wc: need file', 'err'); var x = a[0].indexOf('/') === 0 ? a[0] : cwd + '/' + a[0]; var c = VFS.read(x); if(!c) return p('Not found', 'err'); p('Lines: ' + c.split('\n').length + ' Chars: ' + c.length); }},
-    head:{d:'First 10 lines',f:function(a){ if(!a[0]) return p('head: need file', 'err'); var x = a[0].indexOf('/') === 0 ? a[0] : cwd + '/' + a[0]; var c = VFS.read(x); if(!c) return p('Not found', 'err'); p(c.split('\n').slice(0,10).join('\n')); }},
-    tail:{d:'Last 10 lines',f:function(a){ if(!a[0]) return p('tail: need file', 'err'); var x = a[0].indexOf('/') === 0 ? a[0] : cwd + '/' + a[0]; var c = VFS.read(x); if(!c) return p('Not found', 'err'); p(c.split('\n').slice(-10).join('\n')); }},
+    stat:{d:'File info',f:function(a){ if(!a[0]) return p('stat: need file', 'err'); var x = a[0].indexOf('/') === 0 ? a[0] : cwd + '/' + a[0]; var n = VFS.getNode(x); if(!n) return p('Not found', 'err'); p('Type: ' + n.type); if(n.type === 'file'){ p('Size: ' + (n.content || '').length + ' bytes'); if(n.locked) p('Password protected: YES', 'warn'); } }},
+    wc:{d:'Word count',f:function(a){ if(!a[0]) return p('wc: need file', 'err'); var x = a[0].indexOf('/') === 0 ? a[0] : cwd + '/' + a[0]; if(!VFS.checkPassword(x)) return; var c = VFS.read(x); if(!c) return p('Not found', 'err'); p('Lines: ' + c.split('\n').length + ' Chars: ' + c.length); }},
     clear:{d:'Clear screen',f:function(){ out.innerHTML = ''; }},
-    uptime:{d:'System uptime',f:function(){ var u = Math.floor((Date.now() - ST.bootTime) / 1000); p('Uptime: ' + Math.floor(u/3600) + 'h ' + Math.floor(u%3600/60) + 'm ' + (u%60) + 's'); }},
-    whoami:{d:'Current user',f:function(){ p(LS.getItem('oc_device_name') || 'opencore-user'); }},
-    date:{d:'Current date',f:function(){ p(new Date().toString()); }},
-    time:{d:'Current time',f:function(){ p(new Date().toLocaleTimeString()); }},
-    systeminfo:{d:'System info',f:function(){ var m = 'N/A'; try { if(performance.memory) m = (performance.memory.usedJSHeapSize/1048576).toFixed(1) + ' MB'; } catch(e){} p('=== SYSTEM ===', 'info'); p('OS: OpencoreOS v10.4'); p('Device: ' + (LS.getItem('oc_device_name') || 'Opencore-PC')); p('Language: ' + (LS.getItem('oc_lang') || 'en')); p('Keyboard: ' + (LS.getItem('oc_kb') || 'us')); p('CPU: ' + (navigator.hardwareConcurrency || 'N/A')); p('Memory: ' + m); p('Display: ' + window.innerWidth + 'x' + window.innerHeight); p('Files: ' + VFS.count() + ' (' + VFS.size() + ' bytes)'); p('Online: ' + navigator.onLine); }},
-    memory:{d:'Memory usage',f:function(){ try { if(performance.memory){ p('Used: ' + (performance.memory.usedJSHeapSize/1048576).toFixed(2) + ' MB'); p('Total: ' + (performance.memory.totalJSHeapSize/1048576).toFixed(2) + ' MB'); return; }} catch(e){} p('N/A'); }},
+    uptime:{d:'Uptime',f:function(){ var u = Math.floor((Date.now() - ST.bootTime) / 1000); p('Uptime: ' + Math.floor(u/3600) + 'h ' + Math.floor(u%3600/60) + 'm ' + (u%60) + 's'); }},
+    whoami:{d:'User',f:function(){ p(LS.getItem('oc_device_name') || 'opencore-user'); }},
+    date:{d:'Date',f:function(){ p(new Date().toString()); }},
+    time:{d:'Time',f:function(){ p(new Date().toLocaleTimeString()); }},
+    systeminfo:{d:'System info',f:function(){ var m = 'N/A'; try { if(performance.memory) m = (performance.memory.usedJSHeapSize/1048576).toFixed(1) + ' MB'; } catch(e){} p('=== SYSTEM ===', 'info'); p('OS: OpencoreOS v10.4'); p('Device: ' + (LS.getItem('oc_device_name') || 'Opencore-PC')); p('CPU: ' + (navigator.hardwareConcurrency || 'N/A')); p('Memory: ' + m); p('Files: ' + VFS.count()); p('Online: ' + navigator.onLine); }},
+    memory:{d:'Memory',f:function(){ try { if(performance.memory){ p('Used: ' + (performance.memory.usedJSHeapSize/1048576).toFixed(2) + ' MB'); p('Total: ' + (performance.memory.totalJSHeapSize/1048576).toFixed(2) + ' MB'); return; }} catch(e){} p('N/A'); }},
     processes:{d:'Running apps',f:function(){ p('=== PROCESSES ===', 'info'); if(!ST.windows.length) return p('None'); for(var i=0; i<ST.windows.length; i++){ var t = ST.windows[i].el.querySelector('.wt'); p('  [' + i + '] ' + (t ? t.textContent : '?')); } }},
     kill:{d:'Kill window by index',f:function(a){ var i = parseInt(a[0]); if(isNaN(i) || !ST.windows[i]) return p('Invalid index', 'err'); closeWindow(ST.windows[i].id); p('Closed', 'ok'); }},
-    ver:{d:'OS version',f:function(){ p('OpencoreOS v10.4'); }},
+    ver:{d:'Version',f:function(){ p('OpencoreOS v10.4'); }},
     os:{d:'OS name',f:function(){ p('OpencoreOS'); }},
-    arch:{d:'Architecture',f:function(){ p('x86_64'); }},
-    cpu:{d:'CPU cores',f:function(){ p('Cores: ' + (navigator.hardwareConcurrency || 'N/A')); }},
+    arch:{d:'Arch',f:function(){ p('x86_64'); }},
+    cpu:{d:'CPU',f:function(){ p('Cores: ' + (navigator.hardwareConcurrency || 'N/A')); }},
     hostname:{d:'Hostname',f:function(){ p(LS.getItem('oc_device_name') || 'opencore-pc'); }},
-    env:{d:'Environment',f:function(){ p('USER=' + (LS.getItem('oc_device_name') || 'opencore-user')); p('LANG=' + (LS.getItem('oc_lang') || 'en')); p('KEYBOARD=' + (LS.getItem('oc_kb') || 'us')); p('CWD=' + cwd); }},
+    env:{d:'Env',f:function(){ p('USER=' + (LS.getItem('oc_device_name') || 'opencore-user')); p('LANG=' + (LS.getItem('oc_lang') || 'en')); p('CWD=' + cwd); }},
     shutdown:{d:'Shut down',f:function(){ if(confirm('Shut down?')) location.reload(); }},
     reboot:{d:'Reboot',f:function(){ if(confirm('Reboot?')) location.reload(); }},
-    sleep:{d:'Sleep (locks)',f:function(){ showLogin(); }},
-    lock:{d:'Lock screen',f:function(){ showLogin(); }},
+    sleep:{d:'Sleep mode',f:function(){ goToSleep(); }},
+    lock:{d:'Lock',f:function(){ showLogin(); }},
     pin:{d:'PIN status',f:function(){ p((LS.getItem('oc_pin') || '').length === 6 ? 'PIN is set' : 'PIN not set'); }},
     wifi:{d:'WiFi info',f:function(){ var c = navigator.connection || {}; p('Type: ' + (c.effectiveType || 'unknown')); p('Downlink: ' + (c.downlink || '?') + ' Mbps'); p('Online: ' + navigator.onLine); }},
-    netinfo:{d:'Network details',f:function(){ var c = navigator.connection || {}; p('Type: ' + (c.effectiveType || 'unknown')); p('Downlink: ' + (c.downlink || '?') + ' Mbps'); p('RTT: ' + (c.rtt || '?') + ' ms'); p('Online: ' + navigator.onLine); }},
+    netinfo:{d:'Network',f:function(){ var c = navigator.connection || {}; p('Type: ' + (c.effectiveType || 'unknown')); p('RTT: ' + (c.rtt || '?') + ' ms'); p('Online: ' + navigator.onLine); }},
     bt:{d:'Bluetooth status',f:function(){ p('State: ' + (ST.btOn ? 'ON' : 'OFF')); p('Supported: ' + (navigator.bluetooth ? 'Yes' : 'No')); p('Paired: ' + (ST.btDevice ? ST.btDevice.name : 'none')); }},
-    'bt on':{d:'Bluetooth ON',f:function(){ ST.btOn = true; LS.setItem('oc_bt','true'); p('Bluetooth ON', 'ok'); }},
-    'bt off':{d:'Bluetooth OFF',f:function(){ ST.btOn = false; LS.setItem('oc_bt','false'); p('Bluetooth OFF', 'warn'); }},
-    'bt scan':{d:'Scan for BLE devices',f:function(){
-      if(!ST.btOn) return p('Turn on Bluetooth with "bt on"', 'err');
-      if(!navigator.bluetooth) return p('Web Bluetooth not supported', 'err');
-      p('Scanning...', 'info');
-      navigator.bluetooth.requestDevice({acceptAllDevices:true}).then(function(d){
-        ST.btDevice = d;
-        p('Found: ' + (d.name || 'Unknown'), 'ok');
-      }).catch(function(){ p('Cancelled', 'warn'); });
-    }},
-    ping:{d:'Ping host',f:function(a){ if(!a[0]) return p('ping: need host', 'err'); p('Pinging ' + a[0] + '...', 'info'); var t = Date.now(); fetch('https://' + a[0].replace(/^https?:\/\//, ''), {mode:'no-cors'}).then(function(){ p('Reply in ' + (Date.now() - t) + 'ms', 'ok'); }).catch(function(){ p('Failed', 'err'); }); }},
-    spotify:{d:'Spotify status',f:function(){ if(!window.SpotifyAuth) return p('Spotify module not loaded (open Music app first)', 'err'); p('Logged in: ' + (SpotifyAuth.isLoggedIn() ? 'YES' : 'NO')); p('Client ID: ' + (LS.getItem('opencore_spotify_client_id') || 'not set')); }},
-    'spotify login':{d:'Login to Spotify',f:function(){ if(!window.SpotifyAuth) return p('Open Music app first', 'err'); SpotifyAuth.login(); }},
+    'bt on':{d:'BT ON',f:function(){ ST.btOn = true; LS.setItem('oc_bt','true'); p('Bluetooth ON', 'ok'); }},
+    'bt off':{d:'BT OFF',f:function(){ ST.btOn = false; LS.setItem('oc_bt','false'); p('Bluetooth OFF', 'warn'); }},
+    'bt scan':{d:'Scan BLE',f:function(){ if(!ST.btOn) return p('Turn on Bluetooth first', 'err'); if(!navigator.bluetooth) return p('Not supported', 'err'); p('Scanning...', 'info'); navigator.bluetooth.requestDevice({acceptAllDevices:true}).then(function(d){ ST.btDevice = d; p('Found: ' + (d.name || 'Unknown'), 'ok'); }).catch(function(){ p('Cancelled', 'warn'); }); }},
+    ping:{d:'Ping',f:function(a){ if(!a[0]) return p('ping: need host', 'err'); p('Pinging ' + a[0] + '...', 'info'); var t = Date.now(); fetch('https://' + a[0].replace(/^https?:\/\//, ''), {mode:'no-cors'}).then(function(){ p('Reply in ' + (Date.now() - t) + 'ms', 'ok'); }).catch(function(){ p('Failed', 'err'); }); }},
+    spotify:{d:'Spotify status',f:function(){ if(!window.SpotifyAuth) return p('Spotify module not loaded', 'err'); p('Logged in: ' + (SpotifyAuth.isLoggedIn() ? 'YES' : 'NO')); }},
+    'spotify login':{d:'Login',f:function(){ if(!window.SpotifyAuth) return p('Open Music app first', 'err'); SpotifyAuth.login(); }},
     'spotify logout':{d:'Logout',f:function(){ if(window.SpotifyAuth) SpotifyAuth.logout(); p('Logged out', 'ok'); }},
-    theme:{d:'Theme info',f:function(){ p('Dark theme active.'); }},
-    wallpaper:{d:'Set wallpaper',f:function(a){ if(!a[0]) return p('Usage: wallpaper reset OR <css>', 'err'); if(a[0] === 'reset'){ var d = $('dt'); if(d) d.style.background = ''; LS.removeItem('oc_wallpaper'); return p('Reset', 'ok'); } var g = a.join(' '); var d2 = $('dt'); if(d2) d2.style.background = g; LS.setItem('oc_wallpaper', g); p('Set', 'ok'); }},
-    langs:{d:'Language',f:function(a){ if(!a[0]) return p('Current: ' + (LS.getItem('oc_lang') || 'en')); LS.setItem('oc_lang', a[0]); p('Set to ' + a[0], 'ok'); }},
-    keyboard:{d:'Keyboard',f:function(a){ if(!a[0]) return p('Current: ' + (LS.getItem('oc_kb') || 'us')); LS.setItem('oc_kb', a[0]); p('Set to ' + a[0], 'ok'); }},
-    devicename:{d:'Rename device',f:function(a){ if(!a.length) return p('Current: ' + (LS.getItem('oc_device_name') || 'Opencore-PC')); var n = a.join(' '); LS.setItem('oc_device_name', n); var el = $('smn'); if(el) el.textContent = n; p('Renamed to ' + n, 'ok'); }},
-    user:{d:'Current user',f:function(){ p('User: ' + (LS.getItem('oc_device_name') || 'opencore-user')); }},
-    echo:{d:'Print text',f:function(a){ p(a.join(' ')); }},
+    'spotify search':{d:'Search',f:function(a){ if(!a.length) return p('Usage: spotify search <query>', 'err'); SpotifyAuth.search(a.join(' ')).then(function(d){ if(d.tracks) d.tracks.items.slice(0,5).forEach(function(t){ p('  ' + t.name + ' - ' + t.artists[0].name); }); }).catch(function(e){ p('Error: ' + e.message, 'err'); }); }},
+    wallpaper:{d:'Wallpaper',f:function(a){ if(!a[0]) return p('Usage: wallpaper reset OR <css>', 'err'); if(a[0] === 'reset'){ var d = $('dt'); if(d) d.style.background = ''; LS.removeItem('oc_wallpaper'); return p('Reset', 'ok'); } var g = a.join(' '); var d2 = $('dt'); if(d2) d2.style.background = g; LS.setItem('oc_wallpaper', g); p('Set', 'ok'); }},
+    devicename:{d:'Rename device',f:function(a){ if(!a.length) return p('Current: ' + (LS.getItem('oc_device_name') || 'Opencore-PC')); var n = a.join(' '); LS.setItem('oc_device_name', n); var el = $('smn'); if(el) el.textContent = n; p('Renamed', 'ok'); }},
+    echo:{d:'Echo',f:function(a){ p(a.join(' ')); }},
     calc:{d:'Calculate',f:function(a){ if(!a.length) return p('Usage: calc <expr>', 'err'); try { p('= ' + Function('"use strict";return(' + a.join(' ') + ')')()); } catch(e){ p('Error', 'err'); } }},
-    base64:{d:'Base64 encode',f:function(a){ p(btoa(a.join(' '))); }},
-    hex:{d:'To hex',f:function(a){ var s = a.join(' '); var out = ''; for(var i=0; i<s.length; i++) out += s.charCodeAt(i).toString(16) + ' '; p(out); }},
-    reverse:{d:'Reverse string',f:function(a){ p(a.join(' ').split('').reverse().join('')); }},
-    random:{d:'Random number',f:function(a){ p(Math.floor(Math.random() * (parseInt(a[0]) || 100)) + 1); }},
-    uuid:{d:'Generate UUID',f:function(){ p('xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c){ var r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16); })); }},
-    repeat:{d:'Repeat text',f:function(a){ var n = parseInt(a[0]) || 3; var t = a.slice(1).join(' '); for(var i=0; i<n; i++) p(t); }},
-    banner:{d:'Print banner',f:function(a){ var t = a.join(' ') || 'OPENCORE'; p('==========='); p('  ' + t); p('==========='); }},
-    weather:{d:'Quick weather',f:function(){ if(!navigator.geolocation) return p('No geolocation'); navigator.geolocation.getCurrentPosition(function(pos){ fetch('https://api.open-meteo.com/v1/forecast?latitude=' + pos.coords.latitude + '&longitude=' + pos.coords.longitude + '&current_weather=true').then(function(r){ return r.json(); }).then(function(d){ p('Weather: ' + d.current_weather.temperature.toFixed(1) + 'C'); }).catch(function(e){ p(e.message, 'err'); }); }); }},
-    count:{d:'Count to N',f:function(a){ var n = parseInt(a[0]) || 10; for(var i=1; i<=n; i++) p(i); }},
-    diagnostic:{d:'Diagnostics',f:function(){ p('=== DIAG ===', 'info'); try { if(VFS.root && VFS.root.type === 'folder') p('VFS OK', 'ok'); else p('VFS corrupt', 'err'); } catch(e){ p('VFS error', 'err'); } try { LS.getItem('x'); p('Storage OK', 'ok'); } catch(e){ p('Storage error', 'err'); } p(ST.windows.length + ' windows open'); p('Online: ' + navigator.onLine); }},
-    health:{d:'Health check',f:function(){ p('=== HEALTH ===', 'info'); try { var r = VFS.root; p(r && r.type === 'folder' ? 'Healthy' : 'Issues', 'ok'); } catch(e){ p('Error', 'err'); } }},
-    backup:{d:'Backup VFS',f:function(){ var d = JSON.stringify(VFS.root); var b = new Blob([d], {type:'application/json'}); var u = URL.createObjectURL(b); var a = document.createElement('a'); a.href = u; a.download = 'opencore_backup.json'; a.click(); URL.revokeObjectURL(u); p('Downloaded', 'ok'); }},
-    restore:{d:'Restore VFS',f:function(){ var i = document.createElement('input'); i.type = 'file'; i.accept = '.json'; i.onchange = function(e){ var f = e.target.files[0]; var r = new FileReader(); r.onload = function(ev){ try { var d = JSON.parse(ev.target.result); if(d.type === 'folder'){ VFS.root = d; VFS.save(); p('Restored', 'ok'); } else p('Invalid', 'err'); } catch(x){ p('Error', 'err'); } }; r.readAsText(f); }; i.click(); }},
-    sys32:{d:'List System32',f:function(){ p('=== SYSTEM32 (PROTECTED) ===', 'warn'); var l = VFS.list('/System32') || []; for(var i=0; i<l.length; i++) p((l[i].type === 'folder' ? '📁 ' : '📄 ') + l[i].name); p('Admin PIN: devil.9oce', 'warn'); }},
+    base64:{d:'Base64',f:function(a){ p(btoa(a.join(' '))); }},
+    reverse:{d:'Reverse',f:function(a){ p(a.join(' ').split('').reverse().join('')); }},
+    random:{d:'Random',f:function(a){ p(Math.floor(Math.random() * (parseInt(a[0]) || 100)) + 1); }},
+    uuid:{d:'UUID',f:function(){ p('xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c){ var r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16); })); }},
+    weather:{d:'Weather',f:function(){ if(!navigator.geolocation) return p('No geolocation'); navigator.geolocation.getCurrentPosition(function(pos){ fetch('https://api.open-meteo.com/v1/forecast?latitude=' + pos.coords.latitude + '&longitude=' + pos.coords.longitude + '&current_weather=true').then(function(r){ return r.json(); }).then(function(d){ p('Weather: ' + d.current_weather.temperature.toFixed(1) + 'C'); }).catch(function(e){ p(e.message, 'err'); }); }); }},
+    diagnostic:{d:'Diagnostics',f:function(){ p('=== DIAG ===', 'info'); try { if(VFS.root && VFS.root.type === 'folder') p('VFS OK', 'ok'); else p('VFS corrupt', 'err'); } catch(e){ p('VFS error', 'err'); } try { LS.getItem('x'); p('Storage OK', 'ok'); } catch(e){ p('Storage error', 'err'); } p(ST.windows.length + ' windows open'); }},
+    health:{d:'Health',f:function(){ p('=== HEALTH ===', 'info'); try { var r = VFS.root; p(r && r.type === 'folder' ? 'Healthy' : 'Issues', 'ok'); } catch(e){ p('Error', 'err'); } }},
+    sys32:{d:'List System32',f:function(){ p('=== SYSTEM32 ===', 'warn'); var l = VFS.list('/System32') || []; for(var i=0; i<l.length; i++) p((l[i].type === 'folder' ? '📁 ' : '📄 ') + l[i].name); }},
     vfs:{d:'VFS info',f:function(){ p('Files: ' + VFS.count()); p('Size: ' + VFS.size() + ' bytes'); }},
-    apps:{d:'List apps',f:function(){ p('files, terminal, notepad, calculator, browser, music, camera, microphone, audioplayer, wallpaper, weather, clock, calendar, sysinfo, appstore, kernel0, videohub, vapor, science, infinity, settings'); }},
-    update:{d:'Check updates',f:function(){ p('Latest version (v10.4)'); }},
-    cowsay:{d:'Cow says',f:function(a){ var t = a.join(' ') || 'Moo!'; p(' ' + '_'.repeat(t.length + 2)); p('< ' + t + ' >'); p(' ' + '-'.repeat(t.length + 2)); p('        \\   ^__^'); p('         \\  (oo)\\_______'); p('            (__)\\       )\\/\\'); p('                ||----w |'); p('                ||     ||'); }},
-    fortune:{d:'Quote',f:function(){ var q = ['The best way to predict the future is to invent it.', 'Simplicity is the soul of efficiency.', 'Talk is cheap. Show me the code.']; p(q[Math.floor(Math.random() * q.length)]); }},
-    '8ball':{d:'8-ball',f:function(){ var a = ['Yes','No','Maybe','Definitely','Ask later','Not likely','Absolutely!','Never']; p(a[Math.floor(Math.random() * a.length)]); }},
-    joke:{d:'Joke',f:function(){ var j = ['Why do programmers prefer dark mode? Light attracts bugs!', '10 types of people: those who know binary and those who do not.']; p(j[Math.floor(Math.random() * j.length)]); }},
+    apps:{d:'List apps',f:function(){ p('files, terminal, notepad, calculator, browser, music, camera, microphone, audioplayer, wallpaper, weather, clock, calendar, sysinfo, appstore, recovery, kernel0, videohub, vapor, science, infinity, settings'); }},
+    recovery:{d:'Enter recovery mode',f:function(){ p('Recovery mode active. Type "restore-system" to reinstall system files.', 'info'); }},
+    'restore-system':{d:'Restore system files',f:function(){ VFS.restoreSystem32(); p('System files restored', 'ok'); }},
+    cowsay:{d:'Cow',f:function(a){ var t = a.join(' ') || 'Moo!'; p(' ' + '_'.repeat(t.length + 2)); p('< ' + t + ' >'); p(' ' + '-'.repeat(t.length + 2)); p('        \\   ^__^'); p('         \\  (oo)\\_______'); p('            (__)\\       )\\/\\'); p('                ||----w |'); p('                ||     ||'); }},
+    fortune:{d:'Quote',f:function(){ var q = ['The best way to predict the future is to invent it.', 'Simplicity is the soul of efficiency.']; p(q[Math.floor(Math.random() * q.length)]); }},
+    '8ball':{d:'8-ball',f:function(){ var a = ['Yes','No','Maybe','Definitely','Ask later','Never']; p(a[Math.floor(Math.random() * a.length)]); }},
+    joke:{d:'Joke',f:function(){ var j = ['Why do programmers prefer dark mode? Light attracts bugs!']; p(j[Math.floor(Math.random() * j.length)]); }},
     matrix:{d:'Matrix',f:function(){ for(var i=0; i<5; i++){ var l = ''; for(var j=0; j<50; j++) l += Math.random() > 0.5 ? '1' : '0'; p(l, 'ok'); } }},
-    ascii:{d:'ASCII art',f:function(){ p('  ___  ____  ____  _   _  ____  _____  ____  ____'); p(' / _ \\|  _ \\|  _ \\| \\ | ||  __|| ____|/ __ \\|  _ \\'); p('| | | | |_) | |_) |  \\| || |__ |  _| | |  | | |_) |'); p('| |_| |  __/|  __/| |\\  ||  __|| |___| |__| |  _ <'); p(' \\___/|_|   |_|   |_| \\_||____||_____|\\____/|_| \\_\\'); }}
+    ascii:{d:'ASCII art',f:function(){ p('  ___  ____  ____  _   _  ____'); p(' / _ \\|  _ \\|  _ \\| \\ | ||  __|'); p('| | | | |_) | |_) |  \\| || |__ '); p('| |_| |  __/|  __/| |\\  ||  __|'); p(' \\___/|_|   |_|   |_| \\_||____|'); }}
   };
 
   function exec(cmd){
@@ -1333,11 +1313,7 @@ function initTerminal(win){
   }
 
   inp.addEventListener('keydown', function(e){
-    if(e.key === 'Enter'){
-      var c = inp.value;
-      inp.value = '';
-      if(c.trim()) exec(c);
-    }
+    if(e.key === 'Enter'){ var c = inp.value; inp.value = ''; if(c.trim()) exec(c); }
   });
   inp.focus();
   win.onclick = function(){ inp.focus(); };
@@ -1346,7 +1322,7 @@ function initTerminal(win){
 }
 
 // ============================================================
-//  14. NOTEPAD
+//  13. NOTEPAD
 // ============================================================
 function openNotepad(opts){
   var path = (opts && opts.path) ? opts.path : '/Documents/note.txt';
@@ -1357,15 +1333,36 @@ function openNotepad(opts){
     + '<div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;">'
     + '<button class="btn" id="np-save">Save</button>'
     + '<button class="btn2" id="np-saveas">Save As...</button>'
+    + '<button class="btn2" id="np-saveoc">Save as .oc</button>'
+    + '<button class="btn2" id="np-lock">Set Password</button>'
     + '</div>', 520, 400);
   var ta = win.querySelector('#np-text');
   var cp = path;
   win.querySelector('#np-save').onclick = function(){ if(VFS.write(cp, ta.value)) alert('Saved to ' + cp); else alert('Failed'); };
   win.querySelector('#np-saveas').onclick = function(){ var np = prompt('Save as path:', cp); if(!np) return; if(VFS.write(np, ta.value)){ cp = np; alert('Saved to ' + np); } else alert('Failed'); };
+  win.querySelector('#np-saveoc').onclick = function(){
+    var base = cp.split('/').pop().replace(/\.[^.]+$/, '');
+    var ocName = prompt('Save as .oc name:', base + '.oc');
+    if(!ocName) return;
+    if(ocName.indexOf('.oc') === -1) ocName += '.oc';
+    var pw = prompt('Set password (empty = none):') || '';
+    var wrapper = JSON.stringify({type:'txt', content:ta.value, _oc:true});
+    var dir = cp.substring(0, cp.lastIndexOf('/'));
+    var newPath = (dir || '') + '/' + ocName;
+    if(VFS.write(newPath, wrapper, pw)) alert('Saved to ' + newPath);
+    else alert('Failed');
+  };
+  win.querySelector('#np-lock').onclick = function(){
+    var pw = prompt('New password for this file (empty = remove):') || '';
+    if(VFS.write(cp, ta.value, pw)){
+      if(pw) alert('Password set');
+      else alert('Password removed');
+    } else alert('Failed');
+  };
 }
 
 // ============================================================
-//  15. CALCULATOR
+//  14. CALCULATOR
 // ============================================================
 function openCalculator(){
   var win = makeWindow('calculator', 'Calculator', '🧮',
@@ -1393,7 +1390,7 @@ function openCalculator(){
 }
 
 // ============================================================
-//  16. BROWSER
+//  15. BROWSER
 // ============================================================
 function openBrowser(){
   var win = makeWindow('browser', 'Browser', '🌐',
@@ -1424,7 +1421,7 @@ function openBrowser(){
 }
 
 // ============================================================
-//  17. CAMERA
+//  16. CAMERA / MICROPHONE / AUDIO PLAYER
 // ============================================================
 function openCamera(){
   var win = makeWindow('camera', 'Camera', '📷',
@@ -1433,57 +1430,38 @@ function openCamera(){
     + '<button id="cam-flip">Flip</button>'
     + '<button class="dan" id="cam-close">Close</button></div>'
     + '<div class="cg2" id="cam-gal"></div>', 560, 520);
-  var video = win.querySelector('#cam-v');
-  var gal = win.querySelector('#cam-gal');
-  var stream = null;
-  var facing = 'user';
-
+  var video = win.querySelector('#cam-v'), gal = win.querySelector('#cam-gal'), stream = null, facing = 'user';
   var existing = VFS.list('/Pictures') || [];
   for(var i=0; i<existing.length; i++){
-    var f = existing[i];
-    if(f.type !== 'file') continue;
+    var f = existing[i]; if(f.type !== 'file') continue;
     var d = VFS.read('/Pictures/' + f.name);
     if(d && d.indexOf('data:image') === 0){
-      var img = document.createElement('img');
-      img.src = d;
-      img.title = f.name;
+      var img = document.createElement('img'); img.src = d; img.title = f.name;
       (function(dataUrl){ img.onclick = function(){ openImageViewer(dataUrl); }; })(d);
       gal.appendChild(img);
     }
   }
-
   function start(f){
     if(stream) stream.getTracks().forEach(function(t){ t.stop(); });
-    navigator.mediaDevices.getUserMedia({video:{facingMode:f, width:{ideal:1280}}})
-      .then(function(s){ stream = s; video.srcObject = s; win._stream = s; })
-      .catch(function(e){ video.style.cssText = 'width:100%;height:200px;display:flex;align-items:center;justify-content:center;color:#ff6b6b;background:#0a0a1a;border-radius:6px;'; video.textContent = 'Camera denied: ' + e.message; });
+    navigator.mediaDevices.getUserMedia({video:{facingMode:f, width:{ideal:1280}}}).then(function(s){ stream = s; video.srcObject = s; win._stream = s; }).catch(function(e){ video.style.cssText = 'width:100%;height:200px;display:flex;align-items:center;justify-content:center;color:#ff6b6b;background:#0a0a1a;border-radius:6px;'; video.textContent = 'Camera denied: ' + e.message; });
   }
   start(facing);
-
   win.querySelector('#cam-cap').onclick = function(){
     if(!stream) return;
-    var c = document.createElement('canvas');
-    c.width = video.videoWidth || 1280;
-    c.height = video.videoHeight || 720;
+    var c = document.createElement('canvas'); c.width = video.videoWidth || 1280; c.height = video.videoHeight || 720;
     c.getContext('2d').drawImage(video, 0, 0, c.width, c.height);
     var url = c.toDataURL('image/png');
     var name = 'photo_' + Date.now() + '.png';
     if(VFS.write('/Pictures/' + name, url)){
-      var img = document.createElement('img');
-      img.src = url;
-      img.title = name;
+      var img = document.createElement('img'); img.src = url; img.title = name;
       (function(dataUrl){ img.onclick = function(){ openImageViewer(dataUrl); }; })(url);
-      gal.insertBefore(img, gal.firstChild);
-      openImageViewer(url);
+      gal.insertBefore(img, gal.firstChild); openImageViewer(url);
     } else alert('Save failed');
   };
   win.querySelector('#cam-flip').onclick = function(){ facing = facing === 'user' ? 'environment' : 'user'; start(facing); };
   win.querySelector('#cam-close').onclick = function(){ if(stream) stream.getTracks().forEach(function(t){ t.stop(); }); closeWindow(win.id); };
 }
 
-// ============================================================
-//  18. MICROPHONE
-// ============================================================
 function openMicrophone(){
   var win = makeWindow('microphone', 'Microphone', '🎤',
     '<canvas class="av" id="mic-v"></canvas>'
@@ -1491,8 +1469,7 @@ function openMicrophone(){
     + '<button class="dan" id="mic-stop">Stop</button>'
     + '<button id="mic-save" style="background:#0078d4;">Save</button></div>'
     + '<div class="ms" id="mic-status">Click "Record" to start.</div>', 500, 380);
-  var canvas = win.querySelector('#mic-v');
-  var ctx = canvas.getContext('2d');
+  var canvas = win.querySelector('#mic-v'); var ctx = canvas.getContext('2d');
   var status = win.querySelector('#mic-status');
   var audioCtx, analyser, anim, stream, recorder, chunks = [];
   function draw(){
@@ -1514,18 +1491,15 @@ function openMicrophone(){
       stream = s; win._stream = s;
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       win._audioCtx = audioCtx;
-      analyser = audioCtx.createAnalyser();
-      analyser.fftSize = 256;
+      analyser = audioCtx.createAnalyser(); analyser.fftSize = 256;
       audioCtx.createMediaStreamSource(s).connect(analyser);
-      canvas.width = canvas.clientWidth * 2;
-      canvas.height = canvas.clientHeight * 2;
+      canvas.width = canvas.clientWidth * 2; canvas.height = canvas.clientHeight * 2;
       if(audioCtx.state === 'suspended') audioCtx.resume();
       chunks = [];
       var mime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/webm';
       recorder = new MediaRecorder(s, {mimeType: mime});
       recorder.ondataavailable = function(e){ if(e.data.size > 0) chunks.push(e.data); };
-      recorder.start(500);
-      draw();
+      recorder.start(500); draw();
       status.textContent = 'Recording...';
     }).catch(function(e){ status.textContent = 'Mic denied: ' + e.message; });
   };
@@ -1550,9 +1524,6 @@ function openMicrophone(){
   };
 }
 
-// ============================================================
-//  19. AUDIO PLAYER
-// ============================================================
 function openAudioPlayer(){
   var win = makeWindow('audioplayer', 'Audio Player', '🔊', '<div id="ap-c"></div>', 520, 400);
   var c = win.querySelector('#ap-c');
@@ -1560,13 +1531,12 @@ function openAudioPlayer(){
     var files = VFS.list('/Audio') || [];
     var audioFiles = [];
     for(var i=0; i<files.length; i++) if(files[i].type === 'file') audioFiles.push(files[i]);
-    if(audioFiles.length === 0){ c.innerHTML = '<p style="color:#888;text-align:center;padding:30px;">No audio files yet.<br><br>Record with the Microphone app first.</p>'; return; }
-    c.innerHTML = '<p style="color:#888;font-size:11px;margin-bottom:10px;">' + audioFiles.length + ' file(s) in /Audio</p>';
+    if(audioFiles.length === 0){ c.innerHTML = '<p style="color:#888;text-align:center;padding:30px;">No audio files yet.</p>'; return; }
+    c.innerHTML = '<p style="color:#888;font-size:11px;margin-bottom:10px;">' + audioFiles.length + ' file(s)</p>';
     for(var j=0; j<audioFiles.length; j++){
       var f = audioFiles[j];
       var d = VFS.read('/Audio/' + f.name);
-      var div = document.createElement('div');
-      div.className = 'ai';
+      var div = document.createElement('div'); div.className = 'ai';
       div.innerHTML = '<div class="nm">🔊 ' + f.name + '</div><audio controls src="' + d + '"></audio><button class="dl" data-name="' + f.name + '">Del</button>';
       c.appendChild(div);
     }
@@ -1581,7 +1551,7 @@ function openAudioPlayer(){
 }
 
 // ============================================================
-//  20. WALLPAPER
+//  17. WALLPAPER / WEATHER / CLOCK / CALENDAR
 // ============================================================
 function openWallpaper(){
   var presets = [
@@ -1596,11 +1566,7 @@ function openWallpaper(){
     {n:'Galaxy', v:'radial-gradient(ellipse at 20% 20%,#1a1a2e,#16213e,#0f3460,#000)'},
     {n:'Aurora', v:'linear-gradient(135deg,#00c9ff,#92fe9d)'},
     {n:'Twilight', v:'linear-gradient(135deg,#0f0c29,#302b63,#24243e)'},
-    {n:'Blood', v:'linear-gradient(135deg,#200122,#6f0000)'},
-    {n:'Pastel', v:'radial-gradient(ellipse at 20% 20%,#f7dc6f,#f0b27a,#1a1a2e)'},
-    {n:'Peach', v:'radial-gradient(ellipse at 20% 20%,#ffecd2,#fcb69f,#1a1a2e)'},
-    {n:'Steel', v:'radial-gradient(ellipse at 20% 20%,#536976,#292e49,#0a0a1a)'},
-    {n:'Rose', v:'radial-gradient(ellipse at 20% 20%,#ffafbd,#ffc3a0,#1a1a2e)'}
+    {n:'Blood', v:'linear-gradient(135deg,#200122,#6f0000)'}
   ];
   var win = makeWindow('wallpaper', 'Wallpaper', '🖼️',
     '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;max-height:400px;overflow-y:auto;" id="wp-g"></div>', 500, 440);
@@ -1616,8 +1582,7 @@ function openWallpaper(){
   for(var j=0; j<items.length; j++){
     (function(el){
       el.onclick = function(){
-        var d = $('dt');
-        if(d) d.style.background = el.getAttribute('data-v');
+        var d = $('dt'); if(d) d.style.background = el.getAttribute('data-v');
         LS.setItem('oc_wallpaper', el.getAttribute('data-v'));
         for(var k=0; k<items.length; k++) items[k].classList.remove('sel');
         el.classList.add('sel');
@@ -1626,61 +1591,41 @@ function openWallpaper(){
   }
 }
 
-// ============================================================
-//  21. WEATHER
-// ============================================================
 function openWeather(){
   var win = makeWindow('weather', 'Weather', '🌤️', '<div class="wt" id="wt-c"><p style="color:#888;">Loading...</p></div>', 400, 300);
   var c = win.querySelector('#wt-c');
   function show(lat, lon){
-    fetch('https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon + '&current_weather=true')
-      .then(function(r){ return r.json(); })
-      .then(function(d){
-        var t = d.current_weather.temperature.toFixed(1);
-        var code = d.current_weather.weathercode;
-        var m = {0:'Clear',1:'Cloudy',2:'Cloudy',3:'Overcast',45:'Foggy',51:'Drizzle',61:'Rain',71:'Snow',80:'Showers',95:'Storm'};
-        var cond = m[code] || 'Unknown';
-        c.innerHTML = '<div style="font-size:48px;">🌤️</div><div class="temp">' + t + '°C</div><div class="cond">' + cond + '</div><div class="det"><span>' + lat.toFixed(2) + ', ' + lon.toFixed(2) + '</span></div>';
-      })
-      .catch(function(e){ c.innerHTML = '<p style="color:#888;">Error: ' + e.message + '</p>'; });
+    fetch('https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon + '&current_weather=true').then(function(r){ return r.json(); }).then(function(d){
+      var t = d.current_weather.temperature.toFixed(1);
+      var code = d.current_weather.weathercode;
+      var m = {0:'Clear',1:'Cloudy',2:'Cloudy',3:'Overcast',45:'Foggy',51:'Drizzle',61:'Rain',71:'Snow',80:'Showers',95:'Storm'};
+      var cond = m[code] || 'Unknown';
+      c.innerHTML = '<div style="font-size:48px;">🌤️</div><div class="temp">' + t + '°C</div><div class="cond">' + cond + '</div><div class="det"><span>' + lat.toFixed(2) + ', ' + lon.toFixed(2) + '</span></div>';
+    }).catch(function(e){ c.innerHTML = '<p style="color:#888;">Error: ' + e.message + '</p>'; });
   }
   if(navigator.geolocation) navigator.geolocation.getCurrentPosition(function(p){ show(p.coords.latitude, p.coords.longitude); }, function(){ show(51.5, -0.12); });
   else show(51.5, -0.12);
 }
 
-// ============================================================
-//  22. CLOCK
-// ============================================================
 function openClock(){
   var win = makeWindow('clock', 'Clock', '🕐',
     '<div style="font-size:68px;font-weight:300;text-align:center;padding:20px 0;" id="ck-t">00:00:00</div>'
     + '<div style="text-align:center;color:#888;" id="ck-d"></div>', 320, 240);
-  var t = win.querySelector('#ck-t');
-  var d = win.querySelector('#ck-d');
-  function u(){
-    var n = new Date();
-    t.textContent = n.toLocaleTimeString();
-    d.textContent = n.toLocaleDateString('en-US', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
-  }
+  var t = win.querySelector('#ck-t'); var d = win.querySelector('#ck-d');
+  function u(){ var n = new Date(); t.textContent = n.toLocaleTimeString(); d.textContent = n.toLocaleDateString('en-US', {weekday:'long', year:'numeric', month:'long', day:'numeric'}); }
   u();
   var iv = setInterval(u, 1000);
   var closeBtn = win.querySelector('.close');
   if(closeBtn) closeBtn.addEventListener('click', function(){ clearInterval(iv); });
 }
 
-// ============================================================
-//  23. CALENDAR
-// ============================================================
 function openCalendar(){
   var win = makeWindow('calendar', 'Calendar', '📅', '<div id="cal-c"></div>', 400, 400);
   var c = win.querySelector('#cal-c');
-  var m = new Date().getMonth();
-  var y = new Date().getFullYear();
+  var m = new Date().getMonth(); var y = new Date().getFullYear();
   function r(){
     var mo = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    var fd = new Date(y, m, 1).getDay();
-    var dim = new Date(y, m+1, 0).getDate();
-    var today = new Date();
+    var fd = new Date(y, m, 1).getDay(); var dim = new Date(y, m+1, 0).getDate(); var today = new Date();
     var h = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">'
       + '<button id="cp" style="background:rgba(255,255,255,0.04);border:none;color:#ccc;padding:4px 12px;border-radius:4px;cursor:pointer;">◀</button>'
       + '<span>' + mo[m] + ' ' + y + '</span>'
@@ -1702,7 +1647,7 @@ function openCalendar(){
 }
 
 // ============================================================
-//  24. SYSTEM INFO
+//  18. SYSTEM INFO
 // ============================================================
 function openSysInfo(){
   var m = 'N/A';
@@ -1715,9 +1660,8 @@ function openSysInfo(){
     + '<div class="ic2"><div class="lbl">Language</div><div class="val">' + (LS.getItem('oc_lang') || 'en') + '</div></div>'
     + '<div class="ic2"><div class="lbl">Keyboard</div><div class="val">' + (LS.getItem('oc_kb') || 'us') + '</div></div>'
     + '<div class="ic2"><div class="lbl">Uptime</div><div class="val">' + Math.floor(u/60) + 'm ' + (u%60) + 's</div></div>'
-    + '<div class="ic2"><div class="lbl">CPU Cores</div><div class="val">' + (navigator.hardwareConcurrency || 'N/A') + '</div></div>'
+    + '<div class="ic2"><div class="lbl">CPU</div><div class="val">' + (navigator.hardwareConcurrency || 'N/A') + '</div></div>'
     + '<div class="ic2"><div class="lbl">Memory</div><div class="val">' + m + '</div></div>'
-    + '<div class="ic2"><div class="lbl">Display</div><div class="val">' + window.innerWidth + 'x' + window.innerHeight + '</div></div>'
     + '<div class="ic2"><div class="lbl">Files</div><div class="val">' + VFS.count() + '</div></div>'
     + '<div class="ic2"><div class="lbl">Storage</div><div class="val">' + VFS.size() + ' bytes</div></div>'
     + '<div class="ic2"><div class="lbl">Online</div><div class="val">' + (navigator.onLine ? 'Yes' : 'No') + '</div></div>'
@@ -1725,7 +1669,7 @@ function openSysInfo(){
 }
 
 // ============================================================
-//  25. APP STORE
+//  19. APP STORE
 // ============================================================
 function openAppStore(){
   var apps = [
@@ -1737,9 +1681,10 @@ function openAppStore(){
     {id:'music', name:'Spotify', icon:'🎵', desc:'Music streaming'},
     {id:'browser', name:'Browser', icon:'🌐', desc:'Web browser'},
     {id:'camera', name:'Camera', icon:'📷', desc:'Take photos'},
-    {id:'microphone', name:'Microphone', icon:'🎤', desc:'Record audio'}
+    {id:'microphone', name:'Microphone', icon:'🎤', desc:'Record audio'},
+    {id:'recovery', name:'Recovery', icon:'🛠️', desc:'Restore system files'}
   ];
-  var html = '<p style="color:#888;font-size:12px;margin-bottom:14px;">Apps load in an in-OS window. Everything works.</p>';
+  var html = '<p style="color:#888;font-size:12px;margin-bottom:14px;">Apps load in an in-OS window.</p>';
   for(var i=0; i<apps.length; i++){
     var a = apps[i];
     html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:rgba(255,255,255,0.03);border-radius:8px;border:1px solid rgba(255,255,255,0.06);margin-bottom:8px;">'
@@ -1750,35 +1695,70 @@ function openAppStore(){
       + '<button class="launch-app" data-app-id="' + a.id + '" style="background:#0078d4;border:none;color:#fff;padding:6px 18px;border-radius:6px;cursor:pointer;font-weight:500;font-size:12px;">Launch</button>'
       + '</div>';
   }
-  var win = makeWindow('appstore', 'App Store', '🛒', html, 520, 500);
+  var win = makeWindow('appstore', 'App Store', '🛒', html, 520, 520);
   var btns = win.querySelectorAll('.launch-app');
   for(var j=0; j<btns.length; j++){
-    (function(b){
-      b.onclick = function(){ launch(b.getAttribute('data-app-id')); };
-    })(btns[j]);
+    (function(b){ b.onclick = function(){ launch(b.getAttribute('data-app-id')); }; })(btns[j]);
   }
 }
 
 // ============================================================
-//  26. IFRAME APPS
+//  20. RECOVERY
+// ============================================================
+function openRecovery(){
+  var html = '<p style="color:#888;font-size:12px;margin-bottom:14px;">If system files are ever missing or broken, use these options to restore them.</p>'
+    + '<button id="rec-restore-sys" style="width:100%;padding:10px;background:#0078d4;border:none;color:#fff;border-radius:6px;cursor:pointer;margin-bottom:8px;font-size:13px;">Restore System32 Files</button>'
+    + '<button id="rec-restore-folders" style="width:100%;padding:10px;background:rgba(255,255,255,0.06);color:#ccc;border:none;border-radius:6px;cursor:pointer;margin-bottom:8px;font-size:13px;">Restore Core Folders</button>'
+    + '<button id="rec-reset-icons" style="width:100%;padding:10px;background:rgba(255,255,255,0.06);color:#ccc;border:none;border-radius:6px;cursor:pointer;margin-bottom:8px;font-size:13px;">Reset Desktop Icons</button>'
+    + '<button id="rec-restore-apps" style="width:100%;padding:10px;background:rgba(255,255,255,0.06);color:#ccc;border:none;border-radius:6px;cursor:pointer;margin-bottom:8px;font-size:13px;">Reinstall System Apps (Terminal, Files, etc.)</button>'
+    + '<button id="rec-full-reset" style="width:100%;padding:10px;background:#d43a3a;border:none;color:#fff;border-radius:6px;cursor:pointer;margin-bottom:8px;font-size:13px;">Full Reset (Wipes Everything)</button>'
+    + '<div id="rec-status" style="margin-top:14px;color:#51cf66;font-size:12px;min-height:20px;"></div>';
+  var win = makeWindow('recovery', 'Recovery', '🛠️', html, 400, 380);
+  var status = win.querySelector('#rec-status');
+  win.querySelector('#rec-restore-sys').onclick = function(){ VFS.restoreSystem32(); status.textContent = '✓ System32 restored'; };
+  win.querySelector('#rec-restore-folders').onclick = function(){
+    var f = ['Documents','Pictures','Audio'];
+    for(var i=0; i<f.length; i++) if(!VFS.root.children[f[i]]) VFS.root.children[f[i]] = {type:'folder', children:{}};
+    VFS.save();
+    status.textContent = '✓ Core folders restored';
+  };
+  win.querySelector('#rec-reset-icons').onclick = function(){
+    icons = JSON.parse(JSON.stringify(DEFAULT_ICONS));
+    saveIcons(); renderDesktop();
+    status.textContent = '✓ Icons reset';
+  };
+  win.querySelector('#rec-restore-apps').onclick = function(){
+    VFS.restoreSystem32();
+    var f = ['Documents','Pictures','Audio'];
+    for(var i=0; i<f.length; i++) if(!VFS.root.children[f[i]]) VFS.root.children[f[i]] = {type:'folder', children:{}};
+    VFS.save();
+    icons = JSON.parse(JSON.stringify(DEFAULT_ICONS));
+    saveIcons(); renderDesktop();
+    status.textContent = '✓ All system apps and files restored';
+  };
+  win.querySelector('#rec-full-reset').onclick = function(){
+    if(confirm('Wipe everything and reset OpencoreOS? This cannot be undone.')){
+      if(confirm('Are you absolutely sure?')){
+        LS.clear();
+        location.reload();
+      }
+    }
+  };
+}
+
+// ============================================================
+//  21. IFRAME APPS
 // ============================================================
 function makeIframeApp(appId, title, icon, url){
-  var win = makeWindow(appId, title, icon,
+  return makeWindow(appId, title, icon,
     '<div style="flex:1;display:flex;flex-direction:column;">'
     + '<iframe src="' + url + '" style="flex:1;border:none;border-radius:6px;background:white;" sandbox="allow-scripts allow-forms allow-same-origin allow-popups"></iframe>'
     + '<div style="margin-top:8px;font-size:11px;color:#666;">If not loading, <a href="' + url + '" target="_blank" style="color:#4dabf7;">open in new tab</a>.</div>'
     + '</div>', 820, 620);
-  return win;
 }
 
-function openKernel0(){ makeIframeApp('kernel0', 'Kernel0', '🧠', 'https://kernel0.lovable.app'); }
-function openVideoHub(){ makeIframeApp('videohub', 'VideoHub', '🎬', 'https://videohubpro.lovable.app'); }
-function openVapor(){ makeIframeApp('vapor', 'Vapor', '💨', 'https://vapor.freetls.fastly.net/'); }
-function openScience(){ makeIframeApp('science', 'Science', '🔬', 'https://fastly-science-883451.josiah-wilke77.workers.dev/'); }
-function openInfinity(){ makeIframeApp('infinity', 'Infinity Drink', '🥤', 'https://infinity-drink-order.textaway2.workers.dev/'); }
-
 // ============================================================
-//  27. IMAGE VIEWER
+//  22. IMAGE VIEWER
 // ============================================================
 function openImageViewer(dataUrl){
   var existing = null;
@@ -1789,39 +1769,63 @@ function openImageViewer(dataUrl){
 }
 
 // ============================================================
-//  28. MUSIC (Spotify) — FIXED
+//  23. MUSIC (Spotify) — FIXED module detection
 // ============================================================
-var spotifyLoading = false;
-var spotifyCallbacks = [];
+var spotifyLoadStarted = false;
+var spotifyReadyCallbacks = [];
 
-function loadSpotify(callback){
-  if(window.SpotifyAuth){ if(callback) callback(); return; }
-  if(callback) spotifyCallbacks.push(callback);
-  if(spotifyLoading) return;
-  spotifyLoading = true;
+function ensureSpotifyLoaded(callback){
+  if(window.SpotifyAuth){ callback(); return; }
+  spotifyReadyCallbacks.push(callback);
+  if(spotifyLoadStarted) return;
+  spotifyLoadStarted = true;
 
-  // Load SDK first
+  // Load SDK
   var sdk = document.createElement('script');
   sdk.src = 'https://sdk.scdn.co/spotify-player.js';
   sdk.async = true;
   document.head.appendChild(sdk);
 
-  // Then load auth helper
+  // Load auth
   var auth = document.createElement('script');
-  auth.src = 'spotify-auth.js';
+  auth.src = './spotify-auth.js';
   auth.async = true;
   auth.onload = function(){
-    // Give the SDK 100ms to register window.Spotify
-    setTimeout(function(){
-      var cbs = spotifyCallbacks.slice();
-      spotifyCallbacks = [];
-      for(var i=0; i<cbs.length; i++){ try { cbs[i](); } catch(e){ console.error(e); } }
-    }, 150);
+    // Wait for SpotifyAuth to actually be defined
+    var attempts = 0;
+    var iv = setInterval(function(){
+      attempts++;
+      if(window.SpotifyAuth || attempts > 30){
+        clearInterval(iv);
+        var cbs = spotifyReadyCallbacks.slice();
+        spotifyReadyCallbacks = [];
+        for(var i=0; i<cbs.length; i++){ try { cbs[i](); } catch(e){ console.error(e); } }
+      }
+    }, 100);
   };
   auth.onerror = function(){
-    var cbs = spotifyCallbacks.slice();
-    spotifyCallbacks = [];
-    for(var i=0; i<cbs.length; i++){ try { cbs[i](); } catch(e){ console.error(e); } }
+    // Try again as absolute path in case relative failed
+    var auth2 = document.createElement('script');
+    auth2.src = 'spotify-auth.js';
+    auth2.async = true;
+    auth2.onload = function(){
+      var attempts = 0;
+      var iv = setInterval(function(){
+        attempts++;
+        if(window.SpotifyAuth || attempts > 30){
+          clearInterval(iv);
+          var cbs = spotifyReadyCallbacks.slice();
+          spotifyReadyCallbacks = [];
+          for(var i=0; i<cbs.length; i++){ try { cbs[i](); } catch(e){ console.error(e); } }
+        }
+      }, 100);
+    };
+    auth2.onerror = function(){
+      var cbs = spotifyReadyCallbacks.slice();
+      spotifyReadyCallbacks = [];
+      for(var i=0; i<cbs.length; i++){ try { cbs[i](); } catch(e){ console.error(e); } }
+    };
+    document.head.appendChild(auth2);
   };
   document.head.appendChild(auth);
 }
@@ -1830,30 +1834,37 @@ function openMusic(){
   var win = makeWindow('music', 'Spotify', '🎵', '<div id="mus-app"><p style="color:#888;padding:20px;">Loading Spotify module...</p></div>', 620, 560);
   var c = win.querySelector('#mus-app');
 
-  loadSpotify(function(){
+  ensureSpotifyLoaded(function(){
     if(!window.SpotifyAuth){
-      c.innerHTML = '<p style="color:#ff6b6b;padding:20px;">spotify-auth.js not found. Make sure it exists in your GitHub repo.</p>';
+      c.innerHTML = '<div style="padding:20px;">'
+        + '<p style="color:#ff6b6b;margin-bottom:12px;">Could not load spotify-auth.js</p>'
+        + '<p style="color:#888;font-size:12px;line-height:1.6;">Make sure the file <b>spotify-auth.js</b> is in the SAME folder as index.html on GitHub. It must be named exactly with lowercase letters. You can also verify by opening:</p>'
+        + '<p style="color:#4dabf7;font-size:11px;margin-top:8px;word-break:break-all;">' + window.location.origin + window.location.pathname + 'spotify-auth.js</p>'
+        + '<button id="retry-sp" style="margin-top:12px;background:#0078d4;border:none;color:#fff;padding:8px 18px;border-radius:6px;cursor:pointer;">Retry</button>'
+        + '</div>';
+      var rb = c.querySelector('#retry-sp');
+      if(rb) rb.onclick = function(){ spotifyLoadStarted = false; ensureSpotifyLoaded(function(){ renderMusicUI(); }); };
       return;
     }
+    renderMusicUI();
+  });
 
+  function renderMusicUI(){
     var isIn = SpotifyAuth.isLoggedIn();
     c.innerHTML = '<div style="display:flex;gap:8px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,0.06);margin-bottom:10px;flex-wrap:wrap;">'
       + '<input id="mus-q" placeholder="Search Spotify..." style="flex:1;background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.1);color:#fff;padding:8px 12px;border-radius:6px;outline:none;font-size:13px;min-width:150px;"' + (isIn ? '' : ' disabled') + '/>'
       + '<button id="mus-go" style="background:#1db954;border:none;color:#fff;padding:8px 18px;border-radius:6px;cursor:pointer;font-weight:600;font-size:13px;"' + (isIn ? '' : ' disabled') + '>Search</button></div>'
       + '<div id="mus-login" style="display:' + (isIn ? 'none' : 'flex') + ';align-items:center;gap:10px;padding:12px;background:rgba(29,185,84,0.08);border:1px solid rgba(29,185,84,0.25);border-radius:8px;margin-bottom:12px;">'
       + '<span style="font-size:24px;">🎵</span>'
-      + '<div style="flex:1;color:#ccc;font-size:12px;"><strong style="color:#1db954;">Login to Spotify</strong><br>Click to authorize.</div>'
+      + '<div style="flex:1;color:#ccc;font-size:12px;"><strong style="color:#1db954;">Login to Spotify</strong><br>Opens the Spotify login page, then comes back here.</div>'
       + '<button id="mus-login-btn" style="background:#1db954;border:none;color:#fff;padding:6px 16px;border-radius:6px;cursor:pointer;font-weight:600;font-size:12px;">Login</button></div>'
       + '<div id="mus-player"></div>'
       + '<div id="mus-results">' + (!isIn ? '<p style="color:#888;text-align:center;padding:20px;">Log in to search</p>' : '') + '</div>'
       + '<div id="mus-status" style="color:#888;font-size:11px;margin-top:8px;text-align:center;">' + (isIn ? 'Initializing player...' : '') + '</div>';
 
-    var sI = c.querySelector('#mus-q');
-    var sB = c.querySelector('#mus-go');
-    var res = c.querySelector('#mus-results');
-    var pA = c.querySelector('#mus-player');
-    var st = c.querySelector('#mus-status');
-    var lB = c.querySelector('#mus-login-btn');
+    var sI = c.querySelector('#mus-q'), sB = c.querySelector('#mus-go');
+    var res = c.querySelector('#mus-results'), pA = c.querySelector('#mus-player');
+    var st = c.querySelector('#mus-status'), lB = c.querySelector('#mus-login-btn');
 
     if(lB) lB.onclick = function(){ SpotifyAuth.login(); };
 
@@ -1884,16 +1895,14 @@ function openMusic(){
     }
 
     function doSearch(){
-      var q = sI.value.trim();
-      if(!q) return;
+      var q = sI.value.trim(); if(!q) return;
       res.innerHTML = '<p style="color:#888;padding:10px;">Searching...</p>';
       SpotifyAuth.search(q).then(function(d){
         if(!d.tracks || !d.tracks.items.length){ res.innerHTML = '<p style="color:#888;">No results</p>'; return; }
         res.innerHTML = '';
         for(var i=0; i<d.tracks.items.length; i++){
           var t = d.tracks.items[i];
-          var div = document.createElement('div');
-          div.className = 'mr';
+          var div = document.createElement('div'); div.className = 'mr';
           var img = (t.album.images && t.album.images[0]) ? t.album.images[0].url : '';
           var artists = '';
           for(var a=0; a<t.artists.length; a++){ if(a>0) artists += ', '; artists += t.artists[a].name; }
@@ -1914,17 +1923,16 @@ function openMusic(){
             };
           })(playBtns[k]);
         }
-      }).catch(function(e){
-        res.innerHTML = '<p style="color:#ff6b6b;padding:10px;">Error: ' + e.message + '</p>';
-      });
+      }).catch(function(e){ res.innerHTML = '<p style="color:#ff6b6b;padding:10px;">Error: ' + e.message + '</p>'; });
     }
+
     sB.onclick = doSearch;
     sI.addEventListener('keydown', function(e){ if(e.key === 'Enter') doSearch(); });
-  });
+  }
 }
 
 // ============================================================
-//  29. SETTINGS
+//  24. SETTINGS
 // ============================================================
 function openSettings(){
   var dn = LS.getItem('oc_device_name') || 'Opencore-PC';
@@ -1945,16 +1953,12 @@ function openSettings(){
     + '<div class="tc on" data-t="sys">'
     + '<div class="row"><span class="lbl">Device Name</span><input id="s-dn" value="' + dn + '"/><button class="btn" id="s-dn-sv">Rename</button></div>'
     + '<div class="row"><span class="lbl">OS Version</span><span class="val">OpencoreOS v10.4</span></div>'
-    + '<div class="row"><span class="lbl">Language</span><span class="val">' + (LS.getItem('oc_lang') || 'en') + '</span></div>'
-    + '<div class="row"><span class="lbl">Keyboard</span><span class="val">' + (LS.getItem('oc_kb') || 'us') + '</span></div>'
     + '<div class="row"><span class="lbl">Files</span><span class="val">' + VFS.count() + '</span></div>'
     + '<div class="row"><span class="lbl">Storage</span><span class="val">' + VFS.size() + ' bytes</span></div>'
     + '<div class="row"><button class="btn btd" id="s-reset-icons">Reset Desktop Icons</button></div></div>'
     + '<div class="tc" data-t="net">'
     + '<div class="row"><span class="lbl">Wi-Fi</span><div class="tg ' + (ST.wifiOn ? 'on' : '') + '" id="s-wifi"></div></div>'
     + '<div class="row"><span class="lbl">Connection</span><span class="val">' + (net.effectiveType || 'unknown') + '</span></div>'
-    + '<div class="row"><span class="lbl">Downlink</span><span class="val">' + (net.downlink || '?') + ' Mbps</span></div>'
-    + '<div class="row"><span class="lbl">RTT</span><span class="val">' + (net.rtt || '?') + ' ms</span></div>'
     + '<div class="row"><span class="lbl">Online</span><span class="val">' + (navigator.onLine ? 'Yes' : 'No') + '</span></div></div>'
     + '<div class="tc" data-t="bt">'
     + '<div class="row"><span class="lbl">Bluetooth</span><div class="tg ' + (ST.btOn ? 'on' : '') + '" id="s-bt"></div></div>'
@@ -1976,7 +1980,7 @@ function openSettings(){
     + '1. Create app at <a href="https://developer.spotify.com/dashboard" target="_blank" style="color:#4dabf7;">developer.spotify.com/dashboard</a><br>'
     + '2. Add Redirect URI: <code style="background:#000;padding:2px 6px;border-radius:3px;">' + window.location.origin + window.location.pathname + '</code><br>'
     + '3. Copy Client ID, paste above, save<br>'
-    + '4. Click Login</p></div>'
+    + '4. Click Login — you will be sent to Spotify\'s login page, then back here</p></div>'
     + '<div class="tc" data-t="ab">'
     + '<div style="text-align:center;padding:20px;">'
     + '<div style="font-size:56px;">🪟</div>'
@@ -2003,131 +2007,68 @@ function openSettings(){
     var el = $('smn'); if(el) el.textContent = v;
     alert('Renamed to ' + v);
   };
-
   win.querySelector('#s-reset-icons').onclick = function(){
-    if(confirm('Reset desktop icon layout?')){
-      icons = JSON.parse(JSON.stringify(DEFAULT_ICONS));
-      saveIcons();
-      renderDesktop();
-      alert('Reset');
-    }
+    if(confirm('Reset desktop icons?')){ icons = JSON.parse(JSON.stringify(DEFAULT_ICONS)); saveIcons(); renderDesktop(); alert('Reset'); }
   };
-
-  win.querySelector('#s-wifi').onclick = function(){
-    ST.wifiOn = !ST.wifiOn;
-    LS.setItem('oc_wifi', String(ST.wifiOn));
-    this.classList.toggle('on', ST.wifiOn);
-  };
-  win.querySelector('#s-bt').onclick = function(){
-    ST.btOn = !ST.btOn;
-    LS.setItem('oc_bt', String(ST.btOn));
-    this.classList.toggle('on', ST.btOn);
-  };
+  win.querySelector('#s-wifi').onclick = function(){ ST.wifiOn = !ST.wifiOn; LS.setItem('oc_wifi', String(ST.wifiOn)); this.classList.toggle('on', ST.wifiOn); };
+  win.querySelector('#s-bt').onclick = function(){ ST.btOn = !ST.btOn; LS.setItem('oc_bt', String(ST.btOn)); this.classList.toggle('on', ST.btOn); };
   win.querySelector('#s-bt-scan').onclick = function(){
     if(!ST.btOn) return alert('Turn on Bluetooth first');
-    if(!navigator.bluetooth) return alert('Not supported in this browser');
+    if(!navigator.bluetooth) return alert('Not supported');
     navigator.bluetooth.requestDevice({acceptAllDevices:true}).then(function(d){
       ST.btDevice = d;
       win.querySelector('#s-bt-list').innerHTML += '<div style="padding:6px 0;color:#ddd;font-size:12px;">' + (d.name || 'Unknown') + ' (' + d.id.slice(0,8) + ')</div>';
     }).catch(function(){});
   };
-
-  win.querySelector('#s-pin-set').onclick = function(){
-    var p = prompt('Enter 6-digit PIN:');
-    if(p && /^\d{6}$/.test(p)){ LS.setItem('oc_pin', p); alert('PIN set'); }
-    else alert('Must be 6 digits');
-  };
-  win.querySelector('#s-pin-rm').onclick = function(){
-    if(confirm('Remove PIN?')){ LS.removeItem('oc_pin'); alert('Removed'); }
-  };
+  win.querySelector('#s-pin-set').onclick = function(){ var p = prompt('Enter 6-digit PIN:'); if(p && /^\d{6}$/.test(p)){ LS.setItem('oc_pin', p); alert('PIN set'); } else alert('Must be 6 digits'); };
+  win.querySelector('#s-pin-rm').onclick = function(){ if(confirm('Remove PIN?')){ LS.removeItem('oc_pin'); alert('Removed'); } };
   win.querySelector('#s-lock').onclick = function(){ showLogin(); };
-
-  win.querySelector('#s-sp-sv').onclick = function(){
-    var id = win.querySelector('#s-spid').value.trim();
-    if(id){ LS.setItem('opencore_spotify_client_id', id); alert('Saved'); }
-    else alert('Enter Client ID');
-  };
-  win.querySelector('#s-sp-login').onclick = function(){
-    if(window.SpotifyAuth) SpotifyAuth.login();
-    else alert('Open the Music app first to load Spotify');
-  };
-  win.querySelector('#s-sp-out').onclick = function(){
-    if(window.SpotifyAuth) SpotifyAuth.logout();
-    alert('Logged out');
-  };
+  win.querySelector('#s-sp-sv').onclick = function(){ var id = win.querySelector('#s-spid').value.trim(); if(id){ LS.setItem('opencore_spotify_client_id', id); alert('Saved'); } else alert('Enter Client ID'); };
+  win.querySelector('#s-sp-login').onclick = function(){ if(window.SpotifyAuth) SpotifyAuth.login(); else alert('Open the Music app first'); };
+  win.querySelector('#s-sp-out').onclick = function(){ if(window.SpotifyAuth) SpotifyAuth.logout(); alert('Logged out'); };
 }
 
 // ============================================================
-//  30. EVENT BINDINGS
+//  25. EVENT BINDINGS
 // ============================================================
 var smItems = document.querySelectorAll('.smi');
 for(var si=0; si<smItems.length; si++){
   (function(el){
     var app = el.getAttribute('data-a');
-    if(app){
-      el.onclick = function(){
-        launch(app);
-        var sm = $('sm'); if(sm) sm.classList.remove('on');
-      };
-    }
+    if(app){ el.onclick = function(){ launch(app); $('sm').classList.remove('on'); }; }
   })(smItems[si]);
 }
-
-var sbBtn = $('sb');
-if(sbBtn) sbBtn.onclick = function(e){
-  e.stopPropagation();
-  var sm = $('sm');
-  if(sm) sm.classList.toggle('on');
-};
-document.addEventListener('click', function(){ var sm = $('sm'); if(sm) sm.classList.remove('on'); });
-var smEl = $('sm');
-if(smEl) smEl.addEventListener('click', function(e){ e.stopPropagation(); });
-
-var mlk = $('mlk'); if(mlk) mlk.onclick = function(){ var sm = $('sm'); if(sm) sm.classList.remove('on'); showLogin(); };
-var mrs = $('mrs'); if(mrs) mrs.onclick = function(){ if(confirm('Restart?')) location.reload(); };
-var mrr = $('mrr'); if(mrr) mrr.onclick = function(){
-  if(confirm('Re-run setup wizard?')){
-    LS.removeItem('oc_setup_done');
-    LS.removeItem('oc_user_done');
-    location.reload();
-  }
-};
-
-var trayLock = $('tray-lock'); if(trayLock) trayLock.onclick = function(){ showLogin(); };
-var trayWifi = $('tray-wifi'); if(trayWifi) trayWifi.ondblclick = function(){ ST.wifiOn = !ST.wifiOn; LS.setItem('oc_wifi', String(ST.wifiOn)); };
-var trayBt = $('tray-bt'); if(trayBt) trayBt.ondblclick = function(){ ST.btOn = !ST.btOn; LS.setItem('oc_bt', String(ST.btOn)); };
+$('sb').onclick = function(e){ e.stopPropagation(); $('sm').classList.toggle('on'); };
+document.addEventListener('click', function(){ $('sm').classList.remove('on'); });
+$('sm').addEventListener('click', function(e){ e.stopPropagation(); });
+$('mlk').onclick = function(){ $('sm').classList.remove('on'); showLogin(); };
+$('mrs').onclick = function(){ if(confirm('Restart?')) location.reload(); };
+$('tray-lock').onclick = function(){ showLogin(); };
+$('tray-wifi').ondblclick = function(){ ST.wifiOn = !ST.wifiOn; LS.setItem('oc_wifi', String(ST.wifiOn)); };
+$('tray-bt').ondblclick = function(){ ST.btOn = !ST.btOn; LS.setItem('oc_bt', String(ST.btOn)); };
 
 function updateBattery(){
   if('getBattery' in navigator){
     navigator.getBattery().then(function(b){
       var el = $('tray-battery');
-      if(el){
-        el.textContent = b.charging ? '⚡' : '🔋';
-        el.title = Math.round(b.level * 100) + '%' + (b.charging ? ' (Charging)' : '');
-      }
+      if(el){ el.textContent = b.charging ? '⚡' : '🔋'; el.title = Math.round(b.level * 100) + '%'; }
     }).catch(function(){});
   }
 }
 updateBattery();
 setInterval(updateBattery, 30000);
 
-// Re-render icons on window resize
 window.addEventListener('resize', function(){ renderDesktop(); });
 
-// ============================================================
-//  31. LOAD SETTINGS
-// ============================================================
 function loadSettings(){
   var w = LS.getItem('oc_wallpaper');
-  var d = $('dt');
-  if(w && d) d.style.background = w;
+  var d = $('dt'); if(w && d) d.style.background = w;
   var dn = LS.getItem('oc_device_name') || 'Opencore-PC';
-  var smn = $('smn');
-  if(smn) smn.textContent = dn;
+  var smn = $('smn'); if(smn) smn.textContent = dn;
 }
 
 // ============================================================
-//  32. BOOT
+//  26. BOOT
 // ============================================================
 (function boot(){
   try {
@@ -2139,26 +2080,18 @@ function loadSettings(){
     var setupDone = LS.getItem('oc_setup_done') === 'true';
     var userDone = LS.getItem('oc_user_done') === 'true';
 
-    if(!setupDone){
-      runSetup();
-    } else if(!userDone){
-      var setupEl = $('setup');
-      if(setupEl) setupEl.classList.add('hide');
-      runUserWizard();
-    } else {
-      var setupEl2 = $('setup');
-      if(setupEl2) setupEl2.classList.add('hide');
-      showLogin();
+    if(!setupDone){ runSetup(); }
+    else if(!userDone){ $('setup').classList.add('hide'); runUserWizard(); }
+    else { $('setup').classList.add('hide'); showLogin(); }
+
+    // Check for Spotify OAuth callback
+    if(window.location.search.indexOf('code=') !== -1){
+      ensureSpotifyLoaded(function(){});
     }
     console.log('Boot complete');
   } catch(e){
     console.error('Boot error:', e);
-    var box = $('err');
-    if(box){
-      box.style.display = 'block';
-      var em = $('errm'); if(em) em.textContent = 'Boot error: ' + e.message;
-      var es = $('errs'); if(es) es.textContent = e.stack || '';
-    }
+    var box = $('err'); if(box){ box.style.display = 'block'; $('errm').textContent = 'Boot error: ' + e.message; $('errs').textContent = e.stack || ''; }
   }
 })();
 
