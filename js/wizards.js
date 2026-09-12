@@ -1,3 +1,8 @@
+// ============================================================
+//  wizards.js — Setup wizard, user wizard, login screen
+//  Fixed: initLogin now runs correctly with defer scripts
+// ============================================================
+
 function runSetup(){
   var steps = ['Formatting virtual drive...','Creating System32...','Installing core files...','Configuring drivers...','Configuring Spotify SDK...','Finalizing setup...'];
   var p = 0;
@@ -128,6 +133,9 @@ function finishUserWizard(){
   setTimeout(function(){ alert('Welcome, ' + (uData.name || 'Opencore User') + '!'); }, 300);
 }
 
+// ============================================================
+//  LOGIN SCREEN
+// ============================================================
 var pin = '';
 
 function showLogin(){
@@ -136,7 +144,9 @@ function showLogin(){
   if(storedPin.length === 6){
     el.classList.add('on');
     var le = $('le'); if(le) le.textContent = 'Enter your PIN';
-  } else el.classList.remove('on');
+  } else {
+    el.classList.remove('on');
+  }
 }
 
 function updatePins(){
@@ -150,14 +160,20 @@ function checkPin(){
   if(!storedPin){ $('login').classList.remove('on'); return; }
   if(pin === storedPin){
     if(le) le.textContent = '✓ Unlocked';
-    setTimeout(function(){ $('login').classList.remove('on'); pin = ''; updatePins(); }, 300);
+    setTimeout(function(){
+      $('login').classList.remove('on');
+      pin = '';
+      updatePins();
+    }, 300);
   } else {
     if(le) le.textContent = '❌ Wrong PIN';
-    pin = ''; updatePins();
+    pin = '';
+    updatePins();
   }
 }
 
 function initLogin(){
+  // Wire up the on-screen number buttons
   var pinButtons = $$('#pp button');
   for(var i=0; i<pinButtons.length; i++){
     (function(btn){
@@ -171,4 +187,30 @@ function initLogin(){
       };
     })(pinButtons[i]);
   }
+
+  // ALSO allow typing on the physical keyboard
+  document.addEventListener('keydown', function(e){
+    var lg = $('login');
+    if(!lg || !lg.classList.contains('on')) return;
+    if(e.key >= '0' && e.key <= '9'){
+      if(pin.length < 6) pin += e.key;
+      updatePins();
+      if(pin.length === 6) setTimeout(checkPin, 150);
+    } else if(e.key === 'Backspace'){
+      pin = pin.slice(0,-1);
+      updatePins();
+    } else if(e.key === 'Enter'){
+      checkPin();
+    }
+  });
+
+  // Reset pin dots at load
+  updatePins();
+}
+
+// Run initLogin as soon as wizards.js loads
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initLogin);
+} else {
+  initLogin();
 }
