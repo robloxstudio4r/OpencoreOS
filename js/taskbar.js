@@ -60,4 +60,3 @@ function initTaskbar(){
 
   updateBattery();
 }
-document.addEventListener('DOMContentLoaded', initTaskbar);
