@@ -32,7 +32,7 @@ document.addEventListener('click', function(){
 
 function goToSleep(){ var s = $('sleepOverlay'); if(s) s.classList.add('on'); }
 
-document.addEventListener('DOMContentLoaded', function(){
+function initSleepOverlay(){
   var sleep = $('sleepOverlay');
   if(sleep) sleep.addEventListener('click', function(){ sleep.classList.remove('on'); resetIdle(); });
-});
+}
