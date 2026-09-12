@@ -1,1 +1,17 @@
-
+#dt{width:100%;height:calc(100% - 50px);padding:16px;background:radial-gradient(ellipse at 20% 20%,#16213e,#1a1a2e);overflow:hidden;position:relative}
+.di{position:absolute;width:80px;display:flex;flex-direction:column;align-items:center;padding:8px 4px;border-radius:8px;cursor:pointer;background:transparent;border:none;color:#fff;font-size:11px;transition:background .15s,transform .1s}
+.di:hover{background:rgba(255,255,255,0.1)}
+.di.dragging{opacity:0.6;cursor:grabbing;z-index:1000}
+.di .ic{font-size:36px;margin-bottom:2px;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.5));pointer-events:none}
+.di .lb{text-align:center;word-wrap:break-word;line-height:1.2;pointer-events:none}
+#appEditor{position:fixed;background:rgba(28,28,48,0.98);backdrop-filter:blur(20px);border-radius:12px;border:1px solid rgba(255,255,255,0.08);box-shadow:0 20px 60px rgba(0,0,0,0.8);padding:16px;z-index:99997;display:none;min-width:280px}
+#appEditor.on{display:block}
+#appEditor h3{font-size:14px;font-weight:500;color:#fff;margin-bottom:12px}
+#appEditor label{display:block;color:#888;font-size:11px;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px}
+#appEditor input{width:100%;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);color:#fff;padding:8px 12px;border-radius:6px;outline:none;font-size:13px;margin-bottom:12px}
+#appEditor input:focus{border-color:#0078d4}
+#appEditor .ebtns{display:flex;gap:6px}
+#appEditor button{flex:1;padding:8px 12px;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:500}
+#appEditor .save{background:#0078d4;color:#fff}
+#appEditor .remove{background:#d43a3a;color:#fff}
+#appEditor .cancel{background:rgba(255,255,255,0.08);color:#ccc}
