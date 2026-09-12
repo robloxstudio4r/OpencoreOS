@@ -38,7 +38,7 @@ var kbs = [
 
 function runUserWizard(){
   uStep = 0; uData.name = ''; uData.lang = 'en'; uData.kb = 'us'; uData.pw = ''; uData.pwSkipped = true;
-  $('uwiz').classList.remove('hide');
+  var el = $('uwiz'); if(el) el.classList.remove('hide');
   renderUserStep();
 }
 
@@ -122,8 +122,8 @@ function finishUserWizard(){
   LS.setItem('oc_lang', uData.lang);
   LS.setItem('oc_kb', uData.kb);
   LS.setItem('oc_user_done','true');
-  $('uwiz').classList.add('hide');
-  loadSettings();
+  var el = $('uwiz'); if(el) el.classList.add('hide');
+  if(typeof loadSettings === 'function') loadSettings();
   showLogin();
   setTimeout(function(){ alert('Welcome, ' + (uData.name || 'Opencore User') + '!'); }, 300);
 }
@@ -172,4 +172,3 @@ function initLogin(){
     })(pinButtons[i]);
   }
 }
-document.addEventListener('DOMContentLoaded', initLogin);
