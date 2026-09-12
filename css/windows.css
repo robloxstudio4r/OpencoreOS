@@ -1,1 +1,10 @@
-
+.win{position:absolute;min-width:300px;min-height:180px;background:rgba(28,28,48,0.96);backdrop-filter:blur(16px);border-radius:8px;border:1px solid rgba(255,255,255,0.06);box-shadow:0 20px 60px rgba(0,0,0,0.6);display:flex;flex-direction:column;overflow:hidden;animation:wi .15s ease}
+@keyframes wi{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:scale(1)}}
+.wh{background:rgba(255,255,255,0.03);padding:8px 12px;display:flex;justify-content:space-between;align-items:center;cursor:grab;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;min-height:40px}
+.wh:active{cursor:grabbing}
+.wt{color:#eee;font-size:13px;font-weight:500}
+.wc2{display:flex;gap:6px}
+.wc2 button{width:26px;height:26px;border-radius:50%;border:none;background:transparent;color:#888;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center}
+.wc2 .close:hover{background:#e81123;color:#fff}
+.wc2 .min:hover,.wc2 .max:hover{background:rgba(255,255,255,0.15);color:#fff}
+.wb{flex:1;padding:14px;color:#ddd;overflow:auto;font-size:13px;line-height:1.5;display:flex;flex-direction:column}
