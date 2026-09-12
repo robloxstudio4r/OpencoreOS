@@ -16,4 +16,21 @@ function openNotepad(opts){
   win.querySelector('#np-saveas').onclick = function(){ var np = prompt('Save as path:', cp); if(!np) return; if(VFS.write(np, ta.value)){ cp = np; alert('Saved to ' + np); } else alert('Failed'); };
   win.querySelector('#np-saveoc').onclick = function(){
     var base = cp.split('/').pop().replace(/\.[^.]+$/, '');
-    var ocName = prompt('Save as .oc name:', base + '.oc
+    var ocName = prompt('Save as .oc name:', base + '.oc');
+    if(!ocName) return;
+    if(ocName.indexOf('.oc') === -1) ocName += '.oc';
+    var pw = prompt('Set password (empty = none):') || '';
+    var wrapper = JSON.stringify({type:'txt', content:ta.value, _oc:true});
+    var dir = cp.substring(0, cp.lastIndexOf('/'));
+    var newPath = (dir || '') + '/' + ocName;
+    if(VFS.write(newPath, wrapper, pw)) alert('Saved to ' + newPath);
+    else alert('Failed');
+  };
+  win.querySelector('#np-lock').onclick = function(){
+    var pw = prompt('New password for this file (empty = remove):') || '';
+    if(VFS.write(cp, ta.value, pw)){
+      if(pw) alert('Password set');
+      else alert('Password removed');
+    } else alert('Failed');
+  };
+}
