@@ -1,30 +1,173 @@
+/* ============================================================
+   base.css — Global reset, typography, shared components
+   ============================================================ */
+
 *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,'Segoe UI',sans-serif;user-select:none}
 body{width:100vw;height:100vh;overflow:hidden;background:#1a1a2e;color:#eee;font-size:14px}
 .hide{display:none!important}
+
+/* ----- ERROR BOX ----- */
 #err{position:fixed;inset:0;background:#000;color:#f66;padding:20px;font-family:monospace;font-size:13px;z-index:9999999;overflow:auto;display:none}
 #err h2{margin-bottom:10px;font-size:18px}
 #err pre{white-space:pre-wrap;color:#ccc;margin-top:10px;background:#111;padding:10px;border-radius:4px}
+
+/* ----- SCROLLBARS ----- */
 ::-webkit-scrollbar{width:6px;height:6px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15);border-radius:10px}
+
+/* ----- FORM ELEMENTS ----- */
 textarea{width:100%;flex:1;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);color:#eee;padding:10px;border-radius:4px;resize:none;outline:none;font-family:'Consolas',monospace;font-size:13px;min-height:200px}
+
 .btn{background:#0078d4;border:none;color:#fff;padding:5px 14px;border-radius:4px;cursor:pointer;font-size:12px}
 .btn:hover{background:#106ebe}
 .btn2{background:rgba(255,255,255,0.06);color:#ccc;border:none;padding:5px 14px;border-radius:4px;cursor:pointer;font-size:12px}
 .btn2:hover{background:rgba(255,255,255,0.12)}
 .btd{background:#d43a3a}
 .btd:hover{background:#b02b2b}
+
 .tg{position:relative;width:38px;height:20px;background:#444;border-radius:10px;cursor:pointer;transition:background .3s;flex-shrink:0}
 .tg.on{background:#0078d4}
 .tg:after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;background:#fff;border-radius:50%;transition:transform .3s}
 .tg.on:after{transform:translateX(18px)}
+
 audio{max-width:100%;height:34px}
+
+/* ----- INFO GRID ----- */
 .ig{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .ic2{background:rgba(255,255,255,0.03);padding:10px;border-radius:6px;border:1px solid rgba(255,255,255,0.06)}
 .ic2 .lbl{color:#888;font-size:11px}
 .ic2 .val{font-size:14px;color:#fff;word-break:break-all;margin-top:4px}
+
+/* ----- TOOLBAR ----- */
 .bar{display:flex;gap:6px;padding:6px 0 10px;align-items:center;flex-wrap:wrap;border-bottom:1px solid rgba(255,255,255,0.06);margin-bottom:10px}
 .bar button{background:rgba(255,255,255,0.04);border:none;color:#ccc;padding:5px 12px;border-radius:4px;cursor:pointer;font-size:12px}
 .bar button:hover{background:rgba(255,255,255,0.12);color:#fff}
 .bar input{flex:1;background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.1);color:#fff;padding:5px 10px;border-radius:4px;outline:none;font-size:13px;min-width:100px}
 .bar input:focus{border-color:#0078d4}
+
+/* ============================================================
+   MINI PLAYER — OS-wide Spotify now-playing overlay
+   ============================================================ */
+
+#miniPlayer {
+  position: fixed;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-100px);
+  background: rgba(20, 20, 40, 0.96);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+  padding: 8px 14px 8px 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 99998;
+  min-width: 340px;
+  max-width: 520px;
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  pointer-events: auto;
+}
+
+#miniPlayer.on {
+  transform: translateX(-50%) translateY(0);
+}
+
+#miniPlayer img {
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: #222;
+}
+
+#miniPlayer .mp-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+#miniPlayer .mp-title {
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+
+#miniPlayer .mp-artist {
+  color: #aaa;
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+
+#miniPlayer .mp-time {
+  color: #666;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+  margin-right: 4px;
+  white-space: nowrap;
+}
+
+#miniPlayer .mp-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+#miniPlayer .mp-controls button {
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  color: #fff;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+  padding: 0;
+  line-height: 1;
+}
+
+#miniPlayer .mp-controls button:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+#miniPlayer .mp-controls .mp-play-btn {
+  background: #1db954;
+  width: 36px;
+  height: 36px;
+}
+
+#miniPlayer .mp-controls .mp-play-btn:hover {
+  background: #1ed760;
+}
+
+#miniPlayer .mp-close {
+  background: transparent !important;
+  color: #666 !important;
+  font-size: 15px !important;
+  width: 24px !important;
+  height: 24px !important;
+}
+
+#miniPlayer .mp-close:hover {
+  color: #fff !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+}
