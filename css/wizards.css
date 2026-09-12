@@ -1,1 +1,33 @@
-
+.wiz{position:fixed;inset:0;background:radial-gradient(ellipse at center,#1a1a2e,#0a0a1a);display:flex;align-items:center;justify-content:center;color:#fff;z-index:99999;padding:20px;overflow-y:auto}
+.wc{max-width:480px;width:100%;text-align:center;padding:30px}
+.wc h1{font-size:34px;font-weight:300;margin-bottom:8px}
+.wc h2{font-size:22px;font-weight:300;margin-bottom:16px}
+.wc p{color:#888;margin-bottom:14px;font-size:14px}
+.wc input,.wc select{width:100%;padding:12px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);color:#fff;border-radius:8px;font-size:15px;margin-bottom:14px;outline:none}
+.wc input:focus,.wc select:focus{border-color:#0078d4}
+.wc button{padding:12px 24px;background:#0078d4;border:none;color:#fff;border-radius:8px;cursor:pointer;font-size:15px;font-weight:500;margin:4px}
+.wc button.sec{background:rgba(255,255,255,0.1)}
+.pb{width:100%;height:6px;background:rgba(255,255,255,0.05);border-radius:12px;overflow:hidden;margin-bottom:16px}
+.pb>div{height:100%;width:0;background:linear-gradient(90deg,#0078d4,#00b4d8);transition:width .3s}
+#login{position:fixed;inset:0;background:radial-gradient(ellipse at 30% 40%,#0f3460,#1a1a2e,#000);display:none;flex-direction:column;align-items:center;justify-content:center;color:#fff;z-index:99998;text-align:center}
+#login.on{display:flex}
+#login .clk{font-size:56px;font-weight:300;letter-spacing:3px}
+#login .dt{font-size:18px;color:#aaa;margin-bottom:24px}
+#login .pd{display:flex;gap:10px;margin-bottom:20px}
+#login .pdd{width:16px;height:16px;border-radius:50%;border:2px solid #888}
+#login .pdd.f{background:#fff;border-color:#fff}
+#login .pp{display:grid;grid-template-columns:repeat(3,60px);gap:10px}
+#login .pp button{padding:14px;font-size:20px;border:1px solid rgba(255,255,255,0.08);border-radius:50%;background:rgba(255,255,255,0.04);color:#fff;cursor:pointer;width:60px;height:60px}
+#login .pp button:hover{background:rgba(255,255,255,0.15)}
+#login .er{color:#ff6b6b;font-size:13px;min-height:20px;margin-bottom:10px}
+#sleepOverlay{position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:99996;display:none;flex-direction:column;align-items:center;justify-content:center;color:#fff;cursor:pointer;backdrop-filter:blur(12px)}
+#sleepOverlay.on{display:flex}
+#sleepOverlay .moon{font-size:72px;margin-bottom:16px;animation:moonPulse 3s infinite}
+@keyframes moonPulse{0%,100%{opacity:0.6;transform:scale(1)}50%{opacity:1;transform:scale(1.08)}}
+#sleepOverlay .txt{color:#888;font-size:15px;font-weight:300}
+#screensaver{position:fixed;inset:0;background:radial-gradient(ellipse at center,#0f3460,#000);z-index:99995;display:none;align-items:center;justify-content:center;flex-direction:column;color:#fff}
+#screensaver.on{display:flex}
+#screensaver .logo{font-size:80px;animation:floaty 6s ease-in-out infinite;text-shadow:0 0 40px rgba(0,180,216,0.3)}
+@keyframes floaty{0%,100%{transform:translate(0,0) rotate(0)}25%{transform:translate(30px,-20px) rotate(2deg)}50%{transform:translate(-20px,30px) rotate(-2deg)}75%{transform:translate(-30px,-10px) rotate(1deg)}}
+#screensaver .sub{color:#888;font-size:18px;margin-top:12px;animation:subPulse 3s infinite;opacity:0.6}
+@keyframes subPulse{0%,100%{opacity:0.4}50%{opacity:0.9}}
