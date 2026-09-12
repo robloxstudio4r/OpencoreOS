@@ -1,5 +1,8 @@
 // ============================================================
-//  music.js — Spotify app with proper login-state tracking
+//  music.js — Spotify app
+//  Fixed: Login button no longer reloads the page
+//  Fixed: Buttons have type="button"
+//  Fixed: preventDefault on login click
 // ============================================================
 
 var spotifyLoadStarted = false;
@@ -48,24 +51,26 @@ function openMusic(){
     c.innerHTML = '<div style="padding:20px;">'
       + '<p style="color:#ff6b6b;margin-bottom:10px;">' + msg + '</p>'
       + '<p style="color:#888;font-size:12px;">Make sure <b>js/spotify-auth.js</b> exists in the repo.</p>'
-      + '<button id="retry-sp" style="margin-top:12px;background:#0078d4;border:none;color:#fff;padding:8px 18px;border-radius:6px;cursor:pointer;">Retry</button>'
+      + '<button type="button" id="retry-sp" style="margin-top:12px;background:#0078d4;border:none;color:#fff;padding:8px 18px;border-radius:6px;cursor:pointer;">Retry</button>'
       + '</div>';
     var rb = c.querySelector('#retry-sp');
-    if(rb) rb.onclick = function(){ spotifyLoadStarted = false; ensureSpotifyLoaded(renderUI); };
+    if(rb) rb.onclick = function(e){ e.preventDefault();
+      spotifyLoadStarted = false;
+      ensureSpotifyLoaded(renderUI); };
   }
 
   function renderUI(){
     try {
       var isIn = window.SpotifyAuth && SpotifyAuth.isLoggedIn();
-      console.log('Music app render — logged in:', isIn);
+      console.log('Music app — logged in:', isIn);
 
       c.innerHTML = '<div style="display:flex;gap:8px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,0.06);margin-bottom:10px;flex-wrap:wrap;">'
         + '<input id="mus-q" placeholder="Search Spotify..." style="flex:1;background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.1);color:#fff;padding:8px 12px;border-radius:6px;outline:none;font-size:13px;min-width:150px;"' + (isIn ? '' : ' disabled') + '/>'
-        + '<button id="mus-go" style="background:#1db954;border:none;color:#fff;padding:8px 18px;border-radius:6px;cursor:pointer;font-weight:600;font-size:13px;"' + (isIn ? '' : ' disabled') + '>Search</button></div>'
+        + '<button type="button" id="mus-go" style="background:#1db954;border:none;color:#fff;padding:8px 18px;border-radius:6px;cursor:pointer;font-weight:600;font-size:13px;"' + (isIn ? '' : ' disabled') + '>Search</button></div>'
         + '<div id="mus-login" style="display:' + (isIn ? 'none' : 'flex') + ';align-items:center;gap:10px;padding:12px;background:rgba(29,185,84,0.08);border:1px solid rgba(29,185,84,0.25);border-radius:8px;margin-bottom:12px;">'
         + '<span style="font-size:24px;">🎵</span>'
         + '<div style="flex:1;color:#ccc;font-size:12px;"><strong style="color:#1db954;">Login to Spotify</strong><br>Opens Spotify login, then returns here.</div>'
-        + '<button id="mus-login-btn" style="background:#1db954;border:none;color:#fff;padding:6px 16px;border-radius:6px;cursor:pointer;font-weight:600;font-size:12px;">Login</button></div>'
+        + '<button type="button" id="mus-login-btn" style="background:#1db954;border:none;color:#fff;padding:6px 16px;border-radius:6px;cursor:pointer;font-weight:600;font-size:12px;">Login</button></div>'
         + '<div id="mus-player"></div>'
         + '<div id="mus-results">' + (!isIn ? '<p style="color:#888;text-align:center;padding:20px;">Log in to search</p>' : '') + '</div>'
         + '<div id="mus-status" style="color:#888;font-size:11px;margin-top:8px;text-align:center;">' + (isIn ? 'Initializing player...' : '') + '</div>';
@@ -77,7 +82,31 @@ function openMusic(){
       var st = c.querySelector('#mus-status');
       var lB = c.querySelector('#mus-login-btn');
 
-      if (lB) lB.onclick = function(){ SpotifyAuth.login(); };
+      if (lB) {
+        lB.onclick = function(e){
+          if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+          try {
+            var clientId = localStorage.getItem('opencore_spotify_client_id');
+            if (!clientId) {
+              alert('Please set your Spotify Client ID in Settings → Spotify first.');
+              return false;
+            }
+            if (window.SpotifyAuth && typeof SpotifyAuth.login === 'function') {
+              console.log('Calling SpotifyAuth.login()...');
+              SpotifyAuth.login();
+            } else {
+              alert('SpotifyAuth is not ready yet. Try again in a second.');
+            }
+          } catch (err) {
+            console.error('Login click error:', err);
+            alert('Login error: ' + err.message);
+          }
+          return false;
+        };
+      }
 
       function renderPlayer(state){
         if (!state || !state.track_window || !state.track_window.current_track) { pA.innerHTML = ''; return; }
@@ -95,9 +124,9 @@ function openMusic(){
           + '<div class="info"><div class="title">' + t.name + '</div>'
           + '<div class="artist">' + artistNames + '</div></div>'
           + '<div class="ctrl">'
-          + '<button id="mp-prev">⏮</button>'
-          + '<button class="pp2" id="mp-play">' + (state.paused ? '▶' : '⏸') + '</button>'
-          + '<button id="mp-next">⏭</button></div></div>';
+          + '<button type="button" id="mp-prev">⏮</button>'
+          + '<button type="button" class="pp2" id="mp-play">' + (state.paused ? '▶' : '⏸') + '</button>'
+          + '<button type="button" id="mp-next">⏭</button></div></div>';
         pA.querySelector('#mp-play').onclick = function(){ SpotifyAuth.togglePlay(); };
         pA.querySelector('#mp-next').onclick = function(){ SpotifyAuth.nextTrack(); };
         pA.querySelector('#mp-prev').onclick = function(){ SpotifyAuth.previousTrack(); };
@@ -108,7 +137,6 @@ function openMusic(){
           onReady: function(){ st.textContent = '✓ Player ready'; st.style.color = '#1db954'; },
           onStateChange: function(s){
             renderPlayer(s);
-            // Broadcast track to the OS-wide mini player
             if (window.updateMiniPlayer) window.updateMiniPlayer(s);
           }
         });
@@ -131,7 +159,7 @@ function openMusic(){
             div.innerHTML = '<div class="info">' + (img ? '<img src="' + img + '"/>' : '')
               + '<div style="min-width:0;"><div class="title">' + t.name + '</div>'
               + '<div class="artist">' + artists + ' · ' + durStr + '</div></div></div>'
-              + '<button class="pb2" data-id="' + t.id + '">Play</button>';
+              + '<button type="button" class="pb2" data-id="' + t.id + '">Play</button>';
             res.appendChild(div);
           }
           var btns = res.querySelectorAll('.pb2');
