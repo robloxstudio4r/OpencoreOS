@@ -1,3 +1,7 @@
+// ============================================================
+//  music.js — Spotify app with proper login-state tracking
+// ============================================================
+
 var spotifyLoadStarted = false;
 var spotifyReadyCallbacks = [];
 
@@ -43,8 +47,7 @@ function openMusic(){
   function renderNotAvailable(msg){
     c.innerHTML = '<div style="padding:20px;">'
       + '<p style="color:#ff6b6b;margin-bottom:10px;">' + msg + '</p>'
-      + '<p style="color:#888;font-size:12px;">Make sure <b>spotify-auth.js</b> exists in the js/ folder. Test: </p>'
-      + '<p style="color:#4dabf7;font-size:11px;margin-top:8px;word-break:break-all;">' + window.location.origin + window.location.pathname + 'js/spotify-auth.js</p>'
+      + '<p style="color:#888;font-size:12px;">Make sure <b>js/spotify-auth.js</b> exists in the repo.</p>'
       + '<button id="retry-sp" style="margin-top:12px;background:#0078d4;border:none;color:#fff;padding:8px 18px;border-radius:6px;cursor:pointer;">Retry</button>'
       + '</div>';
     var rb = c.querySelector('#retry-sp');
@@ -54,6 +57,7 @@ function openMusic(){
   function renderUI(){
     try {
       var isIn = window.SpotifyAuth && SpotifyAuth.isLoggedIn();
+      console.log('Music app render — logged in:', isIn);
 
       c.innerHTML = '<div style="display:flex;gap:8px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,0.06);margin-bottom:10px;flex-wrap:wrap;">'
         + '<input id="mus-q" placeholder="Search Spotify..." style="flex:1;background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.1);color:#fff;padding:8px 12px;border-radius:6px;outline:none;font-size:13px;min-width:150px;"' + (isIn ? '' : ' disabled') + '/>'
@@ -102,7 +106,11 @@ function openMusic(){
       if (isIn) {
         SpotifyAuth.initPlayer({
           onReady: function(){ st.textContent = '✓ Player ready'; st.style.color = '#1db954'; },
-          onStateChange: function(s){ renderPlayer(s); }
+          onStateChange: function(s){
+            renderPlayer(s);
+            // Broadcast track to the OS-wide mini player
+            if (window.updateMiniPlayer) window.updateMiniPlayer(s);
+          }
         });
       }
 
@@ -118,9 +126,11 @@ function openMusic(){
             var img = (t.album && t.album.images && t.album.images[0]) ? t.album.images[0].url : '';
             var artists = '';
             for (var a = 0; a < t.artists.length; a++) { if (a > 0) artists += ', '; artists += t.artists[a].name; }
+            var dur = Math.floor(t.duration_ms / 1000);
+            var durStr = Math.floor(dur / 60) + ':' + String(dur % 60).padStart(2, '0');
             div.innerHTML = '<div class="info">' + (img ? '<img src="' + img + '"/>' : '')
               + '<div style="min-width:0;"><div class="title">' + t.name + '</div>'
-              + '<div class="artist">' + artists + '</div></div></div>'
+              + '<div class="artist">' + artists + ' · ' + durStr + '</div></div></div>'
               + '<button class="pb2" data-id="' + t.id + '">Play</button>';
             res.appendChild(div);
           }
