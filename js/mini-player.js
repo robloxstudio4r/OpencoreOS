@@ -1,6 +1,7 @@
 // ============================================================
 //  mini-player.js — OS-wide Spotify mini player
 //  Shows track title, artist, duration, and playback controls.
+//  Hardened: null-safe, promise-safe, drift-corrected.
 // ============================================================
 
 (function(){
@@ -15,29 +16,23 @@
     return Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0');
   }
 
-  function show(){
-    if(el) el.classList.add('on');
-  }
-
-  function hide(){
-    if(el) el.classList.remove('on');
-  }
+  function show(){ if(el) el.classList.add('on'); }
+  function hide(){ if(el) el.classList.remove('on'); }
 
   function updateButtons(){
-    if(!currentState) return;
-    if(currentState.paused){
-      playBtn.textContent = '▶';
-    } else {
-      playBtn.textContent = '⏸';
-    }
+    if(!currentState || !playBtn) return;
+    playBtn.textContent = currentState.paused ? '▶' : '⏸';
   }
 
   function tick(){
-    if(!currentState) return;
-    if(currentState.paused) return;
-    var now = Date.now();
-    var elapsedSinceUpdate = (now - lastUpdateTime) / 1000;
-    var pos = currentState.position + elapsedSinceUpdate;
+    if(!currentState || !timeEl) return;
+    var pos;
+    if(currentState.paused){
+      pos = currentState.position;
+    } else {
+      var elapsedSinceUpdate = (Date.now() - lastUpdateTime) / 1000;
+      pos = currentState.position + elapsedSinceUpdate;
+    }
     var dur = currentState.duration;
     if(pos > dur) pos = dur;
     timeEl.textContent = fmt(pos) + ' / ' + fmt(dur);
@@ -49,35 +44,29 @@
 
       if(!state || !state.track_window || !state.track_window.current_track){
         currentState = null;
-        title.textContent = 'Not playing';
-        artist.textContent = '—';
-        timeEl.textContent = '0:00';
-        art.src = '';
+        if(title)  title.textContent = 'Not playing';
+        if(artist) artist.textContent = '—';
+        if(timeEl) timeEl.textContent = '0:00';
+        if(art)    art.src = '';
         hide();
         return;
       }
 
       var t = state.track_window.current_track;
       var img = (t.album && t.album.images && t.album.images[0]) ? t.album.images[0].url : '';
-      var artistNames = '';
-      if(t.artists && t.artists.length){
-        for(var i=0; i<t.artists.length; i++){
-          if(i > 0) artistNames += ', ';
-          artistNames += t.artists[i].name;
-        }
-      }
+      var artistNames = (t.artists || []).map(function(a){ return a.name; }).join(', ');
 
       currentState = {
         paused: state.paused,
-        position: state.position / 1000,
-        duration: state.duration / 1000,
+        position: (state.position || 0) / 1000,
+        duration: (state.duration || 0) / 1000,
         track: t
       };
       lastUpdateTime = Date.now();
 
-      title.textContent = t.name || 'Unknown';
-      artist.textContent = artistNames || 'Unknown artist';
-      if(img) art.src = img;
+      if(title)  title.textContent = t.name || 'Unknown';
+      if(artist) artist.textContent = artistNames || 'Unknown artist';
+      if(img && art) art.src = img;
       updateButtons();
       show();
       tick();
@@ -86,38 +75,48 @@
     }
   }
 
+  function safeCall(fnName){
+    try {
+      if(window.SpotifyAuth && typeof SpotifyAuth[fnName] === 'function'){
+        var p = SpotifyAuth[fnName]();
+        if(p && typeof p.catch === 'function') p.catch(function(e){ console.warn(fnName, e); });
+      } else {
+        console.warn('SpotifyAuth.' + fnName + ' not available');
+      }
+    } catch(e){ console.error(fnName + ' threw:', e); }
+  }
+
   function init(){
     el = document.getElementById('miniPlayer');
     if(!el) return;
-    art = document.getElementById('miniPlayerArt');
-    title = document.getElementById('miniPlayerTitle');
-    artist = document.getElementById('miniPlayerArtist');
-    timeEl = document.getElementById('miniPlayerTime');
-    playBtn = document.getElementById('miniPlayerPlay');
-    prevBtn = document.getElementById('miniPlayerPrev');
-    nextBtn = document.getElementById('miniPlayerNext');
+    art      = document.getElementById('miniPlayerArt');
+    title    = document.getElementById('miniPlayerTitle');
+    artist   = document.getElementById('miniPlayerArtist');
+    timeEl   = document.getElementById('miniPlayerTime');
+    playBtn  = document.getElementById('miniPlayerPlay');
+    prevBtn  = document.getElementById('miniPlayerPrev');
+    nextBtn  = document.getElementById('miniPlayerNext');
     closeBtn = document.getElementById('miniPlayerClose');
 
-    playBtn.onclick = function(){
-      if(window.SpotifyAuth) SpotifyAuth.togglePlay();
-    };
-    prevBtn.onclick = function(){
-      if(window.SpotifyAuth) SpotifyAuth.previousTrack();
-    };
-    nextBtn.onclick = function(){
-      if(window.SpotifyAuth) SpotifyAuth.nextTrack();
-    };
-    closeBtn.onclick = function(){
-      hide();
-    };
+    if(playBtn)  playBtn.onclick  = function(){ safeCall('togglePlay');    };
+    if(prevBtn)  prevBtn.onclick  = function(){ safeCall('previousTrack'); };
+    if(nextBtn)  nextBtn.onclick  = function(){ safeCall('nextTrack');     };
+    if(closeBtn) closeBtn.onclick = function(){ hide(); };
 
     if(!progressInterval){
       progressInterval = setInterval(tick, 500);
     }
   }
 
-  // Expose globally so music.js can call it
+  // Expose globally so music.js / SpotifyPlayerState can call it
   window.updateMiniPlayer = updateMiniPlayer;
+
+  // Subscribe to the shared state bus if music.js defined it
+  window.addEventListener('load', function(){
+    if(window.SpotifyPlayerState && typeof SpotifyPlayerState.add === 'function'){
+      SpotifyPlayerState.add(updateMiniPlayer);
+    }
+  });
 
   if(document.readyState === 'loading'){
     document.addEventListener('DOMContentLoaded', init);
