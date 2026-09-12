@@ -126,9 +126,9 @@ function openAppEditor(icon, mx, my){
   ed.classList.add('on');
   setTimeout(function(){ $('ae-name').focus(); }, 50);
 }
-function closeAppEditor(){ $('appEditor').classList.remove('on'); editorTargetIcon = null; }
+function closeAppEditor(){ var ed = $('appEditor'); if(ed) ed.classList.remove('on'); editorTargetIcon = null; }
 
-document.addEventListener('DOMContentLoaded', function(){
+function initAppEditorButtons(){
   var save = $('ae-save');
   if(save) save.onclick = function(){
     if(editorTargetIcon){
@@ -150,10 +150,11 @@ document.addEventListener('DOMContentLoaded', function(){
   };
   var can = $('ae-cancel');
   if(can) can.onclick = closeAppEditor;
-});
-document.addEventListener('mousedown', function(e){
-  var ed = $('appEditor');
-  if(ed && ed.classList.contains('on')){
-    if(!ed.contains(e.target) && !e.target.closest('.di')) closeAppEditor();
-  }
-});
+
+  document.addEventListener('mousedown', function(e){
+    var ed = $('appEditor');
+    if(ed && ed.classList.contains('on')){
+      if(!ed.contains(e.target) && !e.target.closest('.di')) closeAppEditor();
+    }
+  });
+}
