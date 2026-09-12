@@ -1,5 +1,5 @@
 // ============================================================
-//  boot.js — Boot sequence
+//  boot.js — Boot sequence + Spotify OAuth callback
 // ============================================================
 
 function loadSettings(){
@@ -13,9 +13,44 @@ window.addEventListener('resize', function(){
   if(typeof renderDesktop === 'function') renderDesktop();
 });
 
+// ============================================================
+//  Spotify OAuth callback — must run BEFORE anything else
+//  so that when the user returns from Spotify with ?code=...
+//  the code gets exchanged for tokens and saved.
+// ============================================================
+function handleSpotifyCallbackIfNeeded(){
+  if(!window.SpotifyAuth || typeof SpotifyAuth.handleCallback !== 'function'){
+    // SpotifyAuth not loaded yet — retry a few times
+    var attempts = 0;
+    var iv = setInterval(function(){
+      attempts++;
+      if(window.SpotifyAuth && typeof SpotifyAuth.handleCallback === 'function'){
+        clearInterval(iv);
+        SpotifyAuth.handleCallback().then(function(ok){
+          if(ok) console.log('✓ Spotify login callback handled');
+        }).catch(function(e){
+          console.error('Spotify callback error:', e);
+        });
+      } else if(attempts > 30){
+        clearInterval(iv);
+        console.warn('SpotifyAuth never loaded — callback skipped');
+      }
+    }, 100);
+    return;
+  }
+  SpotifyAuth.handleCallback().then(function(ok){
+    if(ok) console.log('✓ Spotify login callback handled');
+  }).catch(function(e){
+    console.error('Spotify callback error:', e);
+  });
+}
+
 function bootOpencore(){
   try {
     console.log('Booting OpencoreOS v10.4 (modular)...');
+
+    // FIRST: handle Spotify callback if returning from login
+    handleSpotifyCallbackIfNeeded();
 
     var setupDone = LS.getItem('oc_setup_done') === 'true';
     var userDone = LS.getItem('oc_user_done') === 'true';
@@ -25,7 +60,7 @@ function bootOpencore(){
     if (typeof loadIcons === 'function') loadIcons();
     if (typeof renderDesktop === 'function') renderDesktop();
 
-    // Safety net — force-init UI components that would otherwise rely on DOMContentLoaded
+    // Safety net — force-init UI components
     if (typeof initLogin === 'function') initLogin();
     if (typeof initTaskbar === 'function') initTaskbar();
     if (typeof initAppEditorButtons === 'function') initAppEditorButtons();
@@ -66,7 +101,6 @@ function showFatal(msg){
 }
 
 // boot.js is loaded last with defer, so DOM is ready.
-// Just run immediately.
 bootOpencore();
 
 console.log('OpencoreOS v10.4 loaded');
