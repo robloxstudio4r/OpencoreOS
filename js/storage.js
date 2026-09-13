@@ -1,4 +1,13 @@
-var LS = (function(){
+// ============================================================
+//  storage.js — OpencoreOS v10.4
+//  Provides LS (safe localStorage wrapper), $ / $$ helpers,
+//  and VFS (virtual file system).
+//
+//  Multi-user note: after VFS.init(), LS is replaced by a scoped
+//  wrapper from accounts.js so every account has its own data.
+// ============================================================
+
+var LS_base = (function(){
   try {
     var ls = window.localStorage;
     ls.setItem('__t','1');
@@ -16,6 +25,35 @@ var LS = (function(){
     };
   }
 })();
+
+// ---- Live LS: returns the account-scoped wrapper when available ----
+// We define it as a getter on window so any code reading `LS.*` gets
+// the currently active account's view without reloading.
+(function () {
+  function makeDefault() {
+    // Fallback when accounts.js didn't load — behaves like plain localStorage.
+    return LS_base;
+  }
+  function currentScoped() {
+    if (window.Accounts && typeof window.Accounts.scopedLS === 'function') {
+      try { return window.Accounts.scopedLS(); } catch (e) {}
+    }
+    return makeDefault();
+  }
+  try {
+    Object.defineProperty(window, 'LS', {
+      configurable: true,
+      get: function () { return currentScoped(); }
+    });
+  } catch (e) {
+    // Fallback for very old browsers: just assign once
+    window.LS = currentScoped();
+  }
+})();
+
+// Make `LS` a global name too, so `LS.getItem(...)` works inside this file
+// and any script that uses `var LS` still resolves through window.LS.
+try { LS = window.LS; } catch (e) {}
 
 window.onerror = function(m,u,l,c,e){
   var box = document.getElementById('err');
