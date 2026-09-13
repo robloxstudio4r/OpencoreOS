@@ -27,6 +27,25 @@
 
 <div id="uwiz" class="wiz hide"><div class="wc" id="uwc"></div></div>
 
+<!-- ACCOUNT PICKER (shown on lock screen when >1 account) -->
+<div id="acctPicker" style="display:none;position:fixed;inset:0;background:rgba(10,12,18,0.92);z-index:9998;align-items:center;justify-content:center;flex-direction:column;font-family:system-ui,-apple-system,sans-serif;color:#fff;">
+  <div style="font-size:44px;font-weight:200;letter-spacing:2px;margin-bottom:6px;">OpencoreOS</div>
+  <div style="color:#888;font-size:13px;margin-bottom:36px;">Choose an account</div>
+  <div id="acctList" style="display:flex;gap:20px;flex-wrap:wrap;justify-content:center;max-width:720px;"></div>
+  <div id="acctPwPrompt" style="display:none;margin-top:28px;text-align:center;">
+    <div id="acctPwName" style="font-size:15px;margin-bottom:10px;color:#ccc;"></div>
+    <input id="acctPwInput" type="password" placeholder="Password"
+      style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:#fff;padding:10px 14px;border-radius:8px;outline:none;font-size:14px;min-width:220px;text-align:center;"/>
+    <div style="margin-top:12px;display:flex;gap:8px;justify-content:center;">
+      <button id="acctPwOk" type="button"
+        style="background:#1db954;border:none;color:#fff;padding:8px 22px;border-radius:6px;cursor:pointer;font-weight:600;font-size:13px;">Unlock</button>
+      <button id="acctPwCancel" type="button"
+        style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#fff;padding:8px 22px;border-radius:6px;cursor:pointer;font-size:13px;">Cancel</button>
+    </div>
+    <div id="acctPwErr" style="color:#ff6b6b;font-size:12px;margin-top:10px;min-height:16px;"></div>
+  </div>
+</div>
+
 <div id="login">
   <div class="clk" id="lt">00:00:00</div>
   <div class="dt" id="ld">Loading...</div>
@@ -118,9 +137,11 @@
   <div id="clk">00:00:00</div>
 </div>
 
+<script defer src="js/accounts.js"></script>
 <script defer src="js/storage.js"></script>
 <script defer src="js/state.js"></script>
 <script defer src="js/airplane.js"></script>
+<script defer src="js/account-picker.js"></script>
 <script defer src="js/window-manager.js"></script>
 <script defer src="js/desktop.js"></script>
 <script defer src="js/taskbar.js"></script>
