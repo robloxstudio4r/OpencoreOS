@@ -2,7 +2,7 @@
 //  taskbar.js — OpencoreOS v10.4
 //  Taskbar, start menu, system tray, Shutdown, Accessibility,
 //  Screenshot, Screen Recording, Captures, Trash, Help,
-//  Task Manager. Lock opens the account picker.
+//  Task Manager, Checklist. Lock opens the account picker.
 // ============================================================
 
 function updateTaskbar(){
@@ -71,7 +71,6 @@ function initTaskbar(){
     })(smItems[si]);
   }
 
-  // ---- Long-press hook on Start menu app items (App Lock + Trash) ----
   if (window.AppLock && typeof window.AppLock.attachLongPress === 'function') {
     var menuIcons = document.querySelectorAll('.smi[data-a]');
     for (var mi = 0; mi < menuIcons.length; mi++) {
@@ -82,7 +81,6 @@ function initTaskbar(){
     }
   }
 
-  // ---- Start menu: Lock → account picker ----
   var mlk = $('mlk');
   if (mlk) mlk.onclick = function(e){
     if (e) { e.preventDefault(); e.stopPropagation(); }
@@ -109,6 +107,15 @@ function initTaskbar(){
     $('sm').classList.remove('on');
     if (typeof openTaskManager === 'function') openTaskManager();
     else alert('Task Manager not loaded');
+  };
+
+  // ---------------- Checklist ----------------
+  var mchecklist = $('mchecklist');
+  if (mchecklist) mchecklist.onclick = function(e){
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    $('sm').classList.remove('on');
+    if (typeof openChecklist === 'function') openChecklist();
+    else alert('Checklist not loaded');
   };
 
   // ---------------- Accessibility ----------------
