@@ -23,9 +23,6 @@ function openHelp(){
   var search = c.querySelector('#help-search');
   var countEl = c.querySelector('#help-count');
 
-  // ============================================================
-  //  Help content
-  // ============================================================
   var SECTIONS = [
     {
       title: 'Getting Started',
@@ -62,7 +59,8 @@ function openHelp(){
       entries: [
         { t: 'Move an icon', d: 'Click and drag any desktop icon to move it to a new grid position. The position is saved automatically.' },
         { t: 'Rename an icon', d: 'Long-press (or right-click) an icon → Rename, or use the built-in Edit App dialog.' },
-        { t: 'Remove from desktop', d: 'Long-press an icon → the app editor → Remove. The app stays in the Start menu.' },
+        { t: 'Remove from desktop', d: 'Long-press (or right-click) an icon → Remove. The app stays in the Start menu. You can add it back later.' },
+        { t: 'Add an app back to the desktop', d: 'Right-click any app in the Start menu → "Add to desktop". It reappears on the desktop in a free grid slot.' },
         { t: 'Reset icons', d: 'Settings → System → Reset Desktop Icons. Restores the default layout.' },
         { t: 'Open the Start menu', d: 'Click the 🪟 Start button at the bottom-left, or press it with keyboard focus.' },
         { t: 'Close a window', d: 'Click the ✕ in the window title bar.' },
@@ -74,9 +72,12 @@ function openHelp(){
       icon: '📁',
       entries: [
         { t: 'Browse files', d: 'Open Files. The virtual file system has Documents, Pictures, Audio, and System32 folders.' },
+        { t: 'Search files', d: 'Type in the search bar at the top of Files to filter the current folder live.' },
         { t: 'Create a file', d: 'In Terminal: "touch myfile.txt" then "echo hello > myfile.txt" (or use Notepad).' },
-        { t: 'Create a folder', d: 'In Terminal: "mkdir MyFolder".' },
-        { t: 'Delete a file', d: 'In Terminal: "rm myfile.txt". Or use Files app and click the ✕.' },
+        { t: 'Create a folder', d: 'In Terminal: "mkdir MyFolder". Or use the "+ Folder" button in Files.' },
+        { t: 'Delete a file', d: 'Click the 🗑️ next to a file in Files. It goes to the Recycle Bin, not permanently.' },
+        { t: 'Recycle Bin', d: 'Click the 🗑️ Bin button in Files. Deleted items stay there for 30 days, then auto-delete.' },
+        { t: 'Restore a file', d: 'In the Bin, click Restore next to any item. Folders come back with all their files intact.' },
         { t: 'Save a file from Notepad', d: 'File → Save, or Ctrl+S. It saves to the current VFS folder.' },
         { t: 'System32 is protected', d: 'You cannot write or delete inside /System32. It contains core system files.' }
       ]
@@ -132,6 +133,23 @@ function openHelp(){
       ]
     },
     {
+      title: 'Checklist',
+      icon: '✅',
+      entries: [
+        { t: 'Open Checklist', d: 'Start menu → ✅ Checklist. Create as many lists as you want.' },
+        { t: 'Create a new list', d: 'On the main view, click the + button (top-right) → enter a name, pick an icon, pick a color → Save.' },
+        { t: 'Add an item', d: 'Inside a list, click the + button → type the item, optionally set a due date and note → Save.' },
+        { t: 'Check off items', d: 'Click the checkbox on any item to mark it done. Click again to uncheck.' },
+        { t: 'Due dates', d: 'Set a due date when creating an item. Today shows in yellow, overdue in red, future in blue.' },
+        { t: 'Notes on items', d: 'Add a note to any item for extra details. It appears in italic below the item text.' },
+        { t: 'Filter items', d: 'In the toolbar inside a list, choose All / Active / Done to focus on what you need.' },
+        { t: 'Edit an item', d: 'Click the ✏️ next to any item to change its text, due date, or note.' },
+        { t: 'Delete an item', d: 'Click the 🗑️ next to any item and confirm.' },
+        { t: 'Edit or delete a list', d: 'On the main view, click the ⋯ next to a list → Edit list or Delete list.' },
+        { t: 'Progress bar', d: 'Each list on the main view shows how many items are done and a percentage progress bar.' }
+      ]
+    },
+    {
       title: 'Spotify Music',
       icon: '🎵',
       entries: [
@@ -140,6 +158,32 @@ function openHelp(){
         { t: 'Playback controls', d: 'Prev, Play/Pause, Next buttons in the Music app and in the mini-player at the bottom of the screen.' },
         { t: 'Mini-player', d: 'Appears when a song starts. Stays visible even if you close the Music window. Controls work from here.' },
         { t: 'Spotify Premium required', d: 'The Web Playback SDK only works with Spotify Premium. Free accounts can search but not play.' }
+      ]
+    },
+    {
+      title: 'Weather',
+      icon: '🌤️',
+      entries: [
+        { t: 'Open Weather', d: 'Start menu → 🌤️ Weather. The app auto-detects your location on open.' },
+        { t: 'Location permission', d: 'Your browser will ask for location permission the first time. Click Allow to see weather for your area.' },
+        { t: 'Celsius / Fahrenheit', d: 'Use the °C / °F toggle in the top-right to switch units. Your choice is saved per-account.' },
+        { t: 'Refresh', d: 'Click the Refresh button to re-fetch weather for your current location.' },
+        { t: 'Live data', d: 'Weather comes from Open-Meteo, a free and keyless API. No signup required.' },
+        { t: 'If location fails', d: 'You\'ll see a "Try again" button. Check your browser\'s site permissions for location.' }
+      ]
+    },
+    {
+      title: 'Calendar & Events',
+      icon: '📅',
+      entries: [
+        { t: 'Open Calendar', d: 'Start menu → 📅 Calendar. Shows the current month by default.' },
+        { t: 'Navigate months', d: 'Use ‹ and › buttons in the header. Click Today to jump back to the current month.' },
+        { t: 'Add an event', d: 'Click the + button (top-right) → fill in title, date, optional time, optional description, and color → Save.' },
+        { t: 'View event details', d: 'Click an event chip on the calendar grid to see its full details.' },
+        { t: 'Edit an event', d: 'In the event viewer, click ✏️ to change any field. Changes apply instantly.' },
+        { t: 'Delete an event', d: 'In the event viewer, click 🗑️ and confirm.' },
+        { t: 'See all events on a day', d: 'Click any day cell (not the chip) to open a Day View listing every event on that day.' },
+        { t: 'Event colors', d: 'Choose from 8 colors when creating an event. The color appears as a border on the chip and viewer.' }
       ]
     },
     {
@@ -203,7 +247,7 @@ function openHelp(){
         { t: 'Launch a locked app', d: 'Clicking the app opens a password prompt first.' },
         { t: 'Move to Trash', d: 'Drag any app onto the 🗑️ Trash icon in the bottom-right of the desktop. Or long-press → Move to trash.' },
         { t: 'Restore from Trash', d: 'Start menu → 🗑️ Trash. Click Restore next to any item.' },
-        { t: 'Auto-delete', d: 'Items in the trash are permanently deleted after 30 days.' },
+        { t: 'Auto-delete apps', d: 'Apps in the trash are permanently deleted after 30 days.' },
         { t: 'Empty trash', d: 'In the Trash window, click Empty trash to delete everything now.' }
       ]
     },
@@ -212,11 +256,9 @@ function openHelp(){
       icon: '⏳',
       entries: [
         { t: 'Trashed apps auto-delete', d: 'Apps you send to the Trash are permanently removed after 30 days.' },
-        { t: 'Purge runs on boot', d: 'Every time OpencoreOS loads, it clears trashed items older than 30 days.' },
-        { t: 'Purge runs every 5 minutes', d: 'While you are using OpencoreOS, the trash is checked every 5 minutes.' },
-        { t: 'Restore before 30 days', d: 'Open 🗑️ Trash from the Start menu and click Restore on any item to bring it back.' },
-        { t: 'Empty trash manually', d: 'In the Trash window, click Empty trash to delete everything immediately.' },
-        { t: 'Account data', d: 'All account data is stored in your browser\'s localStorage under per-account prefixes.' },
+        { t: 'Trashed files auto-delete', d: 'Files in the Recycle Bin are permanently removed after 30 days.' },
+        { t: 'Purge runs on boot', d: 'Every time OpencoreOS loads, it clears items older than 30 days.' },
+        { t: 'Purge runs every 5 minutes', d: 'While you are using OpencoreOS, both bins are checked every 5 minutes.' },
         { t: 'Back up your account', d: 'Open Terminal and type "backup". A .ocbackup file downloads with your files, icons, extensions, and settings.' },
         { t: 'Restore a backup', d: 'Open Terminal and type "restore". Pick the .ocbackup file and confirm.' }
       ]
@@ -274,17 +316,14 @@ function openHelp(){
       entries: [
         { t: 'Fallback device password', d: 'If you never set a PIN, the master password for Developer Tools and Recovery is devil.9oce.' },
         { t: 'Kiosk fullscreen', d: 'The first click after loading puts OpencoreOS into fullscreen. Press Escape — it snaps back. Only Shutdown releases it.' },
-        { t: 'Right-click anywhere', d: 'Right-clicking an app icon opens the full App Lock + Trash menu. Right-clicking elsewhere opens the app editor.' },
-        { t: 'Per-account everything', d: 'Extensions, accessibility, wallpaper, files, icons, Spotify login, PIN — all isolated per account.' },
+        { t: 'Right-click anywhere', d: 'Right-clicking an app icon opens the App Lock + Trash menu. Right-clicking a Start menu item lets you add or remove it from the desktop.' },
+        { t: 'Per-account everything', d: 'Extensions, accessibility, wallpaper, files, icons, Spotify login, PIN, checklists, calendar events — all isolated per account.' },
         { t: 'Reset the whole OS', d: 'Recovery → Full Reset. Or DevTools → Flags → Full Reset.' },
         { t: 'Search field', d: 'The search box at the top of this Help window filters topics as you type.' }
       ]
     }
   ];
 
-  // ============================================================
-  //  Render
-  // ============================================================
   function render(filter) {
     filter = (filter || '').toLowerCase().trim();
     body.innerHTML = '';
@@ -321,37 +360,4 @@ function openHelp(){
         var card = document.createElement('div');
         card.style.cssText =
           'padding:10px 12px;background:rgba(255,255,255,0.02);' +
-          'border:1px solid rgba(255,255,255,0.06);border-radius:8px;' +
-          'margin-bottom:6px;';
-        card.innerHTML =
-          '<div style="color:#8ab4f8;font-weight:600;font-size:13px;margin-bottom:4px;">' + entry.t + '</div>' +
-          '<div style="color:#bbb;font-size:12px;line-height:1.5;">' + entry.d + '</div>';
-        secBox.appendChild(card);
-      });
-
-      body.appendChild(secBox);
-    });
-
-    if (!shown) {
-      body.innerHTML =
-        '<div style="text-align:center;padding:40px 20px;color:#666;">' +
-          '<div style="font-size:48px;margin-bottom:12px;">🔍</div>' +
-          '<div style="font-size:14px;">No help topics match "' + filter + '".</div>' +
-        '</div>';
-    }
-
-    countEl.textContent = shown + ' / ' + total + ' topics';
-  }
-
-  render('');
-
-  search.addEventListener('input', function () {
-    render(search.value);
-  });
-
-  setTimeout(function () { search.focus(); }, 100);
-
-  return win;
-}
-
-window.openHelp = openHelp;
+          '
