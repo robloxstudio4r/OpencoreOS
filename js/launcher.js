@@ -2,12 +2,19 @@
 //  launcher.js — App launcher for OpencoreOS v10.4
 //  Maps data-a app IDs → open* functions.
 //  Checks AppLock and AppTrash before launching.
+//  Recovery is hidden — only reachable via Developer Tools.
 // ============================================================
 
 function launch(appId, extra){
   if(!appId) return;
 
-  // ---- Trash check (highest priority: trashed apps can't launch) ----
+  // ---- Recovery is hidden: block direct launch ----
+  if (appId === 'recovery') {
+    console.warn('Recovery is hidden. Use Developer Tools → Flags → Open Recovery Environment.');
+    return;
+  }
+
+  // ---- Trash check ----
   if (window.AppTrash && typeof window.AppTrash.isTrashed === 'function' && window.AppTrash.isTrashed(appId)) {
     alert('This app is in the Trash.\n\nOpen 🗑️ Trash from the Start menu to restore it.');
     return;
@@ -37,7 +44,6 @@ function launch(appId, extra){
   if(appId === 'calendar') return openCalendar();
   if(appId === 'sysinfo')  return openSysInfo();
   if(appId === 'appstore') return openAppStore();
-  if(appId === 'recovery') return openRecovery();
 
   // ---- Image / media tools ----
   if(appId === 'photoeditor'){
@@ -60,5 +66,4 @@ function launch(appId, extra){
   console.warn('Unknown app:', appId);
 }
 
-// Expose for other scripts (account-picker, dialogs, etc.)
 window.launch = launch;
