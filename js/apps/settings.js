@@ -1,7 +1,7 @@
 function openSettings(){
   var dn = LS.getItem('oc_device_name') || 'Opencore-PC';
   var hasPin = (LS.getItem('oc_pin') || '').length === 6;
-  var cid = LS.getItem('opencore_spotify_client_id') || '';
+  var cid = LS.getItem('opencore_spotify_client_id') || localStorage.getItem('opencore_spotify_client_id') || '';
   var net = navigator.connection || {};
   var hasSpotify = !!window.SpotifyAuth;
   var spotifyLoggedIn = hasSpotify && SpotifyAuth.isLoggedIn();
@@ -109,7 +109,18 @@ function openSettings(){
   win.querySelector('#s-pin-set').onclick = function(){ var p = prompt('Enter 6-digit PIN:'); if(p && /^\d{6}$/.test(p)){ LS.setItem('oc_pin', p); alert('PIN set'); } else alert('Must be 6 digits'); };
   win.querySelector('#s-pin-rm').onclick = function(){ if(confirm('Remove PIN?')){ LS.removeItem('oc_pin'); alert('Removed'); } };
   win.querySelector('#s-lock').onclick = function(){ showLogin(); };
-  win.querySelector('#s-sp-sv').onclick = function(){ var id = win.querySelector('#s-spid').value.trim(); if(id){ LS.setItem('opencore_spotify_client_id', id); alert('Saved'); } else alert('Enter Client ID'); };
+
+  // ---- Spotify Client ID Save (writes to BOTH scoped and unscoped) ----
+  win.querySelector('#s-sp-sv').onclick = function(){
+    var id = win.querySelector('#s-spid').value.trim();
+    if (!id) return alert('Enter Client ID');
+    // Write to account-scoped storage
+    try { LS.setItem('opencore_spotify_client_id', id); } catch (e) { console.warn('scoped save failed:', e); }
+    // Also write to global localStorage so any fallback lookup finds it
+    try { localStorage.setItem('opencore_spotify_client_id', id); } catch (e) { console.warn('global save failed:', e); }
+    alert('Saved');
+  };
+
   win.querySelector('#s-sp-login').onclick = function(){ if(window.SpotifyAuth) SpotifyAuth.login(); else alert('Open the Music app first'); };
   win.querySelector('#s-sp-out').onclick = function(){ if(window.SpotifyAuth) SpotifyAuth.logout(); alert('Logged out'); };
 
