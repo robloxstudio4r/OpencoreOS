@@ -1,10 +1,24 @@
 // ============================================================
 //  launcher.js — App launcher for OpencoreOS v10.4
 //  Maps data-a app IDs → open* functions.
+//  Checks AppLock and AppTrash before launching.
 // ============================================================
 
 function launch(appId, extra){
   if(!appId) return;
+
+  // ---- Trash check (highest priority: trashed apps can't launch) ----
+  if (window.AppTrash && typeof window.AppTrash.isTrashed === 'function' && window.AppTrash.isTrashed(appId)) {
+    alert('This app is in the Trash.\n\nOpen 🗑️ Trash from the Start menu to restore it.');
+    return;
+  }
+
+  // ---- App Lock check ----
+  if (window.AppLock && typeof window.AppLock.isLocked === 'function' && window.AppLock.isLocked(appId)) {
+    var allowed = false;
+    window.AppLock.promptUnlock(appId, function () { allowed = true; });
+    if (!allowed) return;
+  }
 
   // ---- Core apps ----
   if(appId === 'system32') return openFiles('/System32');
