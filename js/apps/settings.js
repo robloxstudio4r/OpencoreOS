@@ -6,6 +6,7 @@ function openSettings(){
   var hasSpotify = !!window.SpotifyAuth;
   var spotifyLoggedIn = hasSpotify && SpotifyAuth.isLoggedIn();
   var amOn = !!(window.AirplaneMode && window.AirplaneMode.isOn());
+  var active = window.Accounts ? window.Accounts.getActiveAccount() : null;
 
   var win = makeWindow('settings', 'Settings', '⚙️',
     '<div class="tabs">'
@@ -13,6 +14,7 @@ function openSettings(){
     + '<button data-t="net">Network</button>'
     + '<button data-t="bt">Bluetooth</button>'
     + '<button data-t="sec">Security</button>'
+    + '<button data-t="usr">Users</button>'
     + '<button data-t="spo">Spotify</button>'
     + '<button data-t="ab">About</button></div>'
 
@@ -27,7 +29,6 @@ function openSettings(){
     + '<div class="row"><span class="lbl">Wi-Fi</span><div class="tg ' + (ST.wifiOn ? 'on' : '') + '" id="s-wifi"></div></div>'
     + '<div class="row"><span class="lbl">Connection</span><span class="val">' + (net.effectiveType || 'unknown') + '</span></div>'
     + '<div class="row"><span class="lbl">Online</span><span class="val">' + (navigator.onLine ? 'Yes' : 'No') + '</span></div>'
-    // ---- Airplane Mode toggle ----
     + '<div class="row"><span class="lbl">Airplane Mode</span><div class="tg ' + (amOn ? 'on' : '') + '" id="s-am"></div></div>'
     + '<div class="row"><span class="lbl" style="font-size:11px;color:#888;">Blocks iframe-based apps (Browser, VideoHub, Iframes)</span></div>'
     + '</div>'
@@ -44,6 +45,18 @@ function openSettings(){
     + '<div class="row"><button class="btn" id="s-pin-set">Set PIN</button><button class="btn btd" id="s-pin-rm">Remove</button></div>'
     + '<div class="row"><button class="btn" id="s-lock">Lock Now</button></div>'
     + '<div class="row"><span class="lbl">System32 PIN</span><span class="val">devil.9oce</span></div></div>'
+
+    // ---------------- USERS TAB ----------------
+    + '<div class="tc" data-t="usr">'
+    + '<div style="background:rgba(29,185,84,0.08);border:1px solid rgba(29,185,84,0.25);padding:10px 12px;border-radius:8px;margin-bottom:12px;">'
+    + '<div style="font-size:11px;color:#888;">Currently signed in as</div>'
+    + '<div style="color:#fff;font-size:14px;font-weight:600;">' + (active ? active.name : 'unknown') + '</div>'
+    + '</div>'
+    + '<div id="s-users-list" style="margin-bottom:12px;"></div>'
+    + '<div class="row"><button class="btn" id="s-users-add" style="background:#1db954;">+ Add Account</button>'
+    + '<button class="btn" id="s-users-switch" style="margin-left:6px;">Switch Account</button></div>'
+    + '<p style="color:#888;font-size:11px;margin-top:8px;">Up to 3 accounts. Each has its own files, apps, and settings.</p>'
+    + '</div>'
 
     + '<div class="tc" data-t="spo">'
     + '<div class="row"><span class="lbl">Status</span><span class="val">' + (spotifyLoggedIn ? 'Connected' : 'Not connected') + '</span></div>'
@@ -88,14 +101,12 @@ function openSettings(){
   win.querySelector('#s-wifi').onclick = function(){ ST.wifiOn = !ST.wifiOn; LS.setItem('oc_wifi', String(ST.wifiOn)); this.classList.toggle('on', ST.wifiOn); };
   win.querySelector('#s-bt').onclick = function(){ ST.btOn = !ST.btOn; LS.setItem('oc_bt', String(ST.btOn)); this.classList.toggle('on', ST.btOn); };
 
-  // ---- Airplane Mode toggle ----
   var amBtn = win.querySelector('#s-am');
   if(amBtn){
     amBtn.onclick = function(){
       if(!window.AirplaneMode){ alert('Airplane Mode module not loaded'); return; }
       window.AirplaneMode.toggle();
-      var on = window.AirplaneMode.isOn();
-      this.classList.toggle('on', on);
+      this.classList.toggle('on', window.AirplaneMode.isOn());
     };
   }
 
@@ -104,19 +115,4 @@ function openSettings(){
     if(!navigator.bluetooth) return alert('Not supported');
     navigator.bluetooth.requestDevice({acceptAllDevices:true}).then(function(d){
       ST.btDevice = d;
-      win.querySelector('#s-bt-list').innerHTML += '<div style="padding:6px 0;color:#ddd;font-size:12px;">' + (d.name || 'Unknown') + ' (' + d.id.slice(0,8) + ')</div>';
-    }).catch(function(){});
-  };
-  win.querySelector('#s-pin-set').onclick = function(){ var p = prompt('Enter 6-digit PIN:'); if(p && /^\d{6}$/.test(p)){ LS.setItem('oc_pin', p); alert('PIN set'); } else alert('Must be 6 digits'); };
-  win.querySelector('#s-pin-rm').onclick = function(){ if(confirm('Remove PIN?')){ LS.removeItem('oc_pin'); alert('Removed'); } };
-  win.querySelector('#s-lock').onclick = function(){ showLogin(); };
-  win.querySelector('#s-sp-sv').onclick = function(){ var id = win.querySelector('#s-spid').value.trim(); if(id){ LS.setItem('opencore_spotify_client_id', id); alert('Saved'); } else alert('Enter Client ID'); };
-  win.querySelector('#s-sp-login').onclick = function(){ if(window.SpotifyAuth) SpotifyAuth.login(); else alert('Open the Music app first'); };
-  win.querySelector('#s-sp-out').onclick = function(){ if(window.SpotifyAuth) SpotifyAuth.logout(); alert('Logged out'); };
-
-  // Keep the Settings toggle in sync if Airplane Mode is flipped elsewhere (tray / start menu)
-  window.addEventListener('airplanemodechange', function (e) {
-    var el = win.querySelector('#s-am');
-    if (el) el.classList.toggle('on', e.detail.on);
-  });
-}
+      win.querySelector('#s-bt-list').innerHTML += '<div style="padding:6px 0;color:#ddd;font-size:12px;">' + (d.name || 'Unknown') + ' (' +
