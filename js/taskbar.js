@@ -1,6 +1,6 @@
 // ============================================================
 //  taskbar.js — OpencoreOS v10.4
-//  Taskbar, start menu, system tray, Shutdown button.
+//  Taskbar, start menu, system tray, Shutdown, Airplane Mode.
 // ============================================================
 
 function updateTaskbar(){
@@ -59,19 +59,23 @@ function initTaskbar(){
   var msleep = $('msleep'); if(msleep) msleep.onclick = function(){ $('sm').classList.remove('on'); goToSleep(); };
   var mrs = $('mrs'); if(mrs) mrs.onclick = function(){ if(confirm('Restart?')) location.reload(); };
 
+  // ---------------- Airplane Mode ----------------
+  var mam = $('mam');
+  if (mam) mam.onclick = function(e){
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    $('sm').classList.remove('on');
+    if (window.AirplaneMode) window.AirplaneMode.toggle();
+  };
+
   // ---------------- Shutdown ----------------
-  // Releases the kiosk fullscreen lock, then shows the shutdown overlay.
   var msd = $('msd');
   if(msd) msd.onclick = function(e){
     if(e){ e.preventDefault(); e.stopPropagation(); }
-    // Close start menu
     var smEl = $('sm');
     if(smEl){ smEl.classList.remove('on'); smEl.classList.remove('show'); }
-    // Release fullscreen lock (kiosk.js exposes this)
     if(typeof window.kioskUnlock === 'function'){
       try { window.kioskUnlock(); } catch(err){ console.warn('kioskUnlock error:', err); }
     } else {
-      // Fallback: exit fullscreen directly
       try {
         if(document.exitFullscreen) document.exitFullscreen();
         else if(document.webkitExitFullscreen) document.webkitExitFullscreen();
@@ -79,11 +83,9 @@ function initTaskbar(){
         else if(document.msExitFullscreen) document.msExitFullscreen();
       } catch(err){}
     }
-    // Draw shutdown overlay (shutdown.js exposes this)
     if(typeof window.doShutdown === 'function'){
       window.doShutdown();
     } else {
-      // Minimal fallback
       var ov = document.createElement('div');
       ov.style.cssText = 'position:fixed;inset:0;background:#000;color:#fff;' +
         'display:flex;align-items:center;justify-content:center;' +
@@ -93,9 +95,15 @@ function initTaskbar(){
     }
   };
 
+  // ---------------- System tray ----------------
+  // Note: tray-wifi click is now handled by airplane.js (toggles Airplane Mode).
   var tl = $('tray-lock'); if(tl) tl.onclick = function(){ showLogin(); };
-  var tw = $('tray-wifi'); if(tw) tw.ondblclick = function(){ ST.wifiOn = !ST.wifiOn; LS.setItem('oc_wifi', String(ST.wifiOn)); };
   var tbt = $('tray-bt'); if(tbt) tbt.ondblclick = function(){ ST.btOn = !ST.btOn; LS.setItem('oc_bt', String(ST.btOn)); };
 
   updateBattery();
+
+  // Reflect Airplane Mode in the Start-menu label if it's on
+  if (window.AirplaneMode && window.AirplaneMode.isOn && mam) {
+    mam.innerHTML = '<span class="ic">✈️</span>Airplane Mode (ON)';
+  }
 }
