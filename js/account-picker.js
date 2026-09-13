@@ -1,6 +1,6 @@
 // ============================================================
 //  account-picker.js — Lock screen account chooser
-//  Supports profile images, rename, password edit.
+//  Profile images + Change-password requires old device password
 // ============================================================
 
 (function () {
@@ -15,19 +15,7 @@
     });
   }
 
-  // ---------- Profile image helpers ----------
-  function getAvatar(accountId) {
-    try { return LS.getItem('__global_avatar_' + accountId) || ''; } catch (e) { return ''; }
-  }
-  function setAvatar(accountId, dataUrl) {
-    try {
-      if (dataUrl) LS.setItem('__global_avatar_' + accountId, dataUrl);
-      else LS.removeItem('__global_avatar_' + accountId);
-    } catch (e) { alert('Image too large to save.'); }
-  }
-
-  // Global-scoped avatar storage — uses the real localStorage (not prefixed)
-  // so avatars show even when no account is active.
+  // ---------- Global avatar storage (unprefixed, so picker can show it) ----------
   function getGlobalAvatar(id) {
     try { return localStorage.getItem('__oc_avatar_' + id) || ''; } catch (e) { return ''; }
   }
@@ -63,7 +51,6 @@
           tile.style.borderColor = 'rgba(255,255,255,0.1)';
         };
 
-        // ----- Profile image or default icon -----
         var avatarBox = document.createElement('div');
         avatarBox.style.cssText =
           'width:72px;height:72px;border-radius:50%;margin:0 auto 12px;' +
@@ -77,7 +64,6 @@
         }
         tile.appendChild(avatarBox);
 
-        // ----- Name -----
         var nameEl = document.createElement('div');
         nameEl.style.cssText =
           'font-size:14px;font-weight:600;color:#fff;white-space:nowrap;' +
@@ -85,13 +71,11 @@
         nameEl.textContent = acc.name;
         tile.appendChild(nameEl);
 
-        // ----- Password status -----
         var pwdEl = document.createElement('div');
         pwdEl.style.cssText = 'font-size:11px;color:#888;margin-top:4px;';
         pwdEl.textContent = acc.hasPassword ? '🔒 Password' : 'No password';
         tile.appendChild(pwdEl);
 
-        // ----- Pencil (edit) button -----
         var pencil = document.createElement('button');
         pencil.type = 'button';
         pencil.textContent = '✏️';
@@ -115,7 +99,7 @@
       })(accounts[i]);
     }
 
-    // ---- Add account tile ----
+    // Add-account tile
     if (window.Accounts && window.Accounts.canCreate()) {
       var add = document.createElement('div');
       add.style.cssText =
@@ -141,7 +125,10 @@
     }
   }
 
-  // ---------- Account editor (pencil click) ----------
+  // ============================================================
+  //  Account editor
+  //  Changing/removing password requires the OLD password first.
+  // ============================================================
   function openAccountEditor(acc) {
     var overlay = document.createElement('div');
     overlay.style.cssText =
@@ -159,7 +146,6 @@
     box.innerHTML =
       '<div style="font-size:16px;font-weight:600;margin-bottom:16px;">Edit Account</div>'
 
-      // Avatar preview
       + '<div style="display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:16px;">'
       + '<div id="aedit-avatar" style="width:96px;height:96px;border-radius:50%;'
         + 'overflow:hidden;background:rgba(0,0,0,0.4);display:flex;align-items:center;'
@@ -172,14 +158,12 @@
       + '</div>'
       + '</div>'
 
-      // Name
       + '<label style="display:block;color:#aaa;font-size:11px;margin-bottom:6px;">Name</label>'
       + '<input id="aedit-name" type="text" value="' + escapeHtml(acc.name) + '" maxlength="20" '
       +   'style="width:100%;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);'
       +   'color:#fff;padding:9px 12px;border-radius:8px;outline:none;font-size:13px;'
       +   'box-sizing:border-box;margin-bottom:14px;"/>'
 
-      // Password section
       + '<div style="color:#aaa;font-size:11px;margin-bottom:6px;">Password</div>'
       + '<div style="display:flex;gap:6px;margin-bottom:20px;">'
       +   '<button type="button" id="aedit-pw" style="flex:1;background:#1e4d6b;border:none;color:#fff;padding:9px;border-radius:8px;cursor:pointer;font-size:12px;">'
@@ -188,7 +172,6 @@
       +   (acc.hasPassword ? '<button type="button" id="aedit-pw-rm" style="background:#4a2028;border:none;color:#ff8a8a;padding:9px 14px;border-radius:8px;cursor:pointer;font-size:12px;">Remove</button>' : '')
       + '</div>'
 
-      // Save / Cancel
       + '<div style="display:flex;gap:8px;">'
       +   '<button type="button" id="aedit-save" style="flex:1;background:#1db954;border:none;color:#fff;padding:10px;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px;">Save</button>'
       +   '<button type="button" id="aedit-cancel" style="flex:1;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);color:#fff;padding:10px;border-radius:8px;cursor:pointer;font-size:13px;">Cancel</button>'
@@ -199,6 +182,28 @@
     document.body.appendChild(overlay);
 
     var avatarEl = box.querySelector('#aedit-avatar');
+
+    // ============================================================
+    //  Verify old device password before allowing password changes
+    // ============================================================
+    function requireOldPassword(actionLabel) {
+      // If the account has no password, no verification needed
+      if (!acc.hasPassword) return true;
+
+      var entered = prompt('🔒 ' + actionLabel + '\n\nEnter the current password for "' + acc.name + '":');
+      if (entered === null) return false;
+
+      var ok = false;
+      try {
+        ok = window.Accounts.verifyPassword(acc.id, entered);
+      } catch (e) { ok = false; }
+
+      if (!ok) {
+        alert('❌ Incorrect password. Change cancelled.');
+        return false;
+      }
+      return true;
+    }
 
     // ---- Upload image ----
     box.querySelector('#aedit-upload').onclick = function () {
@@ -225,36 +230,58 @@
       avatarEl.textContent = '👤';
     };
 
-    // ---- Set / change password ----
+    // ---- Set / change password (requires old password if set) ----
     box.querySelector('#aedit-pw').onclick = function () {
+      // Step 1 — verify old password if one exists
+      if (acc.hasPassword) {
+        if (!requireOldPassword('Change password')) return;
+      }
+
+      // Step 2 — ask for the new password
       var p = prompt(acc.hasPassword ? 'New password:' : 'Set password:');
       if (p === null) return;
       if (!p) return alert('Password cannot be empty.');
-      var p2 = prompt('Confirm password:');
+
+      var p2 = prompt('Confirm new password:');
+      if (p === null) return;
       if (p !== p2) return alert('Passwords do not match.');
+
       window.Accounts.update(acc.id, { password: p });
-      // Update local `acc` object
-      for (var i = 0; i < (window.Accounts.list() || []).length; i++) {
-        var a = window.Accounts.list()[i];
-        if (a.id === acc.id) acc.hasPassword = true;
-      }
+      acc.hasPassword = true;
+
       box.querySelector('#aedit-pw').textContent = 'Change password';
-      overlay.remove();
-      renderList();
+
+      // Ensure Remove button exists
+      if (!box.querySelector('#aedit-pw-rm')) {
+        var rmBtn = document.createElement('button');
+        rmBtn.type = 'button';
+        rmBtn.id = 'aedit-pw-rm';
+        rmBtn.textContent = 'Remove';
+        rmBtn.style.cssText = 'background:#4a2028;border:none;color:#ff8a8a;padding:9px 14px;border-radius:8px;cursor:pointer;font-size:12px;';
+        rmBtn.onclick = onRemovePassword;
+        box.querySelector('#aedit-pw').parentNode.appendChild(rmBtn);
+      }
+
       alert('Password updated.');
+      renderList();
     };
 
-    // ---- Remove password ----
-    var rmBtn = box.querySelector('#aedit-pw-rm');
-    if (rmBtn) rmBtn.onclick = function () {
-      if (!confirm('Remove password from "' + acc.name + '"?')) return;
+    // ---- Remove password (requires old password) ----
+    function onRemovePassword() {
+      if (acc.hasPassword) {
+        if (!requireOldPassword('Remove password')) return;
+      }
+      if (!confirm('Remove the password from "' + acc.name + '"?')) return;
       window.Accounts.update(acc.id, { password: '' });
+      acc.hasPassword = false;
       overlay.remove();
       renderList();
       alert('Password removed.');
-    };
+    }
+    var rmBtnEl = box.querySelector('#aedit-pw-rm');
+    if (rmBtnEl) rmBtnEl.onclick = onRemovePassword;
 
-    // ---- Save ----
+    // ---- Save (name + avatar only — no password change here) ----
     box.querySelector('#aedit-save').onclick = function () {
       var newName = box.querySelector('#aedit-name').value.trim().slice(0, 20);
       if (!newName) return alert('Name is required.');
@@ -325,7 +352,6 @@
   function show() {
     var p = el('acctPicker'); if (!p) return;
 
-    // Hide every other pre-login screen
     var l = el('login'); if (l) { l.style.display = 'none'; l.classList.remove('on'); }
     var s = el('setup'); if (s) s.classList.add('hide');
     var u = el('uwiz');  if (u) u.classList.add('hide');
@@ -351,14 +377,12 @@
     isShowing: function () { return showing; }
   };
 
-  // Alias so the tray-lock handler can call it easily
   window.showAccountPicker = function () {
-    // Sign out of the active account first
     if (window.Accounts && typeof window.Accounts.setActive === 'function') {
       window.Accounts.setActive(null);
     }
     show();
   };
 
-  console.log('Account picker loaded — with profile images');
+  console.log('Account picker loaded — password changes require old password');
 })();
