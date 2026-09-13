@@ -1,6 +1,7 @@
 // ============================================================
 //  desktop.js — Desktop icons, drag/drop, App Lock + Trash hooks
 //  Recovery is hidden — not on desktop.
+//  Custom icons from Extensions apply on every render.
 // ============================================================
 
 var DEFAULT_ICONS = [
@@ -20,12 +21,14 @@ var DEFAULT_ICONS = [
   {id:'calendar', name:'Calendar', icon:'📅', x:1, y:6},
   {id:'sysinfo', name:'System', icon:'ℹ️', x:2, y:0},
   {id:'appstore', name:'App Store', icon:'🛒', x:2, y:1},
+  {id:'extstore', name:'Extensions', icon:'🧩', x:2, y:2},
   {id:'kernel0', name:'Kernel0', icon:'🧠', x:2, y:3},
   {id:'videohub', name:'VideoHub', icon:'🎬', x:2, y:4},
-  {id:'vapor', name:'Vapor', icon:'💨', x:2, y:5},
-  {id:'science', name:'Science', icon:'🔬', x:2, y:6},
-  {id:'infinity', name:'Infinity Drink', icon:'🥤', x:3, y:0},
-  {id:'settings', name:'Settings', icon:'⚙️', x:3, y:1}
+  {id:'photoeditor', name:'Photo Editor', icon:'🎨', x:2, y:5},
+  {id:'vapor', name:'Vapor', icon:'💨', x:2, y:6},
+  {id:'science', name:'Science', icon:'🔬', x:3, y:0},
+  {id:'infinity', name:'Infinity Drink', icon:'🥤', x:3, y:1},
+  {id:'settings', name:'Settings', icon:'⚙️', x:3, y:2}
 ];
 
 var icons = [];
@@ -61,12 +64,29 @@ function renderDesktop(){
     if(icons[i].removed) continue;
     var icon = icons[i];
     var pos = positionToXY(icon);
+
+    // ---- Extensions: custom icon override ----
+    var customIcon = '';
+    if (window.Extensions && typeof window.Extensions.getIconOverride === 'function') {
+      customIcon = window.Extensions.getIconOverride(icon.id);
+    }
+
     var btn = document.createElement('button');
     btn.className = 'di';
     btn.style.left = pos.x + 'px';
     btn.style.top = pos.y + 'px';
     btn.setAttribute('data-app', icon.id);
-    btn.innerHTML = '<span class="ic">' + icon.icon + '</span><span class="lb">' + icon.name + '</span>';
+
+    // Build the icon element (emoji or image)
+    var iconHTML;
+    if (customIcon && customIcon.indexOf('data:image') === 0) {
+      iconHTML = '<span class="ic"><img src="' + customIcon + '" style="width:42px;height:42px;object-fit:contain;vertical-align:middle;"/></span>';
+    } else if (customIcon) {
+      iconHTML = '<span class="ic">' + customIcon + '</span>';
+    } else {
+      iconHTML = '<span class="ic">' + icon.icon + '</span>';
+    }
+    btn.innerHTML = iconHTML + '<span class="lb">' + icon.name + '</span>';
 
     // ---- Lock badge ----
     if (window.AppLock && window.AppLock.isLocked && window.AppLock.isLocked(icon.id)) {
