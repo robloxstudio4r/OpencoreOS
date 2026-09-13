@@ -45,6 +45,13 @@ function launch(appId, extra){
   if(appId === 'sysinfo')  return openSysInfo();
   if(appId === 'appstore') return openAppStore();
 
+  // ---- Extensions ----
+  if(appId === 'extstore'){
+    if (typeof openExtensionStore === 'function') return openExtensionStore();
+    console.warn('openExtensionStore not loaded');
+    return;
+  }
+
   // ---- Image / media tools ----
   if(appId === 'photoeditor'){
     if(typeof openPhotoEditor === 'function') return openPhotoEditor(extra);
