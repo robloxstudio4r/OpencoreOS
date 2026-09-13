@@ -1,8 +1,8 @@
 // ============================================================
 //  taskbar.js — OpencoreOS v10.4
 //  Taskbar, start menu, system tray, Shutdown, Accessibility,
-//  Screenshot, Screen Recording, Captures, Trash, Help.
-//  Lock (tray + Start menu) opens the account picker.
+//  Screenshot, Screen Recording, Captures, Trash, Help,
+//  Task Manager. Lock opens the account picker.
 // ============================================================
 
 function updateTaskbar(){
@@ -54,7 +54,6 @@ function doLockToPicker(){
   } else if (window.AccountPicker && typeof window.AccountPicker.show === 'function') {
     window.AccountPicker.show();
   } else {
-    // Last-resort fallback: reload so boot picks the picker up
     location.reload();
   }
 }
@@ -101,6 +100,15 @@ function initTaskbar(){
     $('sm').classList.remove('on');
     if (typeof openHelp === 'function') openHelp();
     else alert('Help module not loaded');
+  };
+
+  // ---------------- Task Manager ----------------
+  var mtaskmgr = $('mtaskmgr');
+  if (mtaskmgr) mtaskmgr.onclick = function(e){
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    $('sm').classList.remove('on');
+    if (typeof openTaskManager === 'function') openTaskManager();
+    else alert('Task Manager not loaded');
   };
 
   // ---------------- Accessibility ----------------
@@ -159,7 +167,6 @@ function initTaskbar(){
   };
 
   // ---------------- System tray ----------------
-  // ---- Tray lock → account picker ----
   var tl = $('tray-lock');
   if (tl) tl.onclick = function(e){
     if (e) e.stopPropagation();
@@ -168,14 +175,12 @@ function initTaskbar(){
 
   var tbt = $('tray-bt'); if(tbt) tbt.ondblclick = function(){ ST.btOn = !ST.btOn; LS.setItem('oc_bt', String(ST.btOn)); };
 
-  // Wi-Fi toggle (double-click)
   var tw = $('tray-wifi');
   if (tw) tw.ondblclick = function(){
     ST.wifiOn = !ST.wifiOn;
     LS.setItem('oc_wifi', String(ST.wifiOn));
   };
 
-  // Accessibility tray icon
   var trayA11y = $('tray-a11y');
   if(trayA11y) trayA11y.onclick = function(e){
     if(e) e.stopPropagation();
@@ -183,7 +188,6 @@ function initTaskbar(){
     else alert('Accessibility panel not loaded');
   };
 
-  // Screenshot tray icon
   var trayShot = $('tray-shot');
   if(trayShot) trayShot.onclick = function(e){
     if(e) e.stopPropagation();
@@ -191,7 +195,6 @@ function initTaskbar(){
     else alert('Capture module not loaded');
   };
 
-  // Screen recording tray icon (toggles)
   var trayRec = $('tray-rec');
   if(trayRec) trayRec.onclick = function(e){
     if(e) e.stopPropagation();
