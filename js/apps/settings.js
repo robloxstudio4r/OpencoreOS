@@ -324,4 +324,18 @@ function openSettings(){
     var name = prompt('New account name (max 20 chars):');
     if (name === null) return;
     name = name.trim().slice(0, 20);
-    if (!name) return alert
+    if (!name) return alert('Name is required');
+    var pw = prompt('Password (leave blank for none):') || '';
+    var res = window.Accounts.create(name, pw);
+    if (!res.ok) return alert(res.error);
+    renderUsers();
+    alert('Account "' + name + '" created.');
+  };
+
+  var switchBtn = win.querySelector('#s-users-switch');
+  if (switchBtn) switchBtn.onclick = function () {
+    if (!confirm('Sign out of the current account and choose another?')) return;
+    window.Accounts.setActive(null);
+    location.reload();
+  };
+}
