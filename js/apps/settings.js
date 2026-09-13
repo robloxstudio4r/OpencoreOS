@@ -15,6 +15,7 @@ function openSettings(){
     + '<button data-t="sec">Security</button>'
     + '<button data-t="usr">Users</button>'
     + '<button data-t="a11y">A11y</button>'
+    + '<button data-t="ext">Extensions</button>'
     + '<button data-t="spo">Spotify</button>'
     + '<button data-t="ab">About</button></div>'
 
@@ -58,6 +59,13 @@ function openSettings(){
     + '<div class="tc" data-t="a11y">'
     + '<div style="font-size:11px;color:#888;margin-bottom:8px;">These settings apply to the current account only.</div>'
     + '<div id="s-a11y-panel"></div></div>'
+
+    + '<div class="tc" data-t="ext">'
+    + '<div style="font-size:11px;color:#888;margin-bottom:8px;">Change how OpencoreOS looks. Each extension is per-account.</div>'
+    + '<div id="s-ext-list" style="margin-bottom:12px;"></div>'
+    + '<div class="row"><button class="btn" id="s-ext-open" style="background:#1db954;">Open Extension Store</button></div>'
+    + '<p style="color:#888;font-size:11px;margin-top:8px;">Install and customize extensions from the store.</p>'
+    + '</div>'
 
     + '<div class="tc" data-t="spo">'
     + '<div class="row"><span class="lbl">Status</span><span class="val">' + (spotifyLoggedIn ? 'Connected' : 'Not connected') + '</span></div>'
@@ -114,9 +122,7 @@ function openSettings(){
   win.querySelector('#s-sp-sv').onclick = function(){
     var id = win.querySelector('#s-spid').value.trim();
     if (!id) return alert('Enter Client ID');
-    // Write to account-scoped storage
     try { LS.setItem('opencore_spotify_client_id', id); } catch (e) { console.warn('scoped save failed:', e); }
-    // Also write to global localStorage so any fallback lookup finds it
     try { localStorage.setItem('opencore_spotify_client_id', id); } catch (e) { console.warn('global save failed:', e); }
     alert('Saved');
   };
@@ -125,7 +131,7 @@ function openSettings(){
   win.querySelector('#s-sp-out').onclick = function(){ if(window.SpotifyAuth) SpotifyAuth.logout(); alert('Logged out'); };
 
   // ============================================================
-  //  Developer Tools unlock: click the 🪟 on the About tab 5 times
+  //  Developer Tools unlock
   // ============================================================
   (function devUnlockHook(){
     var emblem = win.querySelector('.dev-emblem');
@@ -231,103 +237,30 @@ function openSettings(){
     refresh();
   })();
 
-  // ---- Users tab ----
-  function renderUsers() {
-    var listEl = win.querySelector('#s-users-list');
-    if (!listEl || !window.Accounts) return;
-    var list = window.Accounts.list();
-    var activeId = window.Accounts.getActiveId();
-    listEl.innerHTML = '';
-
-    for (var i = 0; i < list.length; i++) {
-      (function(acc){
-        var isActive = acc.id === activeId;
+  // ---- Extensions tab ----
+  (function buildExtensions(){
+    var listEl = win.querySelector('#s-ext-list');
+    var openBtn = win.querySelector('#s-ext-open');
+    if (!listEl || !window.Extensions) {
+      if (listEl) listEl.innerHTML = '<div style="color:#f66;">Extensions module not loaded.</div>';
+      return;
+    }
+    function render() {
+      listEl.innerHTML = '';
+      var installed = window.Extensions.installed();
+      var activeTheme = window.Extensions.getActiveTheme();
+      if (!installed.length) {
+        listEl.innerHTML = '<div style="color:#666;font-size:12px;padding:10px 0;">No extensions installed yet.</div>';
+        return;
+      }
+      installed.forEach(function (id) {
+        var ext = window.Extensions.get(id);
+        if (!ext) return;
+        var isActive = activeTheme === id;
         var row = document.createElement('div');
         row.style.cssText =
-          'display:flex;align-items:center;gap:8px;padding:10px 12px;' +
-          'border:1px solid rgba(255,255,255,0.08);border-radius:8px;' +
-          'margin-bottom:6px;background:' + (isActive ? 'rgba(29,185,84,0.08)' : 'rgba(255,255,255,0.02)') + ';';
+          'display:flex;align-items:center;gap:10px;padding:10px 12px;' +
+          'border:1px solid ' + (isActive ? 'rgba(29,185,84,0.4)' : 'rgba(255,255,255,0.08)') + ';' +
+          'border-radius:8px;margin-bottom:6px;background:' + (isActive ? 'rgba(29,185,84,0.08)' : 'rgba(255,255,255,0.02)') + ';';
         row.innerHTML =
-          '<div style="font-size:24px;">👤</div>' +
-          '<div style="flex:1;min-width:0;">' +
-            '<div style="color:#fff;font-size:13px;font-weight:600;">' + acc.name +
-              (isActive ? ' <span style="color:#1db954;font-size:10px;font-weight:400;">· active</span>' : '') +
-            '</div>' +
-            '<div style="color:#888;font-size:11px;">' +
-              (acc.hasPassword ? '🔒 Password protected' : 'No password') +
-            '</div>' +
-          '</div>';
-        var rename = document.createElement('button');
-        rename.className = 'btn'; rename.textContent = 'Rename';
-        rename.onclick = function () {
-          var n = prompt('New name:', acc.name);
-          if (n === null) return;
-          n = n.trim().slice(0, 20);
-          if (!n) return;
-          window.Accounts.update(acc.id, { name: n });
-          renderUsers();
-        };
-        row.appendChild(rename);
-
-        var pwBtn = document.createElement('button');
-        pwBtn.className = 'btn';
-        pwBtn.textContent = acc.hasPassword ? 'Change PW' : 'Set PW';
-        pwBtn.onclick = function () {
-          var p = prompt(acc.hasPassword ? 'New password (blank to remove):' : 'New password:');
-          if (p === null) return;
-          window.Accounts.update(acc.id, { password: p || '' });
-          renderUsers();
-          alert(p ? 'Password updated' : 'Password removed');
-        };
-        row.appendChild(pwBtn);
-
-        if (!isActive) {
-          var signIn = document.createElement('button');
-          signIn.className = 'btn'; signIn.textContent = 'Sign in';
-          signIn.onclick = function () {
-            var pw = acc.hasPassword ? (prompt('Password:') || '') : '';
-            if (window.Accounts.verifyPassword(acc.id, pw)) {
-              window.Accounts.setActive(acc.id);
-              location.reload();
-            } else alert('Incorrect password');
-          };
-          row.appendChild(signIn);
-        }
-
-        var del = document.createElement('button');
-        del.className = 'btn btd'; del.textContent = 'Delete';
-        del.onclick = function () {
-          if (list.length <= 1) return alert('Cannot delete the only account');
-          if (!confirm('Delete account "' + acc.name + '"?')) return;
-          window.Accounts.remove(acc.id);
-          if (isActive) location.reload(); else renderUsers();
-        };
-        row.appendChild(del);
-        listEl.appendChild(row);
-      })(list[i]);
-    }
-  }
-  renderUsers();
-
-  var addBtn = win.querySelector('#s-users-add');
-  if (addBtn) addBtn.onclick = function () {
-    if (!window.Accounts) return alert('Accounts module not loaded');
-    if (!window.Accounts.canCreate()) return alert('Maximum of ' + window.Accounts.MAX + ' accounts reached');
-    var name = prompt('New account name (max 20 chars):');
-    if (name === null) return;
-    name = name.trim().slice(0, 20);
-    if (!name) return alert('Name is required');
-    var pw = prompt('Password (leave blank for none):') || '';
-    var res = window.Accounts.create(name, pw);
-    if (!res.ok) return alert(res.error);
-    renderUsers();
-    alert('Account "' + name + '" created.');
-  };
-
-  var switchBtn = win.querySelector('#s-users-switch');
-  if (switchBtn) switchBtn.onclick = function () {
-    if (!confirm('Sign out of the current account and choose another?')) return;
-    window.Accounts.setActive(null);
-    location.reload();
-  };
-}
+          '<div
