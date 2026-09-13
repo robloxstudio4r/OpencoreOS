@@ -72,7 +72,7 @@ function openSettings(){
 
     + '<div class="tc" data-t="ab">'
     + '<div style="text-align:center;padding:20px;">'
-    + '<div style="font-size:56px;">🪟</div>'
+    + '<div class="dev-emblem" style="font-size:56px;">🪟</div>'
     + '<h2 style="font-weight:300;">OpencoreOS v10.4</h2>'
     + '<p style="color:#888;font-size:12px;">Full Edition</p></div></div>', 580, 500);
 
@@ -130,6 +130,51 @@ function openSettings(){
     var el = win.querySelector('#s-am');
     if (el) el.classList.toggle('on', e.detail.on);
   });
+
+  // ============================================================
+  //  Developer Tools unlock: click the 🪟 on the About tab 5 times
+  // ============================================================
+  (function devUnlockHook(){
+    var emblem = win.querySelector('.dev-emblem');
+    if (!emblem) return;
+    var clicks = 0;
+    var lastClick = 0;
+    var FALLBACK_PIN = 'devil.9oce';
+
+    emblem.style.cursor = 'pointer';
+    emblem.style.userSelect = 'none';
+    emblem.style.transition = 'transform 0.12s';
+
+    emblem.addEventListener('click', function(){
+      var now = Date.now();
+      if (now - lastClick > 3000) clicks = 0;
+      lastClick = now;
+      clicks++;
+
+      // Small visual feedback
+      emblem.style.transform = 'scale(1.15)';
+      setTimeout(function(){ emblem.style.transform = ''; }, 120);
+
+      if (clicks >= 5) {
+        clicks = 0;
+        var pin = '';
+        try { pin = LS.getItem('oc_pin') || ''; } catch (e) {}
+        var valid = pin.length ? pin : FALLBACK_PIN;
+
+        var entered = prompt('Developer Tools\n\nEnter device password:');
+        if (entered === null) return;
+        if (entered !== valid) { alert('Incorrect password.'); return; }
+
+        if (typeof window.DevTools !== 'undefined' && typeof window.DevTools.open === 'function') {
+          window.DevTools.open();
+        } else if (typeof openDevTools === 'function') {
+          openDevTools();
+        } else {
+          alert('Developer Tools module not loaded.');
+        }
+      }
+    });
+  })();
 
   // ---- A11y tab ----
   (function buildA11y(){
@@ -194,7 +239,7 @@ function openSettings(){
     refresh();
   })();
 
-  // ---- Users tab (keep your existing renderUsers if you have it) ----
+  // ---- Users tab ----
   function renderUsers() {
     var listEl = win.querySelector('#s-users-list');
     if (!listEl || !window.Accounts) return;
@@ -279,18 +324,4 @@ function openSettings(){
     var name = prompt('New account name (max 20 chars):');
     if (name === null) return;
     name = name.trim().slice(0, 20);
-    if (!name) return alert('Name is required');
-    var pw = prompt('Password (leave blank for none):') || '';
-    var res = window.Accounts.create(name, pw);
-    if (!res.ok) return alert(res.error);
-    renderUsers();
-    alert('Account "' + name + '" created.');
-  };
-
-  var switchBtn = win.querySelector('#s-users-switch');
-  if (switchBtn) switchBtn.onclick = function () {
-    if (!confirm('Sign out of the current account and choose another?')) return;
-    window.Accounts.setActive(null);
-    location.reload();
-  };
-}
+    if (!name) return alert
