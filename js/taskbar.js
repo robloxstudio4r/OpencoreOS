@@ -1,7 +1,7 @@
 // ============================================================
 //  taskbar.js — OpencoreOS v10.4
 //  Taskbar, start menu, system tray, Shutdown, Accessibility,
-//  Screenshot, Screen Recording, Captures, Trash.
+//  Screenshot, Screen Recording, Captures, Trash, Help.
 // ============================================================
 
 function updateTaskbar(){
@@ -70,6 +70,15 @@ function initTaskbar(){
   var mlk = $('mlk'); if(mlk) mlk.onclick = function(){ $('sm').classList.remove('on'); showLogin(); };
   var msleep = $('msleep'); if(msleep) msleep.onclick = function(){ $('sm').classList.remove('on'); goToSleep(); };
   var mrs = $('mrs'); if(mrs) mrs.onclick = function(){ if(confirm('Restart?')) location.reload(); };
+
+  // ---------------- Help ----------------
+  var mhelp = $('mhelp');
+  if (mhelp) mhelp.onclick = function(e){
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    $('sm').classList.remove('on');
+    if (typeof openHelp === 'function') openHelp();
+    else alert('Help module not loaded');
+  };
 
   // ---------------- Accessibility ----------------
   var ma11y = $('ma11y');
