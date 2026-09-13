@@ -6,8 +6,13 @@
   'use strict';
 
   var showing = false;
-
   function el(id) { return document.getElementById(id); }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
 
   function renderList() {
     var listEl = el('acctList');
@@ -34,14 +39,14 @@
           '<div style="font-size:48px;line-height:1;margin-bottom:12px;">👤</div>' +
           '<div style="font-size:14px;font-weight:600;color:#fff;white-space:nowrap;' +
           'overflow:hidden;text-overflow:ellipsis;">' + escapeHtml(acc.name) + '</div>' +
-          (acc.hasPassword ? '<div style="font-size:11px;color:#888;margin-top:4px;">🔒 Password</div>' : '<div style="font-size:11px;color:#666;margin-top:4px;">No password</div>');
-
+          (acc.hasPassword
+            ? '<div style="font-size:11px;color:#888;margin-top:4px;">🔒 Password</div>'
+            : '<div style="font-size:11px;color:#666;margin-top:4px;">No password</div>');
         tile.onclick = function () { selectAccount(acc); };
         listEl.appendChild(tile);
       })(accounts[i]);
     }
 
-    // Add-account tile if under max
     if (window.Accounts && window.Accounts.canCreate()) {
       var add = document.createElement('div');
       add.style.cssText =
@@ -61,23 +66,14 @@
         '<div style="font-size:13px;color:#aaa;">Add account</div>' +
         '<div style="font-size:11px;color:#666;margin-top:4px;">' +
         window.Accounts.count() + '/' + window.Accounts.MAX + '</div>';
-      add.onclick = function () { promptNewAccount(); };
+      add.onclick = promptNewAccount;
       listEl.appendChild(add);
     }
   }
 
-  function escapeHtml(s) {
-    return String(s).replace(/[&<>"']/g, function (c) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
-    });
-  }
-
   function selectAccount(acc) {
-    if (!acc.hasPassword) {
-      finishLogin(acc.id);
-      return;
-    }
-    // Show password prompt
+    if (!acc.hasPassword) return finishLogin(acc.id);
+
     var pwPrompt = el('acctPwPrompt');
     var pwName   = el('acctPwName');
     var pwInput  = el('acctPwInput');
@@ -101,18 +97,13 @@
     }
 
     el('acctPwOk').onclick = tryUnlock;
-    el('acctPwCancel').onclick = function () {
-      pwPrompt.style.display = 'none';
-    };
-    pwInput.onkeydown = function (e) {
-      if (e.key === 'Enter') tryUnlock();
-    };
+    el('acctPwCancel').onclick = function () { pwPrompt.style.display = 'none'; };
+    pwInput.onkeydown = function (e) { if (e.key === 'Enter') tryUnlock(); };
   }
 
   function finishLogin(id) {
     window.Accounts.setActive(id);
-    console.log('Unlocking account:', id);
-    // Reload so storage, desktop, icons, VFS all pull from the right prefix
+    console.log('Signing in as', id);
     location.reload();
   }
 
@@ -123,7 +114,6 @@
     if (!name) return alert('Name is required');
 
     var pw = prompt('Password (leave blank for none):') || '';
-
     var res = window.Accounts.create(name, pw);
     if (!res.ok) { alert(res.error); return; }
     renderList();
@@ -131,33 +121,22 @@
   }
 
   function show() {
-    var p = el('acctPicker');
-    if (!p) return;
-    // Hide login & setup screens
-    var l = el('login');   if (l) l.style.display = 'none';
-    var s = el('setup');   if (s) s.classList.add('hide');
-    var u = el('uwiz');    if (u) u.classList.add('hide');
-    // Hide desktop — we're pre-login
-    var d = el('dt');      if (d) d.style.display = 'none';
-    var t = el('tb');      if (t) t.style.display = 'none';
-
+    var p = el('acctPicker'); if (!p) return;
+    var l = el('login'); if (l) l.style.display = 'none';
+    var s = el('setup'); if (s) s.classList.add('hide');
+    var u = el('uwiz');  if (u) u.classList.add('hide');
+    var d = el('dt');    if (d) d.style.display = 'none';
+    var t = el('tb');    if (t) t.style.display = 'none';
     p.style.display = 'flex';
     renderList();
     showing = true;
   }
 
   function hide() {
-    var p = el('acctPicker');
-    if (p) p.style.display = 'none';
+    var p = el('acctPicker'); if (p) p.style.display = 'none';
     showing = false;
   }
 
-  window.AccountPicker = {
-    show: show,
-    hide: hide,
-    refresh: renderList,
-    isShowing: function () { return showing; }
-  };
-
+  window.AccountPicker = { show: show, hide: hide, refresh: renderList, isShowing: function () { return showing; } };
   console.log('Account picker loaded');
 })();
