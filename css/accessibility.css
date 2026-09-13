@@ -1,0 +1,85 @@
+/* ============================================================
+   accessibility.css — OpencoreOS v10.4
+   High contrast, reduce motion, focus ring, text-size tweaks
+   ============================================================ */
+
+/* --- High contrast --- */
+html.a11y-contrast body {
+  filter: contrast(1.25) saturate(1.15);
+}
+html.a11y-contrast #dt,
+html.a11y-contrast #tb,
+html.a11y-contrast #sm,
+html.a11y-contrast .win {
+  border-color: #fff !important;
+}
+html.a11y-contrast .smi,
+html.a11y-contrast .tba,
+html.a11y-contrast button {
+  outline: 1px solid rgba(255,255,255,0.35);
+}
+html.a11y-contrast *:focus {
+  outline: 3px solid #ffd400 !important;
+  outline-offset: 2px;
+}
+
+/* --- Reduce motion --- */
+html.a11y-reduce-motion *,
+html.a11y-reduce-motion *::before,
+html.a11y-reduce-motion *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+html.a11y-reduce-motion #screensaver,
+html.a11y-reduce-motion #sleepOverlay .moon {
+  animation: none !important;
+}
+
+/* --- Focus ring (keyboard only) --- */
+html.a11y-focus-ring *:focus-visible,
+html.a11y-focus-ring *:focus {
+  outline: 3px solid #ffd400 !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 5px rgba(255,212,0,0.25) !important;
+}
+
+/* --- Text size scaling helper ---
+   OS layout uses rem units in most places; setting html font-size
+   (done in JS) scales everything proportionally.
+   The tweaks below keep tight UIs readable at large sizes. */
+
+html[data-text-size="150"] .smi,
+html[data-text-size="175"] .smi,
+html[data-text-size="200"] .smi,
+html[data-text-size="225"] .smi,
+html[data-text-size="250"] .smi {
+  padding: 8px 12px;
+  line-height: 1.5;
+}
+html[data-text-size="175"] #sm,
+html[data-text-size="200"] #sm,
+html[data-text-size="225"] #sm,
+html[data-text-size="250"] #sm {
+  min-width: 280px;
+}
+
+/* --- Magnifier lens (created in JS, styled here for portability) --- */
+#a11y-lens {
+  box-shadow: 0 0 0 2px #000, 0 8px 24px rgba(0,0,0,0.5);
+}
+
+/* --- Narrator-visible hint border on hovered elements --- */
+html.a11y-narrator-active [data-a]:hover,
+html.a11y-narrator-active button:hover {
+  box-shadow: 0 0 0 2px #ffd400 inset;
+}
+
+/* --- Large tap-target mode (ties into text size) --- */
+html[data-text-size="200"] button,
+html[data-text-size="225"] button,
+html[data-text-size="250"] button {
+  min-height: 36px;
+  padding: 8px 14px;
+}
