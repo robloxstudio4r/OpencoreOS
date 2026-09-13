@@ -15,6 +15,7 @@ function openSettings(){
     + '<button data-t="bt">Bluetooth</button>'
     + '<button data-t="sec">Security</button>'
     + '<button data-t="usr">Users</button>'
+    + '<button data-t="a11y">A11y</button>'
     + '<button data-t="spo">Spotify</button>'
     + '<button data-t="ab">About</button></div>'
 
@@ -30,7 +31,7 @@ function openSettings(){
     + '<div class="row"><span class="lbl">Connection</span><span class="val">' + (net.effectiveType || 'unknown') + '</span></div>'
     + '<div class="row"><span class="lbl">Online</span><span class="val">' + (navigator.onLine ? 'Yes' : 'No') + '</span></div>'
     + '<div class="row"><span class="lbl">Airplane Mode</span><div class="tg ' + (amOn ? 'on' : '') + '" id="s-am"></div></div>'
-    + '<div class="row"><span class="lbl" style="font-size:11px;color:#888;">Blocks iframe-based apps (Browser, VideoHub, Iframes)</span></div>'
+    + '<div class="row"><span class="lbl" style="font-size:11px;color:#888;">Blocks iframe-based apps</span></div>'
     + '</div>'
 
     + '<div class="tc" data-t="bt">'
@@ -46,7 +47,6 @@ function openSettings(){
     + '<div class="row"><button class="btn" id="s-lock">Lock Now</button></div>'
     + '<div class="row"><span class="lbl">System32 PIN</span><span class="val">devil.9oce</span></div></div>'
 
-    // ---------------- USERS TAB ----------------
     + '<div class="tc" data-t="usr">'
     + '<div style="background:rgba(29,185,84,0.08);border:1px solid rgba(29,185,84,0.25);padding:10px 12px;border-radius:8px;margin-bottom:12px;">'
     + '<div style="font-size:11px;color:#888;">Currently signed in as</div>'
@@ -58,22 +58,23 @@ function openSettings(){
     + '<p style="color:#888;font-size:11px;margin-top:8px;">Up to 3 accounts. Each has its own files, apps, and settings.</p>'
     + '</div>'
 
+    // ------------- Accessibility tab -------------
+    + '<div class="tc" data-t="a11y">'
+    + '<div style="font-size:11px;color:#888;margin-bottom:8px;">These settings apply to the current account only.</div>'
+    + '<div id="s-a11y-panel"></div></div>'
+
     + '<div class="tc" data-t="spo">'
     + '<div class="row"><span class="lbl">Status</span><span class="val">' + (spotifyLoggedIn ? 'Connected' : 'Not connected') + '</span></div>'
     + '<div class="row"><span class="lbl">Module</span><span class="val">' + (hasSpotify ? 'Loaded' : 'Not loaded - open Music app') + '</span></div>'
     + '<div class="row"><span class="lbl">Client ID</span><input id="s-spid" value="' + cid + '" style="flex:1;min-width:200px;"/><button class="btn" id="s-sp-sv">Save</button></div>'
     + '<div class="row"><button class="btn" id="s-sp-login" style="background:#1db954;">Login</button><button class="btn btd" id="s-sp-out">Logout</button></div>'
-    + '<p style="color:#888;font-size:11px;margin-top:8px;">'
-    + '1. Create app at <a href="https://developer.spotify.com/dashboard" target="_blank" style="color:#4dabf7;">developer.spotify.com/dashboard</a><br>'
-    + '2. Add Redirect URI: <code style="background:#000;padding:2px 6px;border-radius:3px;">' + window.location.origin + window.location.pathname + '</code><br>'
-    + '3. Copy Client ID, paste above, save<br>'
-    + '4. Click Login</p></div>'
+    + '</div>'
 
     + '<div class="tc" data-t="ab">'
     + '<div style="text-align:center;padding:20px;">'
     + '<div style="font-size:56px;">🪟</div>'
     + '<h2 style="font-weight:300;">OpencoreOS v10.4</h2>'
-    + '<p style="color:#888;font-size:12px;">Full Edition</p></div></div>', 560, 480);
+    + '<p style="color:#888;font-size:12px;">Full Edition</p></div></div>', 580, 500);
 
   var tabs = win.querySelectorAll('.tabs button');
   for(var i=0; i<tabs.length; i++){
@@ -130,7 +131,70 @@ function openSettings(){
     if (el) el.classList.toggle('on', e.detail.on);
   });
 
-  // ---------------- USERS ----------------
+  // ---- A11y tab ----
+  (function buildA11y(){
+    var panel = win.querySelector('#s-a11y-panel');
+    if (!panel || !window.A11y) {
+      if (panel) panel.innerHTML = '<div style="color:#f66;">Accessibility module not loaded.</div>';
+      return;
+    }
+    function refresh() {
+      panel.innerHTML = '';
+      function toggleRow(id, label, sub, key) {
+        var on = window.A11y.get(key);
+        var row = document.createElement('div');
+        row.className = 'row';
+        row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);';
+        row.innerHTML =
+          '<div style="flex:1;min-width:0;">' +
+            '<div style="color:#fff;font-size:13px;">' + label + '</div>' +
+            '<div style="color:#888;font-size:11px;">' + sub + '</div>' +
+          '</div>' +
+          '<div class="tg ' + (on ? 'on' : '') + '"></div>';
+        row.onclick = function () { window.A11y.toggle(key); refresh(); };
+        return row;
+      }
+      function sliderRow(label, key, min, max, step, suffix) {
+        var val = window.A11y.get(key);
+        var wrap = document.createElement('div');
+        wrap.className = 'row';
+        wrap.style.cssText = 'display:block;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);';
+        wrap.innerHTML =
+          '<div style="display:flex;justify-content:space-between;margin-bottom:6px;">' +
+            '<div style="color:#fff;font-size:13px;">' + label + '</div>' +
+            '<div class="val" style="color:#1db954;font-size:12px;">' + val + suffix + '</div>' +
+          '</div>';
+        var inp = document.createElement('input');
+        inp.type = 'range'; inp.min = min; inp.max = max; inp.step = step; inp.value = val;
+        inp.style.cssText = 'width:100%;';
+        inp.oninput = function () {
+          wrap.querySelector('.val').textContent = inp.value + suffix;
+          window.A11y.set(key, parseInt(inp.value, 10));
+        };
+        wrap.appendChild(inp);
+        return wrap;
+      }
+      panel.appendChild(toggleRow('', 'Narrator', 'Screen reader — speaks UI aloud', 'narrator'));
+      panel.appendChild(toggleRow('', 'Magnifier', 'Zoom the whole desktop', 'magnifier'));
+      panel.appendChild(sliderRow('Zoom', 'zoom', 100, 300, 10, '%'));
+      panel.appendChild(toggleRow('', 'Magnifier lens', 'Big magnifier follows cursor', 'lens'));
+      panel.appendChild(sliderRow('Text size', 'textsize', 80, 250, 5, '%'));
+      panel.appendChild(toggleRow('', 'High contrast', 'Sharper edges, stronger colors', 'contrast'));
+      panel.appendChild(toggleRow('', 'Focus ring', 'Large outline on keyboard focus', 'focus_ring'));
+      panel.appendChild(toggleRow('', 'Reduce motion', 'Disable animations and transitions', 'reduce_motion'));
+
+      var hint = document.createElement('p');
+      hint.style.cssText = 'color:#666;font-size:11px;margin-top:12px;line-height:1.8;';
+      hint.innerHTML =
+        '<b style="color:#888;">Shortcuts:</b><br>' +
+        'Ctrl+Alt+N — Narrator<br>Ctrl+Alt+M — Magnifier<br>' +
+        'Ctrl+Alt+= / Ctrl+Alt+- — Text size';
+      panel.appendChild(hint);
+    }
+    refresh();
+  })();
+
+  // ---- Users tab (keep your existing renderUsers if you have it) ----
   function renderUsers() {
     var listEl = win.querySelector('#s-users-list');
     if (!listEl || !window.Accounts) return;
@@ -156,7 +220,6 @@ function openSettings(){
               (acc.hasPassword ? '🔒 Password protected' : 'No password') +
             '</div>' +
           '</div>';
-
         var rename = document.createElement('button');
         rename.className = 'btn'; rename.textContent = 'Rename';
         rename.onclick = function () {
@@ -198,14 +261,9 @@ function openSettings(){
         del.className = 'btn btd'; del.textContent = 'Delete';
         del.onclick = function () {
           if (list.length <= 1) return alert('Cannot delete the only account');
-          if (!confirm('Delete account "' + acc.name + '"? All its files and settings will be lost.')) return;
+          if (!confirm('Delete account "' + acc.name + '"?')) return;
           window.Accounts.remove(acc.id);
-          if (isActive) {
-            // Signed out — force picker on next load
-            location.reload();
-          } else {
-            renderUsers();
-          }
+          if (isActive) location.reload(); else renderUsers();
         };
         row.appendChild(del);
         listEl.appendChild(row);
@@ -226,7 +284,7 @@ function openSettings(){
     var res = window.Accounts.create(name, pw);
     if (!res.ok) return alert(res.error);
     renderUsers();
-    alert('Account "' + name + '" created. Use "Switch Account" to sign in.');
+    alert('Account "' + name + '" created.');
   };
 
   var switchBtn = win.querySelector('#s-users-switch');
