@@ -31,8 +31,6 @@
 
   // ---------- Click tracker on the About emoji ----------
   function attachUnlockHook() {
-    // Every time a Settings window opens, look for the About emoji.
-    // We use a MutationObserver because the window is created fresh each time.
     var obs = new MutationObserver(function () {
       var emoji = document.querySelector('.tc[data-t="ab"] .dev-emblem');
       if (emoji && !emoji.__devHook) {
@@ -42,12 +40,10 @@
         emoji.style.transition = 'transform 0.12s';
         emoji.addEventListener('click', function () {
           var now = Date.now();
-          // Reset the counter if the user waits more than 3 s between clicks
           if (now - lastClickAt > 3000) clickCount = 0;
           lastClickAt = now;
           clickCount++;
 
-          // Visual feedback
           emoji.style.transform = 'scale(1.15)';
           setTimeout(function () { emoji.style.transform = ''; }, 120);
 
@@ -182,7 +178,7 @@
     }
 
     // ==========================================================
-    //  TAB: Storage (LS keys, per-account)
+    //  TAB: Storage
     // ==========================================================
     function renderStorage() {
       body.innerHTML = '';
@@ -335,14 +331,14 @@
     }
 
     // ==========================================================
-    //  TAB: Apps (run by ID)
+    //  TAB: Apps
     // ==========================================================
     function renderApps() {
       body.innerHTML = '';
       var ids = [
         'files','terminal','notepad','calculator','browser','camera',
         'microphone','audioplayer','wallpaper','weather','clock','calendar',
-        'sysinfo','appstore','recovery','kernel0','videohub','photoeditor',
+        'sysinfo','appstore','kernel0','videohub','photoeditor',
         'vapor','science','infinity','settings','music'
       ];
       var hint = document.createElement('div');
@@ -525,6 +521,32 @@
         'Reload the page — respects the account prefix.',
         '#1e4d6b',
         function () { location.reload(); });
+
+      // ============================================================
+      //  RECOVERY (hidden from Start menu, only here)
+      // ============================================================
+
+      flag('Open Recovery Environment',
+        'Restore system files, reset icons, or perform a full wipe. Password required.',
+        '#1e4d6b',
+        function () {
+          if (window.Recovery && typeof window.Recovery.open === 'function') {
+            window.Recovery.open();
+          } else {
+            alert('Recovery module not loaded. Check that js/apps/recovery.js exists.');
+          }
+        });
+
+      flag('⚠️  Full Reset (Wipes Everything)',
+        'Requires device password AND master password. Cannot be undone.',
+        '#7a2a2a',
+        function () {
+          if (window.Recovery && typeof window.Recovery.fullReset === 'function') {
+            window.Recovery.fullReset();
+          } else {
+            alert('Recovery module not loaded. Check that js/apps/recovery.js exists.');
+          }
+        });
     }
 
     // ==========================================================
@@ -550,14 +572,12 @@
   // ---------- Public API ----------
   window.DevTools = {
     open: openDevTools,
-    // Allow forcing it open from console: DevTools.unlock('devil.9oce')
     unlock: function (pin) {
       if (pin === getValidPin()) { openDevTools(); return true; }
       return false;
     }
   };
 
-  // Attach the mutation observer when DOM is ready
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', attachUnlockHook);
   } else {
