@@ -1,26 +1,8 @@
 // ============================================================
-//  browser.js — Browser app with Airplane Mode support
+//  browser.js — Browser app for OpencoreOS
 // ============================================================
 
 function openBrowser(){
-  // Airplane Mode check
-  if (window.AirplaneMode && !window.AirplaneMode.canLoadIframe()) {
-    var win = makeWindow('browser', 'Browser', '🌐',
-      '<div id="br-app">' + window.AirplaneMode.blockMessage() + '</div>', 800, 600);
-    var c = win.querySelector('#br-app');
-    if (window.AirplaneMode.wireDisableButton) window.AirplaneMode.wireDisableButton(c);
-    // Re-render if user turns Airplane Mode off while this window is open
-    var handler = function (e) {
-      if (!e.detail.on) {
-        window.removeEventListener('airplanemodechange', handler);
-        c.innerHTML = '<p style="padding:20px;color:#888;">Airplane Mode off. Close and reopen the Browser.</p>';
-      }
-    };
-    window.addEventListener('airplanemodechange', handler);
-    return win;
-  }
-
-  // Normal browser app (your existing code goes here — iframe, URL bar, etc.)
   var win = makeWindow('browser', 'Browser', '🌐',
     '<div id="br-app" style="display:flex;flex-direction:column;height:100%;">'
       + '<div style="display:flex;gap:6px;padding:8px;border-bottom:1px solid rgba(255,255,255,0.06);">'
@@ -40,15 +22,6 @@ function openBrowser(){
   }
   c.querySelector('#br-go').onclick = go;
   url.addEventListener('keydown', function(e){ if (e.key === 'Enter') go(); });
-
-  // If Airplane Mode turns on while this window is open, blank the iframe
-  window.addEventListener('airplanemodechange', function (e) {
-    if (e.detail.on) {
-      try { frame.src = 'about:blank'; } catch (err) {}
-      c.innerHTML = window.AirplaneMode.blockMessage();
-      if (window.AirplaneMode.wireDisableButton) window.AirplaneMode.wireDisableButton(c);
-    }
-  });
 
   return win;
 }
