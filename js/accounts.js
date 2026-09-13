@@ -2,16 +2,17 @@
 //  accounts.js — Multi-user account system for OpencoreOS v10.4
 //  Max 3 accounts. Each account has an isolated storage prefix.
 //  Prefix scheme:  u1_  u2_  u3_
+//  LOADS BEFORE storage.js so LS can be scoped.
 // ============================================================
 
 (function () {
   'use strict';
 
-  var ACCOUNTS_KEY  = '__oc_accounts__';   // global — NOT prefixed
-  var ACTIVE_KEY    = '__oc_active_user__';// global — NOT prefixed
+  var ACCOUNTS_KEY  = '__oc_accounts__';    // global (unprefixed)
+  var ACTIVE_KEY    = '__oc_active_user__'; // global (unprefixed)
   var MAX_ACCOUNTS  = 3;
 
-  // -------- Account list (global, not per-user) --------
+  // -------- Account list (global) --------
   function getAccounts() {
     try {
       var raw = localStorage.getItem(ACCOUNTS_KEY);
@@ -42,19 +43,15 @@
     return null;
   }
 
-  function prefixFor(id) {
-    // id is "u1", "u2", "u3" → prefix "u1_", etc.
-    return id + '_';
-  }
+  function prefixFor(id) { return id + '_'; }
 
   function activePrefix() {
     var acc = getActiveAccount();
-    return acc ? prefixFor(acc.id) : 'u0_';
+    return acc ? prefixFor(acc.id) : '__anon_';
   }
 
-  // -------- Password hashing (simple, deterministic) --------
+  // -------- Password hash --------
   function hashPassword(pw) {
-    // Small non-crypto hash — fine for local-only lock screen.
     var h = 0;
     for (var i = 0; i < pw.length; i++) {
       h = ((h << 5) - h) + pw.charCodeAt(i);
@@ -78,7 +75,7 @@
   function createAccount(name, password) {
     var list = getAccounts();
     if (list.length >= MAX_ACCOUNTS) return { ok: false, error: 'Maximum of ' + MAX_ACCOUNTS + ' accounts reached' };
-    name = (name || '').trim();
+    name = (name || '').trim().slice(0, 20);
     if (!name) return { ok: false, error: 'Name is required' };
     var id = nextId();
     if (!id) return { ok: false, error: 'No free account slot' };
@@ -93,7 +90,7 @@
     list.push(acc);
     saveAccounts(list);
 
-    // Seed the new account's setup flags so it goes straight to desktop
+    // Seed per-user setup flags so the account boots straight to lock/desktop
     var p = prefixFor(id);
     try {
       localStorage.setItem(p + 'oc_setup_done', 'true');
@@ -108,7 +105,7 @@
     var list = getAccounts();
     for (var i = 0; i < list.length; i++) {
       if (list[i].id === id) {
-        if (patch.name !== undefined) { list[i].name = patch.name; }
+        if (patch.name !== undefined) list[i].name = String(patch.name).trim().slice(0, 20);
         if (patch.password !== undefined) {
           if (patch.password) {
             list[i].hasPassword = true;
@@ -131,7 +128,7 @@
     for (var i = 0; i < list.length; i++) if (list[i].id !== id) filtered.push(list[i]);
     saveAccounts(filtered);
 
-    // Wipe all storage belonging to that user
+    // Wipe that user's prefixed keys
     var p = prefixFor(id);
     var toRemove = [];
     try {
@@ -157,36 +154,57 @@
     return false;
   }
 
-  // -------- Prefixed storage wrapper --------
-  // Any LS operation through this wrapper gets scoped to the active user.
-  // We monkey-patch window.LS (OpencoreOS storage helper) after boot.
-  function makeScopedLS() {
+  // -------- Scoped LS factory --------
+  // The returned object behaves like localStorage but every key is
+  // transparently prefixed with the active account's prefix.
+  function scopedLS(prefix) {
+    prefix = prefix || activePrefix();
     return {
       getItem: function (k) {
-        try { return localStorage.getItem(activePrefix() + k); } catch (e) { return null; }
+        try { return localStorage.getItem(prefix + k); } catch (e) { return null; }
       },
       setItem: function (k, v) {
-        try { localStorage.setItem(activePrefix() + k, v); } catch (e) {}
+        try { localStorage.setItem(prefix + k, String(v)); } catch (e) {}
       },
       removeItem: function (k) {
-        try { localStorage.removeItem(activePrefix() + k); } catch (e) {}
+        try { localStorage.removeItem(prefix + k); } catch (e) {}
       },
       clear: function () {
-        // Clears only this user's keys
-        var p = activePrefix();
         var toRemove = [];
         try {
           for (var i = 0; i < localStorage.length; i++) {
             var key = localStorage.key(i);
-            if (key && key.indexOf(p) === 0) toRemove.push(key);
+            if (key && key.indexOf(prefix) === 0) toRemove.push(key);
           }
           for (var j = 0; j < toRemove.length; j++) localStorage.removeItem(toRemove[j]);
         } catch (e) {}
-      }
+      },
+      key: function (i) {
+        // Enumerate only keys for this account, with the prefix stripped
+        var mine = [];
+        try {
+          for (var k = 0; k < localStorage.length; k++) {
+            var key = localStorage.key(k);
+            if (key && key.indexOf(prefix) === 0) mine.push(key.slice(prefix.length));
+          }
+        } catch (e) {}
+        return mine[i] || null;
+      },
+      get length() {
+        var n = 0;
+        try {
+          for (var k = 0; k < localStorage.length; k++) {
+            var key = localStorage.key(k);
+            if (key && key.indexOf(prefix) === 0) n++;
+          }
+        } catch (e) {}
+        return n;
+      },
+      _prefix: prefix
     };
   }
 
-  // Expose for settings / wizards / boot
+  // Expose
   window.Accounts = {
     MAX: MAX_ACCOUNTS,
     list: getAccounts,
@@ -198,13 +216,12 @@
     remove: deleteAccount,
     verifyPassword: verifyPassword,
     activePrefix: activePrefix,
-    scopedLS: makeScopedLS,
-
-    // Convenience
+    prefixFor: prefixFor,
+    scopedLS: scopedLS,
     count: function () { return getAccounts().length; },
     isFull: function () { return getAccounts().length >= MAX_ACCOUNTS; },
     canCreate: function () { return getAccounts().length < MAX_ACCOUNTS; }
   };
 
-  console.log('Accounts module loaded — ' + getAccounts().length + ' account(s)');
+  console.log('Accounts module loaded — ' + getAccounts().length + ' account(s), active prefix: ' + activePrefix());
 })();
