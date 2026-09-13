@@ -1,7 +1,7 @@
 // ============================================================
 //  desktop.js — Desktop icons, drag/drop, App Lock + Trash hooks
 //  Custom icons from Extensions apply on every render.
-//  Remove from desktop keeps the app in a restore list.
+//  Remove from desktop + Add back to desktop both supported.
 // ============================================================
 
 var DEFAULT_ICONS = [
@@ -39,7 +39,6 @@ function loadIcons(){
     var saved = LS.getItem('oc_icons_v1');
     if(saved){
       icons = JSON.parse(saved);
-      // Add any new default icons the user hasn't seen
       for(var i=0; i<DEFAULT_ICONS.length; i++){
         var found = false;
         for(var j=0; j<icons.length; j++){ if(icons[j].id === DEFAULT_ICONS[i].id){ found = true; break; } }
@@ -48,13 +47,12 @@ function loadIcons(){
     } else icons = JSON.parse(JSON.stringify(DEFAULT_ICONS));
   } catch(e){ icons = JSON.parse(JSON.stringify(DEFAULT_ICONS)); }
 
-  // Remove Recovery from any existing icon list (feature is now hidden)
   icons = icons.filter(function (ic) { return ic.id !== 'recovery'; });
 }
 
 function saveIcons(){ try { LS.setItem('oc_icons_v1', JSON.stringify(icons)); } catch(e){} }
 
-// ---- Find an icon entry (including removed ones) ----
+// ---- Icon entry helpers ----
 function findIconEntry(appId) {
   for (var i = 0; i < icons.length; i++) {
     if (icons[i].id === appId) return icons[i];
@@ -62,23 +60,46 @@ function findIconEntry(appId) {
   return null;
 }
 
-// ---- Public helper used by app editor to restore to desktop ----
+var ICON_W = 80, ICON_H = 90, ICON_PAD = 10, ICON_TOP_PAD = 8, ICON_LEFT_PAD = 8;
+
+function positionToXY(pos){ return { x: ICON_LEFT_PAD + pos.x * (ICON_W + ICON_PAD), y: ICON_TOP_PAD + pos.y * (ICON_H + ICON_PAD) }; }
+function xyToPosition(x, y){ return { x: Math.round((x - ICON_LEFT_PAD) / (ICON_W + ICON_PAD)), y: Math.round((y - ICON_TOP_PAD) / (ICON_H + ICON_PAD)) }; }
+
+function findFreeSlot() {
+  var dt = document.getElementById('dt');
+  var cols = dt ? Math.max(1, Math.floor((dt.clientWidth - ICON_LEFT_PAD) / (ICON_W + ICON_PAD))) : 4;
+  var rows = dt ? Math.max(1, Math.floor((dt.clientHeight - ICON_TOP_PAD) / (ICON_H + ICON_PAD))) : 6;
+  for (var y = 0; y < rows; y++) {
+    for (var x = 0; x < cols; x++) {
+      var taken = false;
+      for (var i = 0; i < icons.length; i++) {
+        if (!icons[i].removed && icons[i].x === x && icons[i].y === y) { taken = true; break; }
+      }
+      if (!taken) return { x: x, y: y };
+    }
+  }
+  return { x: 0, y: rows };
+}
+
+// ---- Public: add app back to desktop ----
 function addAppToDesktop(appId) {
   var entry = findIconEntry(appId);
   if (entry) {
     entry.removed = false;
-    // If it had no position, give it a fresh one
-    if (typeof entry.x !== 'number' || typeof entry.y !== 'number') {
+    if (typeof entry.x !== 'number' || typeof entry.y !== 'number' || entry.x < 0 || entry.y < 0) {
       var pos = findFreeSlot();
       entry.x = pos.x;
       entry.y = pos.y;
     }
   } else {
-    // Was never in the list — pull from DEFAULT_ICONS
     for (var i = 0; i < DEFAULT_ICONS.length; i++) {
       if (DEFAULT_ICONS[i].id === appId) {
         var clone = JSON.parse(JSON.stringify(DEFAULT_ICONS[i]));
         clone.removed = false;
+        // Place in free slot instead of the default position (may be occupied)
+        var free = findFreeSlot();
+        clone.x = free.x;
+        clone.y = free.y;
         icons.push(clone);
         entry = clone;
         break;
@@ -90,28 +111,15 @@ function addAppToDesktop(appId) {
   return !!entry;
 }
 
-function findFreeSlot() {
-  var dt = document.getElementById('dt');
-  var cols = dt ? Math.max(1, Math.floor((dt.clientWidth - ICON_LEFT_PAD) / (ICON_W + ICON_PAD))) : 4;
-  var rows = dt ? Math.max(1, Math.floor((dt.clientHeight - ICON_TOP_PAD) / (ICON_H + ICON_PAD))) : 6;
-  // Find first free slot
-  for (var y = 0; y < rows; y++) {
-    for (var x = 0; x < cols; x++) {
-      var taken = false;
-      for (var i = 0; i < icons.length; i++) {
-        if (!icons[i].removed && icons[i].x === x && icons[i].y === y) { taken = true; break; }
-      }
-      if (!taken) return { x: x, y: y };
-    }
-  }
-  // Fallback: append
-  return { x: 0, y: rows };
+// ---- Public: remove app from desktop ----
+function removeAppFromDesktop(appId) {
+  var entry = findIconEntry(appId);
+  if (!entry) return false;
+  entry.removed = true;
+  saveIcons();
+  renderDesktop();
+  return true;
 }
-
-var ICON_W = 80, ICON_H = 90, ICON_PAD = 10, ICON_TOP_PAD = 8, ICON_LEFT_PAD = 8;
-
-function positionToXY(pos){ return { x: ICON_LEFT_PAD + pos.x * (ICON_W + ICON_PAD), y: ICON_TOP_PAD + pos.y * (ICON_H + ICON_PAD) }; }
-function xyToPosition(x, y){ return { x: Math.round((x - ICON_LEFT_PAD) / (ICON_W + ICON_PAD)), y: Math.round((y - ICON_TOP_PAD) / (ICON_H + ICON_PAD)) }; }
 
 function renderDesktop(){
   var dt = $('dt'); if(!dt) return;
@@ -241,6 +249,15 @@ var editorTargetIcon = null;
 function openAppEditor(icon, mx, my){
   editorTargetIcon = icon;
   var ed = $('appEditor');
+
+  // Update heading to make it obvious what the dialog does
+  var heading = ed.querySelector('h3');
+  if (heading) heading.textContent = 'Edit "' + (icon.name || 'App') + '"';
+
+  // Update the Remove button label dynamically
+  var remBtn = $('ae-remove');
+  if (remBtn) remBtn.textContent = 'Remove from desktop';
+
   $('ae-name').value = icon.name;
   ed.style.left = Math.min(window.innerWidth - 300, mx) + 'px';
   ed.style.top = Math.min(window.innerHeight - 200, my) + 'px';
@@ -259,16 +276,25 @@ function initAppEditorButtons(){
     }
     closeAppEditor();
   };
+
+  // ---- Remove from desktop ----
   var rem = $('ae-remove');
   if(rem) rem.onclick = function(){
-    if(editorTargetIcon){
-      if(confirm('Remove "' + editorTargetIcon.name + '" from home screen?\n\nIt will still appear in the Start menu. You can add it back by right-clicking its Start menu entry and choosing "Add to desktop".')) {
-        editorTargetIcon.removed = true;
-        saveIcons(); renderDesktop();
-      }
+    if(!editorTargetIcon) { closeAppEditor(); return; }
+    var appName = editorTargetIcon.name || 'this app';
+    var ok = confirm(
+      'Remove "' + appName + '" from the home screen?\n\n' +
+      'It will still appear in the Start menu.\n\n' +
+      'To add it back: right-click "' + appName + '" in the Start menu and choose "Add to desktop".'
+    );
+    if (ok) {
+      editorTargetIcon.removed = true;
+      saveIcons();
+      renderDesktop();
     }
     closeAppEditor();
   };
+
   var can = $('ae-cancel');
   if(can) can.onclick = closeAppEditor;
 
@@ -279,7 +305,7 @@ function initAppEditorButtons(){
     }
   });
 
-  // ---- Right-click on Start menu items to add back to desktop ----
+  // ---- Right-click on Start menu items → Add / Remove from desktop ----
   document.addEventListener('contextmenu', function (e) {
     var mi = e.target.closest && e.target.closest('.smi[data-a]');
     if (!mi) return;
@@ -287,26 +313,35 @@ function initAppEditorButtons(){
     var appId = mi.getAttribute('data-a');
     if (!appId) return;
 
+    // Read the visible label from the Start menu item
+    var nameEl = mi.querySelector('.lb') || mi;
+    var label = (mi.textContent || '').replace(/[^\x00-\x7F]/g, '').trim() || appId;
+
     var menu = document.createElement('div');
     menu.style.cssText =
-      'position:fixed;z-index:2147483647;min-width:200px;background:#1a1c22;color:#fff;' +
+      'position:fixed;z-index:2147483647;min-width:210px;background:#1a1c22;color:#fff;' +
       'border:1px solid rgba(255,255,255,0.12);border-radius:8px;' +
       'box-shadow:0 12px 40px rgba(0,0,0,0.55);font-family:system-ui,sans-serif;' +
       'font-size:13px;padding:6px 0;left:' + e.clientX + 'px;top:' + e.clientY + 'px;';
     menu.onclick = function (ev) { ev.stopPropagation(); };
 
-    function item(label, fn, danger) {
+    function closeCtx() {
+      if (menu.parentNode) menu.parentNode.removeChild(menu);
+      document.removeEventListener('click', closeCtx);
+      document.removeEventListener('contextmenu', closeCtx);
+    }
+    document.addEventListener('contextmenu', function (ev) {
+      if (!menu.contains(ev.target)) closeCtx();
+    });
+
+    function item(label2, fn, danger) {
       var row = document.createElement('div');
-      row.textContent = label;
-      row.style.cssText = 'padding:8px 14px;cursor:pointer;' + (danger ? 'color:#ff8a8a;' : '');
+      row.textContent = label2;
+      row.style.cssText = 'padding:9px 16px;cursor:pointer;' + (danger ? 'color:#ff8a8a;' : 'color:#fff;');
       row.onmouseenter = function () { row.style.background = 'rgba(255,255,255,0.06)'; };
       row.onmouseleave = function () { row.style.background = ''; };
       row.onclick = function () { closeCtx(); fn(); };
       menu.appendChild(row);
-    }
-    function closeCtx() {
-      if (menu.parentNode) menu.parentNode.removeChild(menu);
-      document.removeEventListener('click', closeCtx);
     }
 
     var entry = findIconEntry(appId);
@@ -314,15 +349,13 @@ function initAppEditorButtons(){
 
     if (isOnDesktop) {
       item('🚫 Remove from desktop', function () {
-        if (!confirm('Remove "' + (entry.name || appId) + '" from the home screen?\n\nIt will still appear in the Start menu.')) return;
-        entry.removed = true;
-        saveIcons();
-        renderDesktop();
+        if (!confirm('Remove "' + label + '" from the home screen?\n\nIt will still appear in the Start menu.')) return;
+        removeAppFromDesktop(appId);
       }, true);
     } else {
       item('➕ Add to desktop', function () {
         if (!addAppToDesktop(appId)) {
-          alert('Could not add this app to the desktop.');
+          alert('Could not add "' + label + '" to the desktop.');
         }
       });
     }
