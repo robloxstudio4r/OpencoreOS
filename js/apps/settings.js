@@ -187,4 +187,136 @@ function openSettings(){
         wrap.style.cssText = 'display:block;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);';
         wrap.innerHTML =
           '<div style="display:flex;justify-content:space-between;margin-bottom:6px;">' +
-            '<div style="color:#fff;font-size:13px;">' + label + '</
+            '<div style="color:#fff;font-size:13px;">' + label + '</div>' +
+            '<div class="val" style="color:#1db954;font-size:12px;">' + val + suffix + '</div>' +
+          '</div>';
+        var inp = document.createElement('input');
+        inp.type = 'range'; inp.min = min; inp.max = max; inp.step = step; inp.value = val;
+        inp.style.cssText = 'width:100%;';
+        inp.oninput = function () {
+          wrap.querySelector('.val').textContent = inp.value + suffix;
+          window.A11y.set(key, parseInt(inp.value, 10));
+        };
+        wrap.appendChild(inp);
+        return wrap;
+      }
+      panel.appendChild(toggleRow('', 'Narrator', 'Screen reader — speaks UI aloud', 'narrator'));
+      panel.appendChild(toggleRow('', 'Magnifier', 'Zoom the whole desktop', 'magnifier'));
+      panel.appendChild(sliderRow('Zoom', 'zoom', 100, 300, 10, '%'));
+      panel.appendChild(toggleRow('', 'Magnifier lens', 'Big magnifier follows cursor', 'lens'));
+      panel.appendChild(sliderRow('Text size', 'textsize', 80, 250, 5, '%'));
+      panel.appendChild(toggleRow('', 'High contrast', 'Sharper edges, stronger colors', 'contrast'));
+      panel.appendChild(toggleRow('', 'Focus ring', 'Large outline on keyboard focus', 'focus_ring'));
+      panel.appendChild(toggleRow('', 'Reduce motion', 'Disable animations and transitions', 'reduce_motion'));
+
+      var hint = document.createElement('p');
+      hint.style.cssText = 'color:#666;font-size:11px;margin-top:12px;line-height:1.8;';
+      hint.innerHTML =
+        '<b style="color:#888;">Shortcuts:</b><br>' +
+        'Ctrl+Alt+N — Narrator<br>Ctrl+Alt+M — Magnifier<br>' +
+        'Ctrl+Alt+= / Ctrl+Alt+- — Text size';
+      panel.appendChild(hint);
+    }
+    refresh();
+  })();
+
+  // ---- Users tab ----
+  function renderUsers() {
+    var listEl = win.querySelector('#s-users-list');
+    if (!listEl || !window.Accounts) return;
+    var list = window.Accounts.list();
+    var activeId = window.Accounts.getActiveId();
+    listEl.innerHTML = '';
+
+    for (var i = 0; i < list.length; i++) {
+      (function(acc){
+        var isActive = acc.id === activeId;
+        var row = document.createElement('div');
+        row.style.cssText =
+          'display:flex;align-items:center;gap:8px;padding:10px 12px;' +
+          'border:1px solid rgba(255,255,255,0.08);border-radius:8px;' +
+          'margin-bottom:6px;background:' + (isActive ? 'rgba(29,185,84,0.08)' : 'rgba(255,255,255,0.02)') + ';';
+        row.innerHTML =
+          '<div style="font-size:24px;">👤</div>' +
+          '<div style="flex:1;min-width:0;">' +
+            '<div style="color:#fff;font-size:13px;font-weight:600;">' + acc.name +
+              (isActive ? ' <span style="color:#1db954;font-size:10px;font-weight:400;">· active</span>' : '') +
+            '</div>' +
+            '<div style="color:#888;font-size:11px;">' +
+              (acc.hasPassword ? '🔒 Password protected' : 'No password') +
+            '</div>' +
+          '</div>';
+        var rename = document.createElement('button');
+        rename.className = 'btn'; rename.textContent = 'Rename';
+        rename.onclick = function () {
+          var n = prompt('New name:', acc.name);
+          if (n === null) return;
+          n = n.trim().slice(0, 20);
+          if (!n) return;
+          window.Accounts.update(acc.id, { name: n });
+          renderUsers();
+        };
+        row.appendChild(rename);
+
+        var pwBtn = document.createElement('button');
+        pwBtn.className = 'btn';
+        pwBtn.textContent = acc.hasPassword ? 'Change PW' : 'Set PW';
+        pwBtn.onclick = function () {
+          var p = prompt(acc.hasPassword ? 'New password (blank to remove):' : 'New password:');
+          if (p === null) return;
+          window.Accounts.update(acc.id, { password: p || '' });
+          renderUsers();
+          alert(p ? 'Password updated' : 'Password removed');
+        };
+        row.appendChild(pwBtn);
+
+        if (!isActive) {
+          var signIn = document.createElement('button');
+          signIn.className = 'btn'; signIn.textContent = 'Sign in';
+          signIn.onclick = function () {
+            var pw = acc.hasPassword ? (prompt('Password:') || '') : '';
+            if (window.Accounts.verifyPassword(acc.id, pw)) {
+              window.Accounts.setActive(acc.id);
+              location.reload();
+            } else alert('Incorrect password');
+          };
+          row.appendChild(signIn);
+        }
+
+        var del = document.createElement('button');
+        del.className = 'btn btd'; del.textContent = 'Delete';
+        del.onclick = function () {
+          if (list.length <= 1) return alert('Cannot delete the only account');
+          if (!confirm('Delete account "' + acc.name + '"?')) return;
+          window.Accounts.remove(acc.id);
+          if (isActive) location.reload(); else renderUsers();
+        };
+        row.appendChild(del);
+        listEl.appendChild(row);
+      })(list[i]);
+    }
+  }
+  renderUsers();
+
+  var addBtn = win.querySelector('#s-users-add');
+  if (addBtn) addBtn.onclick = function () {
+    if (!window.Accounts) return alert('Accounts module not loaded');
+    if (!window.Accounts.canCreate()) return alert('Maximum of ' + window.Accounts.MAX + ' accounts reached');
+    var name = prompt('New account name (max 20 chars):');
+    if (name === null) return;
+    name = name.trim().slice(0, 20);
+    if (!name) return alert('Name is required');
+    var pw = prompt('Password (leave blank for none):') || '';
+    var res = window.Accounts.create(name, pw);
+    if (!res.ok) return alert(res.error);
+    renderUsers();
+    alert('Account "' + name + '" created.');
+  };
+
+  var switchBtn = win.querySelector('#s-users-switch');
+  if (switchBtn) switchBtn.onclick = function () {
+    if (!confirm('Sign out of the current account and choose another?')) return;
+    window.Accounts.setActive(null);
+    location.reload();
+  };
+}
