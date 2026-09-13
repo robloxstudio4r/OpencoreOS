@@ -360,4 +360,37 @@ function openHelp(){
         var card = document.createElement('div');
         card.style.cssText =
           'padding:10px 12px;background:rgba(255,255,255,0.02);' +
-          '
+          'border:1px solid rgba(255,255,255,0.06);border-radius:8px;' +
+          'margin-bottom:6px;';
+        card.innerHTML =
+          '<div style="color:#8ab4f8;font-weight:600;font-size:13px;margin-bottom:4px;">' + entry.t + '</div>' +
+          '<div style="color:#bbb;font-size:12px;line-height:1.5;">' + entry.d + '</div>';
+        secBox.appendChild(card);
+      });
+
+      body.appendChild(secBox);
+    });
+
+    if (!shown) {
+      body.innerHTML =
+        '<div style="text-align:center;padding:40px 20px;color:#666;">' +
+          '<div style="font-size:48px;margin-bottom:12px;">🔍</div>' +
+          '<div style="font-size:14px;">No help topics match "' + filter + '".</div>' +
+        '</div>';
+    }
+
+    countEl.textContent = shown + ' / ' + total + ' topics';
+  }
+
+  render('');
+
+  search.addEventListener('input', function () {
+    render(search.value);
+  });
+
+  setTimeout(function () { search.focus(); }, 100);
+
+  return win;
+}
+
+window.openHelp = openHelp;
