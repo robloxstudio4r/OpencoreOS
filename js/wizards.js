@@ -1,6 +1,6 @@
 // ============================================================
 //  wizards.js — Setup wizard, user wizard, login screen
-//  Fixed: initLogin now runs correctly with defer scripts
+//  Multi-user: creates account 1 at end of first-run setup
 // ============================================================
 
 function runSetup(){
@@ -20,7 +20,17 @@ function runSetup(){
         setTimeout(function(){
           var el = $('setup'); if(el) el.classList.add('hide');
           if(LS.getItem('oc_user_done') !== 'true') runUserWizard();
-          else showLogin();
+          else {
+            // First-run is done already? Create default account and go to picker
+            if (window.Accounts && window.Accounts.list().length === 0) {
+              var dn = LS.getItem('oc_device_name') || 'Opencore User';
+              window.Accounts.create(dn, '');
+              window.Accounts.setActive('u1');
+              location.reload();
+            } else {
+              showLogin();
+            }
+          }
         }, 400);
       }, 300);
     }
@@ -127,7 +137,28 @@ function finishUserWizard(){
   LS.setItem('oc_lang', uData.lang);
   LS.setItem('oc_kb', uData.kb);
   LS.setItem('oc_user_done','true');
+
+  // Create account 1 if there are no accounts yet
+  if (window.Accounts && window.Accounts.list().length === 0) {
+    var name = uData.name || 'Opencore User';
+    var pw = uData.pw || '';
+    var res = window.Accounts.create(name, pw);
+    if (res.ok) {
+      window.Accounts.setActive(res.account.id);
+      console.log('Created account 1:', res.account.id);
+    } else {
+      console.warn('Account creation failed:', res.error);
+    }
+  }
+
   var el = $('uwiz'); if(el) el.classList.add('hide');
+
+  // Reload so VFS + all data is re-initialized under the new account's prefix
+  if (window.Accounts && window.Accounts.getActiveId()) {
+    setTimeout(function () { location.reload(); }, 400);
+    return;
+  }
+
   if(typeof loadSettings === 'function') loadSettings();
   showLogin();
   setTimeout(function(){ alert('Welcome, ' + (uData.name || 'Opencore User') + '!'); }, 300);
@@ -173,7 +204,6 @@ function checkPin(){
 }
 
 function initLogin(){
-  // Wire up the on-screen number buttons
   var pinButtons = $$('#pp button');
   for(var i=0; i<pinButtons.length; i++){
     (function(btn){
@@ -188,7 +218,6 @@ function initLogin(){
     })(pinButtons[i]);
   }
 
-  // ALSO allow typing on the physical keyboard
   document.addEventListener('keydown', function(e){
     var lg = $('login');
     if(!lg || !lg.classList.contains('on')) return;
@@ -204,11 +233,9 @@ function initLogin(){
     }
   });
 
-  // Reset pin dots at load
   updatePins();
 }
 
-// Run initLogin as soon as wizards.js loads
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initLogin);
 } else {
