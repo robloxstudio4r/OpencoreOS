@@ -4,6 +4,8 @@
 //  Keys:  oc_applock_<appId>       = 'true'
 //         oc_applock_type_<appId>  = 'device' | 'custom'
 //         oc_applock_pw_<appId>    = hashed password (custom only)
+//
+//  Unlock requires the password. Locking does NOT.
 // ============================================================
 
 (function () {
@@ -60,13 +62,25 @@
     return entered === getDevicePassword();
   }
 
-  // ---------- Prompt for unlock ----------
+  // ---------- Prompt for unlock (used by launcher) ----------
   function promptUnlock(appId, onSuccess) {
     var type = getLockType(appId);
     var label = type === 'custom' ? 'Enter app password:' : 'Enter device password:';
     var entered = prompt('🔒 Locked app\n\n' + label);
     if (entered === null) return false;
     if (verify(appId, entered)) { onSuccess(); return true; }
+    alert('Incorrect password.');
+    return false;
+  }
+
+  // ---------- Prompt for unlock BEFORE an action (used by menu) ----------
+  // Returns true if the user entered the correct password.
+  function requirePassword(appId, actionLabel) {
+    var type = getLockType(appId);
+    var label = type === 'custom' ? 'app password' : 'device password';
+    var entered = prompt('🔒 ' + (actionLabel || 'Confirm action') + '\n\nEnter ' + label + ' to continue:');
+    if (entered === null) return false;
+    if (verify(appId, entered)) return true;
     alert('Incorrect password.');
     return false;
   }
@@ -128,7 +142,7 @@
     var rect = anchorEl.getBoundingClientRect();
     var menu = document.createElement('div');
     menu.style.cssText =
-      'position:fixed;z-index:2147483647;min-width:200px;' +
+      'position:fixed;z-index:2147483647;min-width:220px;' +
       'background:#1a1c22;color:#fff;border:1px solid rgba(255,255,255,0.12);' +
       'border-radius:8px;box-shadow:0 12px 40px rgba(0,0,0,0.55);' +
       'font-family:system-ui,sans-serif;font-size:13px;padding:6px 0;' +
@@ -153,19 +167,44 @@
       menu.appendChild(row);
     }
 
-    // ----- Lock section -----
-    item(locked ? '🔓 Unlock this app' : '🔒 Lock this app', function () {
-      setLocked(appId, !locked);
-      if (!locked && !getCustomHash(appId)) setLockType(appId, 'device');
-      alert(locked ? 'Unlocked.' : 'Locked. Long-press again to set a custom password.');
-    });
-
+    // ============================================================
+    //  LOCK / UNLOCK
+    // ============================================================
     if (locked) {
-      item('🔑 Use ' + (type === 'device' ? 'device' : 'custom') + ' password → change', function () {
+      // ---- Unlock: REQUIRE PASSWORD ----
+      item('🔓 Unlock this app', function () {
+        if (!requirePassword(appId, 'Unlock app')) return;
+        setLocked(appId, false);
+        // Clear the custom password too so it's a clean lock next time
+        setCustomHash(appId, '');
+        setLockType(appId, 'device');
+        alert('App unlocked.');
+        if (typeof renderDesktop === 'function') renderDesktop();
+      });
+    } else {
+      // ---- Lock: no password needed ----
+      item('🔒 Lock this app', function () {
+        setLocked(appId, true);
+        // Default to device password
+        if (!getCustomHash(appId)) setLockType(appId, 'device');
+        alert('App locked.\n\nLong-press again to set a custom password.');
+        if (typeof renderDesktop === 'function') renderDesktop();
+      });
+    }
+
+    // ============================================================
+    //  PASSWORD TYPE (only visible when locked)
+    // ============================================================
+    if (locked) {
+      item('🔑 Password: ' + (type === 'device' ? 'Device' : 'Custom') + ' → change', function () {
+        // Require current password before changing
+        if (!requirePassword(appId, 'Change password type')) return;
+
         var choice = prompt('Password type for this app:\n1 = Device password\n2 = Custom password\n\nEnter 1 or 2:');
         if (choice === '1') {
           setLockType(appId, 'device');
-          alert('Using device password.');
+          setCustomHash(appId, '');
+          alert('Now using device password.');
         } else if (choice === '2') {
           var pw = prompt('Set custom password for this app:');
           if (!pw) return;
@@ -178,13 +217,20 @@
       });
     }
 
-    // ----- Rename / info (optional) -----
+    // ============================================================
+    //  RENAME (optional hook)
+    // ============================================================
     if (opts && opts.onRename) {
       item('✏️ Rename', function () { opts.onRename(anchorEl, appId); });
     }
 
-    // ----- Trash -----
+    // ============================================================
+    //  MOVE TO TRASH — requires password if app is locked
+    // ============================================================
     item('🗑️ Move to trash', function () {
+      // If locked, require password first
+      if (locked && !requirePassword(appId, 'Move to trash')) return;
+
       if (window.AppTrash && typeof window.AppTrash.moveToTrash === 'function') {
         window.AppTrash.moveToTrash(appId);
       } else {
@@ -214,8 +260,9 @@
     verify: verify,
     attachLongPress: attachLongPress,
     promptUnlock: promptUnlock,
+    requirePassword: requirePassword,
     hash: hashPassword
   };
 
-  console.log('App Lock module loaded');
+  console.log('App Lock module loaded — unlock requires password');
 })();
