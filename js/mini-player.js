@@ -98,20 +98,18 @@
     nextBtn  = document.getElementById('miniPlayerNext');
     closeBtn = document.getElementById('miniPlayerClose');
 
-    if(playBtn)  playBtn.onclick  = function(){ safeCall('togglePlay');    };
-    if(prevBtn)  prevBtn.onclick  = function(){ safeCall('previousTrack'); };
-    if(nextBtn)  nextBtn.onclick  = function(){ safeCall('nextTrack');     };
-    if(closeBtn) closeBtn.onclick = function(){ hide(); };
+    if(playBtn)  playBtn.onclick  = function(e){ if(e) e.stopPropagation(); safeCall('togglePlay');    };
+    if(prevBtn)  prevBtn.onclick  = function(e){ if(e) e.stopPropagation(); safeCall('previousTrack'); };
+    if(nextBtn)  nextBtn.onclick  = function(e){ if(e) e.stopPropagation(); safeCall('nextTrack');     };
+    if(closeBtn) closeBtn.onclick = function(e){ if(e) e.stopPropagation(); hide(); };
 
     if(!progressInterval){
       progressInterval = setInterval(tick, 500);
     }
   }
 
-  // Expose globally so music.js / SpotifyPlayerState can call it
   window.updateMiniPlayer = updateMiniPlayer;
 
-  // Subscribe to the shared state bus if music.js defined it
   window.addEventListener('load', function(){
     if(window.SpotifyPlayerState && typeof SpotifyPlayerState.add === 'function'){
       SpotifyPlayerState.add(updateMiniPlayer);
