@@ -1,7 +1,8 @@
 // ============================================================
-//  backup.js — Full system backup & restore for OpencoreOS v10.4
+//  backup.js — Backup & restore for the ACTIVE account only
 //  Terminal commands:  backup   restore
-//  Backup file format: JSON with a magic header.
+//  File format: JSON with magic header.
+//  Scope: whatever account is currently signed in.
 // ============================================================
 
 (function () {
@@ -10,7 +11,6 @@
   var MAGIC = 'OPENCORE_BACKUP_v1';
   var EXT = '.ocbackup';
 
-  // ---------- Utilities ----------
   function pad2(n) { return String(n).padStart(2, '0'); }
 
   function timestamp() {
@@ -25,34 +25,44 @@
     return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
   }
 
-  // ---------- Collect everything ----------
-  function collectLocalStorage() {
+  // ---------- Active account metadata ----------
+  function activeInfo() {
+    if (!window.Accounts) return null;
+    return {
+      id: window.Accounts.getActiveId(),
+      account: window.Accounts.getActiveAccount(),
+      prefix: window.Accounts.activePrefix()
+    };
+  }
+
+  // ---------- Collect ONLY this account's keys ----------
+  function collectActiveLocalStorage() {
     var out = {};
+    var info = activeInfo();
+    if (!info || !info.prefix) return out;
+    var prefix = info.prefix;
     try {
       for (var i = 0; i < localStorage.length; i++) {
         var k = localStorage.key(i);
-        out[k] = localStorage.getItem(k);
+        if (k && k.indexOf(prefix) === 0) {
+          // strip prefix when storing, so restore can re-apply it
+          out[k.slice(prefix.length)] = localStorage.getItem(k);
+        }
       }
     } catch (e) { console.warn('localStorage read error:', e); }
     return out;
   }
 
   function collectVFS() {
-    // VFS is your virtual file system. We try a few common shapes.
     var out = { files: [], meta: {} };
     try {
-      // Preferred: VFS.export() -> plain object
       if (window.VFS && typeof VFS.export === 'function') {
         out.files = VFS.export();
-      }
-      // Fallback: VFS.files is an array/object
-      else if (window.VFS && window.VFS.files) {
-        out.files = JSON.parse(JSON.stringify(window.VFS.files));
-      }
-      // Fallback: read from localStorage key we saw elsewhere (oc_files)
-      else {
+      } else if (window.VFS && window.VFS.root) {
+        out.files = JSON.parse(JSON.stringify(window.VFS.root));
+      } else {
         var raw = null;
-        try { raw = localStorage.getItem('oc_files') || localStorage.getItem('opencore_files'); } catch (e) {}
+        try { raw = LS.getItem('oc_vfs'); } catch (e) {}
         if (raw) out.files = JSON.parse(raw);
       }
       if (window.VFS && typeof VFS.count === 'function') out.meta.count = VFS.count();
@@ -62,66 +72,63 @@
   }
 
   function collectIcons() {
-    try {
-      if (typeof icons !== 'undefined' && icons) return JSON.parse(JSON.stringify(icons));
-    } catch (e) {}
-    try {
-      var raw = localStorage.getItem('oc_icons');
-      if (raw) return JSON.parse(raw);
-    } catch (e) {}
+    try { if (typeof icons !== 'undefined' && icons) return JSON.parse(JSON.stringify(icons)); } catch (e) {}
+    try { var raw = LS.getItem('oc_icons'); if (raw) return JSON.parse(raw); } catch (e) {}
     return [];
   }
 
   function collectAppList() {
-    // Apps are the start-menu entries + any user-created shortcuts.
     var out = { startMenu: [], custom: [] };
     try {
       var smItems = document.querySelectorAll('.smi[data-a]');
-      for (var i = 0; i < smItems.length; i++) {
-        out.startMenu.push(smItems[i].getAttribute('data-a'));
-      }
+      for (var i = 0; i < smItems.length; i++) out.startMenu.push(smItems[i].getAttribute('data-a'));
     } catch (e) {}
-    try {
-      var custom = localStorage.getItem('oc_custom_apps');
-      if (custom) out.custom = JSON.parse(custom);
-    } catch (e) {}
+    try { var custom = LS.getItem('oc_custom_apps'); if (custom) out.custom = JSON.parse(custom); } catch (e) {}
     return out;
   }
 
   function collectState() {
-    // ST is the OS runtime state object in your build.
     var out = {};
     try {
       if (typeof ST !== 'undefined' && ST) {
         out.wifiOn = !!ST.wifiOn;
         out.btOn   = !!ST.btOn;
-        out.z      = ST.z;
       }
     } catch (e) {}
     return out;
   }
 
   function buildBackup() {
-    var ls = collectLocalStorage();
+    var info = activeInfo();
+    if (!info || !info.account) throw new Error('No active account to back up');
+
+    var ls = collectActiveLocalStorage();
     var vfs = collectVFS();
-    var data = {
+    var iconArr = collectIcons();
+
+    return {
       magic: MAGIC,
       version: '10.4',
+      scope: 'active-account',
       createdAt: new Date().toISOString(),
       createdAtHuman: new Date().toLocaleString(),
       origin: (typeof location !== 'undefined') ? location.origin : '',
+      account: {
+        name: info.account.name,
+        id: info.account.id,
+        hasPassword: info.account.hasPassword
+      },
       localStorage: ls,
       vfs: vfs,
-      icons: collectIcons(),
+      icons: iconArr,
       apps: collectAppList(),
       state: collectState(),
       meta: {
         localStorageKeys: Object.keys(ls).length,
         vfsFiles: vfs.meta.count || (vfs.files ? (vfs.files.length || Object.keys(vfs.files).length) : 0),
-        icons: (collectIcons() || []).length
+        icons: iconArr.length
       }
     };
-    return data;
   }
 
   // ---------- Download ----------
@@ -130,30 +137,32 @@
       var blob = new Blob([text], { type: 'application/json' });
       var url = URL.createObjectURL(blob);
       var a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      a.style.display = 'none';
-      document.body.appendChild(a);
-      a.click();
+      a.href = url; a.download = filename; a.style.display = 'none';
+      document.body.appendChild(a); a.click();
       setTimeout(function () {
         try { document.body.removeChild(a); } catch (e) {}
         URL.revokeObjectURL(url);
       }, 500);
       return true;
-    } catch (e) {
-      console.error('Download failed:', e);
-      return false;
-    }
+    } catch (e) { console.error('Download failed:', e); return false; }
   }
 
   function runBackup(term) {
     try {
-      if (term && typeof term.print === 'function') term.print('Preparing backup...');
+      var info = activeInfo();
+      if (!info || !info.account) {
+        if (term && term.print) term.print('✗ No active account to back up.');
+        return false;
+      }
+
+      if (term && term.print) term.print('Preparing backup for "' + info.account.name + '"...');
+
       var data = buildBackup();
       var json = JSON.stringify(data, null, 2);
-      var name = 'opencore-backup-' + timestamp() + EXT;
+      var name = 'opencore-' + info.account.id + '-backup-' + timestamp() + EXT;
 
-      if (term && typeof term.print === 'function') {
+      if (term && term.print) {
+        term.print('  Account:           ' + info.account.name + ' (' + info.account.id + ')');
         term.print('  localStorage keys: ' + data.meta.localStorageKeys);
         term.print('  VFS files:         ' + data.meta.vfsFiles);
         term.print('  Desktop icons:     ' + data.meta.icons);
@@ -161,21 +170,17 @@
       }
 
       var ok = download(name, json);
-      if (ok) {
-        if (term && typeof term.print === 'function') {
-          term.print('');
-          term.print('✓ Backup downloaded: ' + name);
-          term.print('  Keep this file safe. Use "restore" to load it.');
-        } else {
-          console.log('Backup downloaded:', name);
-        }
-      } else {
-        if (term && typeof term.print === 'function') term.print('✗ Download blocked by browser.');
+      if (ok && term && term.print) {
+        term.print('');
+        term.print('✓ Backup downloaded: ' + name);
+        term.print('  Scope: this account only. Type "restore" to load it back.');
+      } else if (!ok && term && term.print) {
+        term.print('✗ Download blocked by browser.');
       }
       return ok;
     } catch (e) {
       console.error('Backup error:', e);
-      if (term && typeof term.print === 'function') term.print('✗ Backup failed: ' + e.message);
+      if (term && term.print) term.print('✗ Backup failed: ' + e.message);
       return false;
     }
   }
@@ -196,9 +201,7 @@
     };
     document.body.appendChild(input);
     input.click();
-    setTimeout(function () {
-      try { document.body.removeChild(input); } catch (e) {}
-    }, 60000);
+    setTimeout(function () { try { document.body.removeChild(input); } catch (e) {} }, 60000);
   }
 
   function validateBackup(obj) {
@@ -208,34 +211,30 @@
     return null;
   }
 
-  function writeLocalStorage(map) {
-    var written = 0;
+  function writeActiveLocalStorage(map) {
+    var info = activeInfo();
+    if (!info || !info.prefix) return 0;
+    var prefix = info.prefix;
+    var n = 0;
     try {
       for (var k in map) {
         if (!Object.prototype.hasOwnProperty.call(map, k)) continue;
-        try { localStorage.setItem(k, map[k]); written++; } catch (e) {}
+        try { localStorage.setItem(prefix + k, map[k]); n++; } catch (e) {}
       }
     } catch (e) { console.warn('localStorage write error:', e); }
-    return written;
+    return n;
   }
 
   function writeVFS(vfs) {
     if (!vfs) return 0;
     try {
-      if (window.VFS && typeof VFS.import === 'function') {
-        VFS.import(vfs.files);
-        return 1;
-      }
-      if (window.VFS && window.VFS.files && vfs.files) {
-        window.VFS.files = vfs.files;
+      if (window.VFS && typeof VFS.import === 'function') { VFS.import(vfs.files); return 1; }
+      if (window.VFS && vfs.files) {
+        window.VFS.root = vfs.files;
         if (typeof VFS.save === 'function') VFS.save();
         return 1;
       }
-      // Fallback: put it back in localStorage
-      try {
-        localStorage.setItem('oc_files', JSON.stringify(vfs.files || []));
-        return 1;
-      } catch (e) {}
+      try { LS.setItem('oc_vfs', JSON.stringify(vfs.files || [])); return 1; } catch (e) {}
     } catch (e) { console.warn('VFS restore error:', e); }
     return 0;
   }
@@ -243,87 +242,71 @@
   function writeIcons(iconsArr) {
     if (!iconsArr) return 0;
     try {
-      if (typeof icons !== 'undefined') {
-        // reassign the global
+      if (typeof window !== 'undefined') {
         window.icons = JSON.parse(JSON.stringify(iconsArr));
         if (typeof saveIcons === 'function') saveIcons();
-      } else {
-        try { localStorage.setItem('oc_icons', JSON.stringify(iconsArr)); } catch (e) {}
       }
       return 1;
     } catch (e) { console.warn('Icons restore error:', e); return 0; }
   }
 
   function runRestore(term) {
-    if (term && typeof term.print === 'function') term.print('Choose a backup file...');
+    var info = activeInfo();
+    if (!info || !info.account) {
+      if (term && term.print) term.print('✗ Must be signed in to restore.');
+      return;
+    }
+
+    if (term && term.print) term.print('Choose a backup file...');
 
     pickFile(function (text, name, err) {
-      if (err) {
-        if (term && typeof term.print === 'function') term.print('✗ File read error: ' + err.message);
-        return;
-      }
-      if (!text) {
-        if (term && typeof term.print === 'function') term.print('Cancelled.');
-        return;
-      }
+      if (err) { if (term && term.print) term.print('✗ File read error: ' + err.message); return; }
+      if (!text) { if (term && term.print) term.print('Cancelled.'); return; }
 
       var obj;
       try { obj = JSON.parse(text); }
-      catch (e) {
-        if (term && typeof term.print === 'function') term.print('✗ Not valid JSON: ' + e.message);
-        return;
-      }
+      catch (e) { if (term && term.print) term.print('✗ Not valid JSON: ' + e.message); return; }
 
       var problem = validateBackup(obj);
-      if (problem) {
-        if (term && typeof term.print === 'function') term.print('✗ Invalid backup: ' + problem);
-        return;
-      }
+      if (problem) { if (term && term.print) term.print('✗ Invalid backup: ' + problem); return; }
 
-      // Summarize
+      var backupName = obj.account ? obj.account.name : 'unknown';
       var summary =
         'Backup from: ' + (obj.createdAtHuman || obj.createdAt || 'unknown') + '\n' +
+        'Made by:     ' + backupName + '\n\n' +
         '  localStorage keys: ' + (obj.meta && obj.meta.localStorageKeys || Object.keys(obj.localStorage).length) + '\n' +
         '  VFS files:         ' + (obj.meta && obj.meta.vfsFiles || 0) + '\n' +
         '  Desktop icons:     ' + (obj.meta && obj.meta.icons || 0) + '\n\n' +
-        'Restoring will OVERWRITE your current system state.\n' +
-        'Continue?';
+        'Restore into CURRENT account "' + info.account.name + '"?\n' +
+        'This will OVERWRITE its files and settings.';
 
       var ok = true;
       try { ok = confirm(summary); } catch (e) { ok = true; }
-      if (!ok) {
-        if (term && typeof term.print === 'function') term.print('Cancelled.');
-        return;
-      }
+      if (!ok) { if (term && term.print) term.print('Cancelled.'); return; }
 
-      if (term && typeof term.print === 'function') term.print('Restoring...');
+      if (term && term.print) term.print('Restoring into "' + info.account.name + '"...');
 
-      var lsCount = writeLocalStorage(obj.localStorage);
+      var lsCount = writeActiveLocalStorage(obj.localStorage);
       var vfsOk   = writeVFS(obj.vfs);
       var iconsOk = writeIcons(obj.icons);
 
-      if (term && typeof term.print === 'function') {
+      if (term && term.print) {
         term.print('  localStorage written: ' + lsCount);
         term.print('  VFS restored:         ' + (vfsOk ? 'yes' : 'no'));
         term.print('  Icons restored:       ' + (iconsOk ? 'yes' : 'no'));
         term.print('');
-        term.print('✓ Restore complete. Reloading system in 2 seconds...');
+        term.print('✓ Restore complete. Reloading in 2 seconds...');
       }
 
-      setTimeout(function () {
-        try { location.reload(); } catch (e) {}
-      }, 2000);
+      setTimeout(function () { try { location.reload(); } catch (e) {} }, 2000);
     });
   }
 
-  // ---------- Public API ----------
   window.OpencoreBackup = {
     runBackup: runBackup,
     runRestore: runRestore,
-    // also callable without the terminal
-    backupNow: function () { return runBackup(null); },
-    restoreFromText: function (text) { return runRestore(null); }
+    backupNow: function () { return runBackup(null); }
   };
 
-  console.log('Backup module loaded — type "backup" or "restore" in the Terminal');
+  console.log('Backup module loaded (active-account scope)');
 })();
