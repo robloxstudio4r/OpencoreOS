@@ -1,7 +1,7 @@
 // ============================================================
 //  taskbar.js — OpencoreOS v10.4
 //  Taskbar, start menu, system tray, Shutdown, Airplane Mode,
-//  Accessibility panel hook.
+//  Accessibility, Screenshot, Screen Recording, Captures.
 // ============================================================
 
 function updateTaskbar(){
@@ -77,6 +77,15 @@ function initTaskbar(){
     else alert('Accessibility panel not loaded');
   };
 
+  // ---------------- Captures gallery ----------------
+  var mcaptures = $('mcaptures');
+  if (mcaptures) mcaptures.onclick = function(e){
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    $('sm').classList.remove('on');
+    if (window.Capture) window.Capture.openGallery();
+    else alert('Capture module not loaded');
+  };
+
   // ---------------- Shutdown ----------------
   var msd = $('msd');
   if(msd) msd.onclick = function(e){
@@ -110,12 +119,29 @@ function initTaskbar(){
   var tl = $('tray-lock'); if(tl) tl.onclick = function(){ showLogin(); };
   var tbt = $('tray-bt'); if(tbt) tbt.ondblclick = function(){ ST.btOn = !ST.btOn; LS.setItem('oc_bt', String(ST.btOn)); };
 
-  // Accessibility tray icon — opens the quick panel
+  // Accessibility tray icon
   var trayA11y = $('tray-a11y');
   if(trayA11y) trayA11y.onclick = function(e){
     if(e) e.stopPropagation();
     if (typeof openAccessibilityPanel === 'function') openAccessibilityPanel();
     else alert('Accessibility panel not loaded');
+  };
+
+  // Screenshot tray icon
+  var trayShot = $('tray-shot');
+  if(trayShot) trayShot.onclick = function(e){
+    if(e) e.stopPropagation();
+    if (window.Capture) window.Capture.screenshot();
+    else alert('Capture module not loaded');
+  };
+
+  // Screen recording tray icon (toggles)
+  var trayRec = $('tray-rec');
+  if(trayRec) trayRec.onclick = function(e){
+    if(e) e.stopPropagation();
+    if (!window.Capture) return alert('Capture module not loaded');
+    if (window.Capture.isRecording()) window.Capture.stopRecording();
+    else window.Capture.startRecording();
   };
 
   updateBattery();
