@@ -2,6 +2,7 @@
 //  taskbar.js — OpencoreOS v10.4
 //  Taskbar, start menu, system tray, Shutdown, Accessibility,
 //  Screenshot, Screen Recording, Captures, Trash, Help.
+//  Lock (tray + Start menu) opens the account picker.
 // ============================================================
 
 function updateTaskbar(){
@@ -43,6 +44,21 @@ function updateBattery(){
 }
 setInterval(updateBattery, 30000);
 
+// ---- Helper: lock → open the account picker ----
+function doLockToPicker(){
+  if (window.Accounts && typeof window.Accounts.setActive === 'function') {
+    try { window.Accounts.setActive(null); } catch (e) {}
+  }
+  if (typeof window.showAccountPicker === 'function') {
+    window.showAccountPicker();
+  } else if (window.AccountPicker && typeof window.AccountPicker.show === 'function') {
+    window.AccountPicker.show();
+  } else {
+    // Last-resort fallback: reload so boot picks the picker up
+    location.reload();
+  }
+}
+
 function initTaskbar(){
   var sb = $('sb'); if(sb) sb.onclick = function(e){ e.stopPropagation(); $('sm').classList.toggle('on'); };
   document.addEventListener('click', function(){ $('sm').classList.remove('on'); });
@@ -67,7 +83,14 @@ function initTaskbar(){
     }
   }
 
-  var mlk = $('mlk'); if(mlk) mlk.onclick = function(){ $('sm').classList.remove('on'); showLogin(); };
+  // ---- Start menu: Lock → account picker ----
+  var mlk = $('mlk');
+  if (mlk) mlk.onclick = function(e){
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    $('sm').classList.remove('on');
+    doLockToPicker();
+  };
+
   var msleep = $('msleep'); if(msleep) msleep.onclick = function(){ $('sm').classList.remove('on'); goToSleep(); };
   var mrs = $('mrs'); if(mrs) mrs.onclick = function(){ if(confirm('Restart?')) location.reload(); };
 
@@ -136,7 +159,13 @@ function initTaskbar(){
   };
 
   // ---------------- System tray ----------------
-  var tl = $('tray-lock'); if(tl) tl.onclick = function(){ showLogin(); };
+  // ---- Tray lock → account picker ----
+  var tl = $('tray-lock');
+  if (tl) tl.onclick = function(e){
+    if (e) e.stopPropagation();
+    doLockToPicker();
+  };
+
   var tbt = $('tray-bt'); if(tbt) tbt.ondblclick = function(){ ST.btOn = !ST.btOn; LS.setItem('oc_bt', String(ST.btOn)); };
 
   // Wi-Fi toggle (double-click)
