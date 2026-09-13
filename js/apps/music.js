@@ -136,17 +136,17 @@ function openMusic(){
       }
 
       // ---------- button handlers (always bound, even before a track plays) ----------
-      playBtn.onclick = function(){
+      if (playBtn) playBtn.onclick = function(){
         SpotifyAuth.togglePlay().then(function(ok){
           if (!ok) console.warn('togglePlay returned false');
         }).catch(function(e){ console.error('togglePlay error:', e); });
       };
-      nextBtn.onclick = function(){
+      if (nextBtn) nextBtn.onclick = function(){
         SpotifyAuth.nextTrack().then(function(ok){
           if (!ok) console.warn('nextTrack returned false');
         }).catch(function(e){ console.error('nextTrack error:', e); });
       };
-      prevBtn.onclick = function(){
+      if (prevBtn) prevBtn.onclick = function(){
         SpotifyAuth.previousTrack().then(function(ok){
           if (!ok) console.warn('previousTrack returned false');
         }).catch(function(e){ console.error('previousTrack error:', e); });
