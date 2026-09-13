@@ -1,6 +1,7 @@
 // ============================================================
 //  taskbar.js — OpencoreOS v10.4
-//  Taskbar, start menu, system tray, Shutdown, Airplane Mode.
+//  Taskbar, start menu, system tray, Shutdown, Airplane Mode,
+//  Accessibility panel hook.
 // ============================================================
 
 function updateTaskbar(){
@@ -67,6 +68,15 @@ function initTaskbar(){
     if (window.AirplaneMode) window.AirplaneMode.toggle();
   };
 
+  // ---------------- Accessibility ----------------
+  var ma11y = $('ma11y');
+  if (ma11y) ma11y.onclick = function(e){
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    $('sm').classList.remove('on');
+    if (typeof openAccessibilityPanel === 'function') openAccessibilityPanel();
+    else alert('Accessibility panel not loaded');
+  };
+
   // ---------------- Shutdown ----------------
   var msd = $('msd');
   if(msd) msd.onclick = function(e){
@@ -96,9 +106,17 @@ function initTaskbar(){
   };
 
   // ---------------- System tray ----------------
-  // Note: tray-wifi click is now handled by airplane.js (toggles Airplane Mode).
+  // tray-wifi click is handled by airplane.js (toggles Airplane Mode).
   var tl = $('tray-lock'); if(tl) tl.onclick = function(){ showLogin(); };
   var tbt = $('tray-bt'); if(tbt) tbt.ondblclick = function(){ ST.btOn = !ST.btOn; LS.setItem('oc_bt', String(ST.btOn)); };
+
+  // Accessibility tray icon — opens the quick panel
+  var trayA11y = $('tray-a11y');
+  if(trayA11y) trayA11y.onclick = function(e){
+    if(e) e.stopPropagation();
+    if (typeof openAccessibilityPanel === 'function') openAccessibilityPanel();
+    else alert('Accessibility panel not loaded');
+  };
 
   updateBattery();
 
