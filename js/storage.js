@@ -3,8 +3,8 @@
 //  Provides LS (safe localStorage wrapper), $ / $$ helpers,
 //  and VFS (virtual file system).
 //
-//  Multi-user note: after VFS.init(), LS is replaced by a scoped
-//  wrapper from accounts.js so every account has its own data.
+//  Multi-user note: window.LS is a live getter that returns a
+//  scoped wrapper for the active account (from accounts.js).
 // ============================================================
 
 var LS_base = (function(){
@@ -27,18 +27,14 @@ var LS_base = (function(){
 })();
 
 // ---- Live LS: returns the account-scoped wrapper when available ----
-// We define it as a getter on window so any code reading `LS.*` gets
-// the currently active account's view without reloading.
+// window.LS is defined as a getter. Every read of LS.* goes through
+// accounts.scopedLS() so each account sees its own data.
 (function () {
-  function makeDefault() {
-    // Fallback when accounts.js didn't load — behaves like plain localStorage.
-    return LS_base;
-  }
   function currentScoped() {
     if (window.Accounts && typeof window.Accounts.scopedLS === 'function') {
       try { return window.Accounts.scopedLS(); } catch (e) {}
     }
-    return makeDefault();
+    return LS_base;
   }
   try {
     Object.defineProperty(window, 'LS', {
@@ -46,14 +42,10 @@ var LS_base = (function(){
       get: function () { return currentScoped(); }
     });
   } catch (e) {
-    // Fallback for very old browsers: just assign once
+    // Very old browsers: fall back to a one-time assignment.
     window.LS = currentScoped();
   }
 })();
-
-// Make `LS` a global name too, so `LS.getItem(...)` works inside this file
-// and any script that uses `var LS` still resolves through window.LS.
-try { LS = window.LS; } catch (e) {}
 
 window.onerror = function(m,u,l,c,e){
   var box = document.getElementById('err');
