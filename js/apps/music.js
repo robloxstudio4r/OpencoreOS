@@ -123,7 +123,12 @@ function openMusic(){
         lB.onclick = function(e){
           if (e) { e.preventDefault(); e.stopPropagation(); }
           try {
-            var clientId = localStorage.getItem('opencore_spotify_client_id');
+            // READ FROM SCOPED LS (per-account), fall back to global localStorage
+            var clientId = null;
+            try { clientId = LS.getItem('opencore_spotify_client_id'); } catch (x) {}
+            if (!clientId) {
+              try { clientId = localStorage.getItem('opencore_spotify_client_id'); } catch (x) {}
+            }
             if (!clientId) { alert('Please set your Spotify Client ID in Settings → Spotify first.'); return false; }
             if (window.SpotifyAuth && typeof SpotifyAuth.login === 'function') {
               SpotifyAuth.login();
