@@ -2,6 +2,7 @@
 //  spotify-auth.js — Bulletproof version for OpencoreOS v10.4
 //  Never throws at load time. Never crashes the host page.
 //  Handles PKCE OAuth flow + Web Playback SDK + search.
+//  Multi-user: uses the account-scoped LS so tokens are per-user.
 // ============================================================
 
 var SpotifyAuth = (function () {
@@ -21,13 +22,22 @@ var SpotifyAuth = (function () {
   var sdkReady = false;
   var pendingInit = false;
 
-  // -------- Safe localStorage (works in sandboxed iframes) --------
+  // -------- Safe storage: prefer account-scoped LS --------
   function store() {
+    // 1) Prefer the account-scoped LS (multi-user)
+    try {
+      if (window.LS && typeof window.LS.getItem === 'function' && typeof window.LS.setItem === 'function') {
+        return window.LS;
+      }
+    } catch (e) {}
+
+    // 2) Fall back to raw localStorage
     try {
       window.localStorage.setItem('__spotify_test__', '1');
       window.localStorage.removeItem('__spotify_test__');
       return window.localStorage;
     } catch (e) {
+      // 3) In-memory fallback
       var m = {};
       return {
         getItem: function (k) { return Object.prototype.hasOwnProperty.call(m, k) ? m[k] : null; },
@@ -64,10 +74,19 @@ var SpotifyAuth = (function () {
     return window.location.origin + window.location.pathname;
   }
 
+  // Read client ID from either scoped or unscoped storage
+  function readClientId() {
+    var v = null;
+    try { v = S.getItem(CLIENT_ID_KEY); } catch (e) {}
+    if (v) return v;
+    try { v = localStorage.getItem(CLIENT_ID_KEY); } catch (e) {}
+    return v || '';
+  }
+
   // -------- Login (redirect to Spotify) --------
   function login() {
     try {
-      var clientId = S.getItem(CLIENT_ID_KEY);
+      var clientId = readClientId();
       if (!clientId) {
         alert('Please set your Spotify Client ID in Settings → Spotify first.');
         return;
@@ -111,7 +130,7 @@ var SpotifyAuth = (function () {
         }
         if (!code) return resolve(false);
 
-        var clientId = S.getItem(CLIENT_ID_KEY);
+        var clientId = readClientId();
         var verifier = S.getItem(VERIFIER_KEY);
         if (!clientId || !verifier) {
           window.history.replaceState({}, document.title, window.location.pathname);
@@ -172,7 +191,7 @@ var SpotifyAuth = (function () {
         if (token && Date.now() < expiry - 60000) return resolve(token);
 
         var refresh = S.getItem(REFRESH_TOKEN_KEY);
-        var clientId = S.getItem(CLIENT_ID_KEY);
+        var clientId = readClientId();
         if (!refresh || !clientId) return resolve(null);
 
         fetch('https://accounts.spotify.com/api/token', {
