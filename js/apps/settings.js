@@ -5,7 +5,6 @@ function openSettings(){
   var net = navigator.connection || {};
   var hasSpotify = !!window.SpotifyAuth;
   var spotifyLoggedIn = hasSpotify && SpotifyAuth.isLoggedIn();
-  var amOn = !!(window.AirplaneMode && window.AirplaneMode.isOn());
   var active = window.Accounts ? window.Accounts.getActiveAccount() : null;
 
   var win = makeWindow('settings', 'Settings', '⚙️',
@@ -30,8 +29,6 @@ function openSettings(){
     + '<div class="row"><span class="lbl">Wi-Fi</span><div class="tg ' + (ST.wifiOn ? 'on' : '') + '" id="s-wifi"></div></div>'
     + '<div class="row"><span class="lbl">Connection</span><span class="val">' + (net.effectiveType || 'unknown') + '</span></div>'
     + '<div class="row"><span class="lbl">Online</span><span class="val">' + (navigator.onLine ? 'Yes' : 'No') + '</span></div>'
-    + '<div class="row"><span class="lbl">Airplane Mode</span><div class="tg ' + (amOn ? 'on' : '') + '" id="s-am"></div></div>'
-    + '<div class="row"><span class="lbl" style="font-size:11px;color:#888;">Blocks iframe-based apps</span></div>'
     + '</div>'
 
     + '<div class="tc" data-t="bt">'
@@ -58,7 +55,6 @@ function openSettings(){
     + '<p style="color:#888;font-size:11px;margin-top:8px;">Up to 3 accounts. Each has its own files, apps, and settings.</p>'
     + '</div>'
 
-    // ------------- Accessibility tab -------------
     + '<div class="tc" data-t="a11y">'
     + '<div style="font-size:11px;color:#888;margin-bottom:8px;">These settings apply to the current account only.</div>'
     + '<div id="s-a11y-panel"></div></div>'
@@ -102,15 +98,6 @@ function openSettings(){
   win.querySelector('#s-wifi').onclick = function(){ ST.wifiOn = !ST.wifiOn; LS.setItem('oc_wifi', String(ST.wifiOn)); this.classList.toggle('on', ST.wifiOn); };
   win.querySelector('#s-bt').onclick = function(){ ST.btOn = !ST.btOn; LS.setItem('oc_bt', String(ST.btOn)); this.classList.toggle('on', ST.btOn); };
 
-  var amBtn = win.querySelector('#s-am');
-  if(amBtn){
-    amBtn.onclick = function(){
-      if(!window.AirplaneMode){ alert('Airplane Mode module not loaded'); return; }
-      window.AirplaneMode.toggle();
-      this.classList.toggle('on', window.AirplaneMode.isOn());
-    };
-  }
-
   win.querySelector('#s-bt-scan').onclick = function(){
     if(!ST.btOn) return alert('Turn on Bluetooth first');
     if(!navigator.bluetooth) return alert('Not supported');
@@ -125,11 +112,6 @@ function openSettings(){
   win.querySelector('#s-sp-sv').onclick = function(){ var id = win.querySelector('#s-spid').value.trim(); if(id){ LS.setItem('opencore_spotify_client_id', id); alert('Saved'); } else alert('Enter Client ID'); };
   win.querySelector('#s-sp-login').onclick = function(){ if(window.SpotifyAuth) SpotifyAuth.login(); else alert('Open the Music app first'); };
   win.querySelector('#s-sp-out').onclick = function(){ if(window.SpotifyAuth) SpotifyAuth.logout(); alert('Logged out'); };
-
-  window.addEventListener('airplanemodechange', function (e) {
-    var el = win.querySelector('#s-am');
-    if (el) el.classList.toggle('on', e.detail.on);
-  });
 
   // ============================================================
   //  Developer Tools unlock: click the 🪟 on the About tab 5 times
@@ -151,7 +133,6 @@ function openSettings(){
       lastClick = now;
       clicks++;
 
-      // Small visual feedback
       emblem.style.transform = 'scale(1.15)';
       setTimeout(function(){ emblem.style.transform = ''; }, 120);
 
@@ -206,136 +187,4 @@ function openSettings(){
         wrap.style.cssText = 'display:block;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);';
         wrap.innerHTML =
           '<div style="display:flex;justify-content:space-between;margin-bottom:6px;">' +
-            '<div style="color:#fff;font-size:13px;">' + label + '</div>' +
-            '<div class="val" style="color:#1db954;font-size:12px;">' + val + suffix + '</div>' +
-          '</div>';
-        var inp = document.createElement('input');
-        inp.type = 'range'; inp.min = min; inp.max = max; inp.step = step; inp.value = val;
-        inp.style.cssText = 'width:100%;';
-        inp.oninput = function () {
-          wrap.querySelector('.val').textContent = inp.value + suffix;
-          window.A11y.set(key, parseInt(inp.value, 10));
-        };
-        wrap.appendChild(inp);
-        return wrap;
-      }
-      panel.appendChild(toggleRow('', 'Narrator', 'Screen reader — speaks UI aloud', 'narrator'));
-      panel.appendChild(toggleRow('', 'Magnifier', 'Zoom the whole desktop', 'magnifier'));
-      panel.appendChild(sliderRow('Zoom', 'zoom', 100, 300, 10, '%'));
-      panel.appendChild(toggleRow('', 'Magnifier lens', 'Big magnifier follows cursor', 'lens'));
-      panel.appendChild(sliderRow('Text size', 'textsize', 80, 250, 5, '%'));
-      panel.appendChild(toggleRow('', 'High contrast', 'Sharper edges, stronger colors', 'contrast'));
-      panel.appendChild(toggleRow('', 'Focus ring', 'Large outline on keyboard focus', 'focus_ring'));
-      panel.appendChild(toggleRow('', 'Reduce motion', 'Disable animations and transitions', 'reduce_motion'));
-
-      var hint = document.createElement('p');
-      hint.style.cssText = 'color:#666;font-size:11px;margin-top:12px;line-height:1.8;';
-      hint.innerHTML =
-        '<b style="color:#888;">Shortcuts:</b><br>' +
-        'Ctrl+Alt+N — Narrator<br>Ctrl+Alt+M — Magnifier<br>' +
-        'Ctrl+Alt+= / Ctrl+Alt+- — Text size';
-      panel.appendChild(hint);
-    }
-    refresh();
-  })();
-
-  // ---- Users tab ----
-  function renderUsers() {
-    var listEl = win.querySelector('#s-users-list');
-    if (!listEl || !window.Accounts) return;
-    var list = window.Accounts.list();
-    var activeId = window.Accounts.getActiveId();
-    listEl.innerHTML = '';
-
-    for (var i = 0; i < list.length; i++) {
-      (function(acc){
-        var isActive = acc.id === activeId;
-        var row = document.createElement('div');
-        row.style.cssText =
-          'display:flex;align-items:center;gap:8px;padding:10px 12px;' +
-          'border:1px solid rgba(255,255,255,0.08);border-radius:8px;' +
-          'margin-bottom:6px;background:' + (isActive ? 'rgba(29,185,84,0.08)' : 'rgba(255,255,255,0.02)') + ';';
-        row.innerHTML =
-          '<div style="font-size:24px;">👤</div>' +
-          '<div style="flex:1;min-width:0;">' +
-            '<div style="color:#fff;font-size:13px;font-weight:600;">' + acc.name +
-              (isActive ? ' <span style="color:#1db954;font-size:10px;font-weight:400;">· active</span>' : '') +
-            '</div>' +
-            '<div style="color:#888;font-size:11px;">' +
-              (acc.hasPassword ? '🔒 Password protected' : 'No password') +
-            '</div>' +
-          '</div>';
-        var rename = document.createElement('button');
-        rename.className = 'btn'; rename.textContent = 'Rename';
-        rename.onclick = function () {
-          var n = prompt('New name:', acc.name);
-          if (n === null) return;
-          n = n.trim().slice(0, 20);
-          if (!n) return;
-          window.Accounts.update(acc.id, { name: n });
-          renderUsers();
-        };
-        row.appendChild(rename);
-
-        var pwBtn = document.createElement('button');
-        pwBtn.className = 'btn';
-        pwBtn.textContent = acc.hasPassword ? 'Change PW' : 'Set PW';
-        pwBtn.onclick = function () {
-          var p = prompt(acc.hasPassword ? 'New password (blank to remove):' : 'New password:');
-          if (p === null) return;
-          window.Accounts.update(acc.id, { password: p || '' });
-          renderUsers();
-          alert(p ? 'Password updated' : 'Password removed');
-        };
-        row.appendChild(pwBtn);
-
-        if (!isActive) {
-          var signIn = document.createElement('button');
-          signIn.className = 'btn'; signIn.textContent = 'Sign in';
-          signIn.onclick = function () {
-            var pw = acc.hasPassword ? (prompt('Password:') || '') : '';
-            if (window.Accounts.verifyPassword(acc.id, pw)) {
-              window.Accounts.setActive(acc.id);
-              location.reload();
-            } else alert('Incorrect password');
-          };
-          row.appendChild(signIn);
-        }
-
-        var del = document.createElement('button');
-        del.className = 'btn btd'; del.textContent = 'Delete';
-        del.onclick = function () {
-          if (list.length <= 1) return alert('Cannot delete the only account');
-          if (!confirm('Delete account "' + acc.name + '"?')) return;
-          window.Accounts.remove(acc.id);
-          if (isActive) location.reload(); else renderUsers();
-        };
-        row.appendChild(del);
-        listEl.appendChild(row);
-      })(list[i]);
-    }
-  }
-  renderUsers();
-
-  var addBtn = win.querySelector('#s-users-add');
-  if (addBtn) addBtn.onclick = function () {
-    if (!window.Accounts) return alert('Accounts module not loaded');
-    if (!window.Accounts.canCreate()) return alert('Maximum of ' + window.Accounts.MAX + ' accounts reached');
-    var name = prompt('New account name (max 20 chars):');
-    if (name === null) return;
-    name = name.trim().slice(0, 20);
-    if (!name) return alert('Name is required');
-    var pw = prompt('Password (leave blank for none):') || '';
-    var res = window.Accounts.create(name, pw);
-    if (!res.ok) return alert(res.error);
-    renderUsers();
-    alert('Account "' + name + '" created.');
-  };
-
-  var switchBtn = win.querySelector('#s-users-switch');
-  if (switchBtn) switchBtn.onclick = function () {
-    if (!confirm('Sign out of the current account and choose another?')) return;
-    window.Accounts.setActive(null);
-    location.reload();
-  };
-}
+            '<div style="color:#fff;font-size:13px;">' + label + '</
