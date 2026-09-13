@@ -1,3 +1,7 @@
+// ============================================================
+//  desktop.js — Desktop icons, drag/drop, App Lock + Trash hooks
+// ============================================================
+
 var DEFAULT_ICONS = [
   {id:'system32', name:'System32', icon:'⚙️', x:0, y:0},
   {id:'files', name:'Files', icon:'📁', x:0, y:1},
@@ -58,9 +62,49 @@ function renderDesktop(){
     btn.className = 'di';
     btn.style.left = pos.x + 'px';
     btn.style.top = pos.y + 'px';
+    btn.setAttribute('data-app', icon.id);
     btn.innerHTML = '<span class="ic">' + icon.icon + '</span><span class="lb">' + icon.name + '</span>';
+
+    // ---- Lock indicator: show 🔒 badge if the app is locked ----
+    if (window.AppLock && window.AppLock.isLocked && window.AppLock.isLocked(icon.id)) {
+      var lockBadge = document.createElement('span');
+      lockBadge.textContent = '🔒';
+      lockBadge.style.cssText =
+        'position:absolute;top:2px;right:6px;font-size:14px;' +
+        'background:rgba(0,0,0,0.6);border-radius:50%;padding:2px 4px;';
+      btn.appendChild(lockBadge);
+    }
+
+    // ---- Trash indicator (shouldn't normally show, but safety) ----
+    if (window.AppTrash && window.AppTrash.isTrashed && window.AppTrash.isTrashed(icon.id)) {
+      btn.style.display = 'none';
+    }
+
     attachIconHandlers(btn, icon);
+
+    // ---- Hook long-press for the App Lock / Trash menu ----
+    if (window.AppLock && window.AppLock.attachLongPress) {
+      window.AppLock.attachLongPress(btn, icon.id, {
+        onRename: function (el, appId) {
+          // Use the built-in editor
+          openAppEditor(icon, el.getBoundingClientRect().left, el.getBoundingClientRect().top);
+        }
+      });
+    }
+
+    // ---- Make draggable for drag-to-trash ----
+    btn.setAttribute('draggable', 'true');
+    btn.addEventListener('dragstart', function (e) {
+      try { e.dataTransfer.setData('text/app-id', icon.id); } catch (x) {}
+      try { e.dataTransfer.effectAllowed = 'move'; } catch (x) {}
+    });
+
     dt.appendChild(btn);
+  }
+
+  // Let the trash module hook its icon droppers
+  if (window.AppTrash && typeof window.AppTrash.hookIcons === 'function') {
+    window.AppTrash.hookIcons();
   }
 }
 
@@ -75,11 +119,19 @@ function attachIconHandlers(btn, icon){
     startX = e.clientX; startY = e.clientY;
     startLeft = rect.left; startTop = rect.top;
     moved = false; holdFired = false;
+
+    // NOTE: we no longer open the app editor here directly — the AppLock
+    // long-press hook (attached in renderDesktop) handles that menu.
+    // But we still keep a legacy fallback for right-click:
     holdTimer = setTimeout(function(){
       holdFired = true;
       dragMode = false;
-      openAppEditor(icon, e.clientX, e.clientY);
+      // fallback only if AppLock didn't install its own menu
+      if (!window.AppLock || !window.AppLock.attachLongPress) {
+        openAppEditor(icon, e.clientX, e.clientY);
+      }
     }, 650);
+
     document.addEventListener('mousemove', onMove);
     document.addEventListener('mouseup', onUp);
   };
@@ -111,7 +163,9 @@ function attachIconHandlers(btn, icon){
       icon.x = newPos.x; icon.y = newPos.y;
       saveIcons(); renderDesktop();
       dragMode = false;
-    } else if(!holdFired && !moved){ launch(icon.id); }
+    } else if(!holdFired && !moved){
+      launch(icon.id);
+    }
   }
 }
 
