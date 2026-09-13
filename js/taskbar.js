@@ -1,7 +1,7 @@
 // ============================================================
 //  taskbar.js — OpencoreOS v10.4
-//  Taskbar, start menu, system tray, Shutdown, Airplane Mode,
-//  Accessibility, Screenshot, Screen Recording, Captures.
+//  Taskbar, start menu, system tray, Shutdown, Accessibility,
+//  Screenshot, Screen Recording, Captures.
 // ============================================================
 
 function updateTaskbar(){
@@ -60,14 +60,6 @@ function initTaskbar(){
   var msleep = $('msleep'); if(msleep) msleep.onclick = function(){ $('sm').classList.remove('on'); goToSleep(); };
   var mrs = $('mrs'); if(mrs) mrs.onclick = function(){ if(confirm('Restart?')) location.reload(); };
 
-  // ---------------- Airplane Mode ----------------
-  var mam = $('mam');
-  if (mam) mam.onclick = function(e){
-    if (e) { e.preventDefault(); e.stopPropagation(); }
-    $('sm').classList.remove('on');
-    if (window.AirplaneMode) window.AirplaneMode.toggle();
-  };
-
   // ---------------- Accessibility ----------------
   var ma11y = $('ma11y');
   if (ma11y) ma11y.onclick = function(e){
@@ -115,9 +107,15 @@ function initTaskbar(){
   };
 
   // ---------------- System tray ----------------
-  // tray-wifi click is handled by airplane.js (toggles Airplane Mode).
   var tl = $('tray-lock'); if(tl) tl.onclick = function(){ showLogin(); };
   var tbt = $('tray-bt'); if(tbt) tbt.ondblclick = function(){ ST.btOn = !ST.btOn; LS.setItem('oc_bt', String(ST.btOn)); };
+
+  // Wi-Fi toggle (double-click)
+  var tw = $('tray-wifi');
+  if (tw) tw.ondblclick = function(){
+    ST.wifiOn = !ST.wifiOn;
+    LS.setItem('oc_wifi', String(ST.wifiOn));
+  };
 
   // Accessibility tray icon
   var trayA11y = $('tray-a11y');
@@ -145,9 +143,4 @@ function initTaskbar(){
   };
 
   updateBattery();
-
-  // Reflect Airplane Mode in the Start-menu label if it's on
-  if (window.AirplaneMode && window.AirplaneMode.isOn && mam) {
-    mam.innerHTML = '<span class="ic">✈️</span>Airplane Mode (ON)';
-  }
 }
