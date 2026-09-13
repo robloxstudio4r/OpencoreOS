@@ -39,20 +39,75 @@ function loadIcons(){
     var saved = LS.getItem('oc_icons_v1');
     if(saved){
       icons = JSON.parse(saved);
+      // Add any new default icons the user hasn't seen yet
       for(var i=0; i<DEFAULT_ICONS.length; i++){
         var found = false;
-        for(var j=0; j<icons.length; j++){ if(icons[j].id === DEFAULT_ICONS[i].id){ found = true; break; } }
-        if(!found) icons.push(JSON.parse(JSON.stringify(DEFAULT_ICONS[i])));
+        for(var j=0; j<icons.length; j++){
+          if(icons[j].id === DEFAULT_ICONS[i].id){ found = true; break; }
+        }
+        if(!found) {
+          icons.push(JSON.parse(JSON.stringify(DEFAULT_ICONS[i])));
+        }
       }
-    } else icons = JSON.parse(JSON.stringify(DEFAULT_ICONS));
-  } catch(e){ icons = JSON.parse(JSON.stringify(DEFAULT_ICONS)); }
+    } else {
+      icons = JSON.parse(JSON.stringify(DEFAULT_ICONS));
+    }
+  } catch(e){
+    icons = JSON.parse(JSON.stringify(DEFAULT_ICONS));
+  }
 
+  // Remove Recovery from any existing icon list (feature is hidden)
   icons = icons.filter(function (ic) { return ic.id !== 'recovery'; });
+
+  // Ensure every icon has a valid position (fixes icons stuck off-screen)
+  ensureValidPositions();
+}
+
+// ---- Ensure every visible icon has a valid grid position ----
+function ensureValidPositions() {
+  var used = {};
+  // First pass: mark all taken slots by icons that already have valid positions
+  for (var i = 0; i < icons.length; i++) {
+    var ic = icons[i];
+    if (ic.removed) continue;
+    if (typeof ic.x !== 'number' || typeof ic.y !== 'number' || ic.x < 0 || ic.y < 0) continue;
+    var key = ic.x + ',' + ic.y;
+    if (used[key]) {
+      // Collision — mark this one as needing reassignment
+      ic._needsSlot = true;
+    } else {
+      used[key] = true;
+    }
+  }
+  // Second pass: assign free slots to anything missing or collided
+  for (var k = 0; k < icons.length; k++) {
+    var icon = icons[k];
+    if (icon.removed) continue;
+    var invalid = (typeof icon.x !== 'number' || typeof icon.y !== 'number' || icon.x < 0 || icon.y < 0 || icon._needsSlot);
+    if (!invalid) continue;
+    // Find first free slot
+    for (var y = 0; y < 20; y++) {
+      var placed = false;
+      for (var x = 0; x < 4; x++) {
+        var key2 = x + ',' + y;
+        if (!used[key2]) {
+          icon.x = x;
+          icon.y = y;
+          used[key2] = true;
+          delete icon._needsSlot;
+          placed = true;
+          break;
+        }
+      }
+      if (placed) break;
+    }
+  }
+  saveIcons();
 }
 
 function saveIcons(){ try { LS.setItem('oc_icons_v1', JSON.stringify(icons)); } catch(e){} }
 
-// ---- Icon entry helpers ----
+// ---- Icon lookup helpers ----
 function findIconEntry(appId) {
   for (var i = 0; i < icons.length; i++) {
     if (icons[i].id === appId) return icons[i];
@@ -62,14 +117,24 @@ function findIconEntry(appId) {
 
 var ICON_W = 80, ICON_H = 90, ICON_PAD = 10, ICON_TOP_PAD = 8, ICON_LEFT_PAD = 8;
 
-function positionToXY(pos){ return { x: ICON_LEFT_PAD + pos.x * (ICON_W + ICON_PAD), y: ICON_TOP_PAD + pos.y * (ICON_H + ICON_PAD) }; }
-function xyToPosition(x, y){ return { x: Math.round((x - ICON_LEFT_PAD) / (ICON_W + ICON_PAD)), y: Math.round((y - ICON_TOP_PAD) / (ICON_H + ICON_PAD)) }; }
+function positionToXY(pos){
+  return {
+    x: ICON_LEFT_PAD + pos.x * (ICON_W + ICON_PAD),
+    y: ICON_TOP_PAD + pos.y * (ICON_H + ICON_PAD)
+  };
+}
+function xyToPosition(x, y){
+  return {
+    x: Math.round((x - ICON_LEFT_PAD) / (ICON_W + ICON_PAD)),
+    y: Math.round((y - ICON_TOP_PAD) / (ICON_H + ICON_PAD))
+  };
+}
 
 function findFreeSlot() {
   var dt = document.getElementById('dt');
   var cols = dt ? Math.max(1, Math.floor((dt.clientWidth - ICON_LEFT_PAD) / (ICON_W + ICON_PAD))) : 4;
-  var rows = dt ? Math.max(1, Math.floor((dt.clientHeight - ICON_TOP_PAD) / (ICON_H + ICON_PAD))) : 6;
-  for (var y = 0; y < rows; y++) {
+  var rows = dt ? Math.max(1, Math.floor((dt.clientHeight - ICON_TOP_PAD) / (ICON_H + ICON_PAD))) : 8;
+  for (var y = 0; y < rows + 2; y++) {
     for (var x = 0; x < cols; x++) {
       var taken = false;
       for (var i = 0; i < icons.length; i++) {
@@ -78,25 +143,26 @@ function findFreeSlot() {
       if (!taken) return { x: x, y: y };
     }
   }
-  return { x: 0, y: rows };
+  return { x: 0, y: rows + 2 };
 }
 
-// ---- Public: add app back to desktop ----
+// ---- Add app back to desktop ----
 function addAppToDesktop(appId) {
   var entry = findIconEntry(appId);
   if (entry) {
     entry.removed = false;
+    // Make sure it has a valid position
     if (typeof entry.x !== 'number' || typeof entry.y !== 'number' || entry.x < 0 || entry.y < 0) {
       var pos = findFreeSlot();
       entry.x = pos.x;
       entry.y = pos.y;
     }
   } else {
+    // Look in DEFAULT_ICONS
     for (var i = 0; i < DEFAULT_ICONS.length; i++) {
       if (DEFAULT_ICONS[i].id === appId) {
         var clone = JSON.parse(JSON.stringify(DEFAULT_ICONS[i]));
         clone.removed = false;
-        // Place in free slot instead of the default position (may be occupied)
         var free = findFreeSlot();
         clone.x = free.x;
         clone.y = free.y;
@@ -106,12 +172,14 @@ function addAppToDesktop(appId) {
       }
     }
   }
+  if (!entry) return false;
+
   saveIcons();
   renderDesktop();
-  return !!entry;
+  return true;
 }
 
-// ---- Public: remove app from desktop ----
+// ---- Remove app from desktop ----
 function removeAppFromDesktop(appId) {
   var entry = findIconEntry(appId);
   if (!entry) return false;
@@ -121,14 +189,21 @@ function removeAppFromDesktop(appId) {
   return true;
 }
 
+// ---- Render desktop ----
 function renderDesktop(){
   var dt = $('dt'); if(!dt) return;
   dt.innerHTML = '';
+
   for(var i=0; i<icons.length; i++){
     if(icons[i].removed) continue;
     var icon = icons[i];
+
+    // Skip if the icon position is invalid
+    if (typeof icon.x !== 'number' || typeof icon.y !== 'number' || icon.x < 0 || icon.y < 0) continue;
+
     var pos = positionToXY(icon);
 
+    // Custom icon from Extensions
     var customIcon = '';
     if (window.Extensions && typeof window.Extensions.getIconOverride === 'function') {
       customIcon = window.Extensions.getIconOverride(icon.id);
@@ -150,6 +225,7 @@ function renderDesktop(){
     }
     btn.innerHTML = iconHTML + '<span class="lb">' + icon.name + '</span>';
 
+    // Lock badge
     if (window.AppLock && window.AppLock.isLocked && window.AppLock.isLocked(icon.id)) {
       var lockBadge = document.createElement('span');
       lockBadge.textContent = '🔒';
@@ -159,12 +235,14 @@ function renderDesktop(){
       btn.appendChild(lockBadge);
     }
 
+    // Hide if the app is in the trash
     if (window.AppTrash && window.AppTrash.isTrashed && window.AppTrash.isTrashed(icon.id)) {
       btn.style.display = 'none';
     }
 
     attachIconHandlers(btn, icon);
 
+    // Long-press / right-click menu
     if (window.AppLock && window.AppLock.attachLongPress) {
       window.AppLock.attachLongPress(btn, icon.id, {
         onRename: function (el, appId) {
@@ -173,6 +251,7 @@ function renderDesktop(){
       });
     }
 
+    // Drag-to-trash
     btn.setAttribute('draggable', 'true');
     btn.addEventListener('dragstart', function (e) {
       try { e.dataTransfer.setData('text/app-id', icon.id); } catch (x) {}
@@ -187,6 +266,7 @@ function renderDesktop(){
   }
 }
 
+// ---- Icon interaction: drag, click, long-press ----
 function attachIconHandlers(btn, icon){
   var holdTimer = null, holdFired = false, dragMode = false, moved = false;
   var startX = 0, startY = 0, startLeft = 0, startTop = 0;
@@ -217,13 +297,17 @@ function attachIconHandlers(btn, icon){
       moved = true;
       if(!holdFired){ clearTimeout(holdTimer); dragMode = true; btn.classList.add('dragging'); }
     }
-    if(dragMode){ btn.style.left = (startLeft + dx) + 'px'; btn.style.top = (startTop + dy) + 'px'; }
+    if(dragMode){
+      btn.style.left = (startLeft + dx) + 'px';
+      btn.style.top = (startTop + dy) + 'px';
+    }
   }
 
   function onUp(){
     clearTimeout(holdTimer);
     document.removeEventListener('mousemove', onMove);
     document.removeEventListener('mouseup', onUp);
+
     if(dragMode){
       btn.classList.remove('dragging');
       var dtRect = $('dt').getBoundingClientRect();
@@ -235,8 +319,10 @@ function attachIconHandlers(btn, icon){
       var rows = Math.max(1, Math.floor((dt2.clientHeight - ICON_TOP_PAD) / (ICON_H + ICON_PAD)));
       newPos.x = Math.max(0, Math.min(cols - 1, newPos.x));
       newPos.y = Math.max(0, Math.min(rows - 1, newPos.y));
-      icon.x = newPos.x; icon.y = newPos.y;
-      saveIcons(); renderDesktop();
+      icon.x = newPos.x;
+      icon.y = newPos.y;
+      saveIcons();
+      renderDesktop();
       dragMode = false;
     } else if(!holdFired && !moved){
       launch(icon.id);
@@ -244,17 +330,16 @@ function attachIconHandlers(btn, icon){
   }
 }
 
+// ---- App editor dialog ----
 var editorTargetIcon = null;
 
 function openAppEditor(icon, mx, my){
   editorTargetIcon = icon;
   var ed = $('appEditor');
 
-  // Update heading to make it obvious what the dialog does
   var heading = ed.querySelector('h3');
   if (heading) heading.textContent = 'Edit "' + (icon.name || 'App') + '"';
 
-  // Update the Remove button label dynamically
   var remBtn = $('ae-remove');
   if (remBtn) remBtn.textContent = 'Remove from desktop';
 
@@ -264,7 +349,12 @@ function openAppEditor(icon, mx, my){
   ed.classList.add('on');
   setTimeout(function(){ $('ae-name').focus(); }, 50);
 }
-function closeAppEditor(){ var ed = $('appEditor'); if(ed) ed.classList.remove('on'); editorTargetIcon = null; }
+
+function closeAppEditor(){
+  var ed = $('appEditor');
+  if(ed) ed.classList.remove('on');
+  editorTargetIcon = null;
+}
 
 function initAppEditorButtons(){
   var save = $('ae-save');
@@ -272,22 +362,22 @@ function initAppEditorButtons(){
     if(editorTargetIcon){
       var newName = $('ae-name').value.trim();
       if(newName) editorTargetIcon.name = newName;
-      saveIcons(); renderDesktop();
+      saveIcons();
+      renderDesktop();
     }
     closeAppEditor();
   };
 
-  // ---- Remove from desktop ----
   var rem = $('ae-remove');
   if(rem) rem.onclick = function(){
-    if(!editorTargetIcon) { closeAppEditor(); return; }
+    if(!editorTargetIcon){ closeAppEditor(); return; }
     var appName = editorTargetIcon.name || 'this app';
     var ok = confirm(
       'Remove "' + appName + '" from the home screen?\n\n' +
       'It will still appear in the Start menu.\n\n' +
       'To add it back: right-click "' + appName + '" in the Start menu and choose "Add to desktop".'
     );
-    if (ok) {
+    if(ok){
       editorTargetIcon.removed = true;
       saveIcons();
       renderDesktop();
@@ -313,8 +403,6 @@ function initAppEditorButtons(){
     var appId = mi.getAttribute('data-a');
     if (!appId) return;
 
-    // Read the visible label from the Start menu item
-    var nameEl = mi.querySelector('.lb') || mi;
     var label = (mi.textContent || '').replace(/[^\x00-\x7F]/g, '').trim() || appId;
 
     var menu = document.createElement('div');
@@ -328,11 +416,7 @@ function initAppEditorButtons(){
     function closeCtx() {
       if (menu.parentNode) menu.parentNode.removeChild(menu);
       document.removeEventListener('click', closeCtx);
-      document.removeEventListener('contextmenu', closeCtx);
     }
-    document.addEventListener('contextmenu', function (ev) {
-      if (!menu.contains(ev.target)) closeCtx();
-    });
 
     function item(label2, fn, danger) {
       var row = document.createElement('div');
