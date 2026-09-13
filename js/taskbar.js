@@ -1,7 +1,7 @@
 // ============================================================
 //  taskbar.js — OpencoreOS v10.4
 //  Taskbar, start menu, system tray, Shutdown, Accessibility,
-//  Screenshot, Screen Recording, Captures.
+//  Screenshot, Screen Recording, Captures, Trash.
 // ============================================================
 
 function updateTaskbar(){
@@ -56,6 +56,17 @@ function initTaskbar(){
     })(smItems[si]);
   }
 
+  // ---- Long-press hook on Start menu app items (App Lock + Trash) ----
+  if (window.AppLock && typeof window.AppLock.attachLongPress === 'function') {
+    var menuIcons = document.querySelectorAll('.smi[data-a]');
+    for (var mi = 0; mi < menuIcons.length; mi++) {
+      (function (el) {
+        var aId = el.getAttribute('data-a');
+        if (aId) window.AppLock.attachLongPress(el, aId, {});
+      })(menuIcons[mi]);
+    }
+  }
+
   var mlk = $('mlk'); if(mlk) mlk.onclick = function(){ $('sm').classList.remove('on'); showLogin(); };
   var msleep = $('msleep'); if(msleep) msleep.onclick = function(){ $('sm').classList.remove('on'); goToSleep(); };
   var mrs = $('mrs'); if(mrs) mrs.onclick = function(){ if(confirm('Restart?')) location.reload(); };
@@ -76,6 +87,15 @@ function initTaskbar(){
     $('sm').classList.remove('on');
     if (window.Capture) window.Capture.openGallery();
     else alert('Capture module not loaded');
+  };
+
+  // ---------------- Trash ----------------
+  var mtrash = $('mtrash');
+  if (mtrash) mtrash.onclick = function(e){
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    $('sm').classList.remove('on');
+    if (window.AppTrash && typeof window.AppTrash.openWindow === 'function') window.AppTrash.openWindow();
+    else alert('Trash module not loaded');
   };
 
   // ---------------- Shutdown ----------------
