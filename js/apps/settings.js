@@ -115,4 +115,124 @@ function openSettings(){
     if(!navigator.bluetooth) return alert('Not supported');
     navigator.bluetooth.requestDevice({acceptAllDevices:true}).then(function(d){
       ST.btDevice = d;
-      win.querySelector('#s-bt-list').innerHTML += '<div style="padding:6px 0;color:#ddd;font-size:12px;">' + (d.name || 'Unknown') + ' (' +
+      win.querySelector('#s-bt-list').innerHTML += '<div style="padding:6px 0;color:#ddd;font-size:12px;">' + (d.name || 'Unknown') + ' (' + d.id.slice(0,8) + ')</div>';
+    }).catch(function(){});
+  };
+  win.querySelector('#s-pin-set').onclick = function(){ var p = prompt('Enter 6-digit PIN:'); if(p && /^\d{6}$/.test(p)){ LS.setItem('oc_pin', p); alert('PIN set'); } else alert('Must be 6 digits'); };
+  win.querySelector('#s-pin-rm').onclick = function(){ if(confirm('Remove PIN?')){ LS.removeItem('oc_pin'); alert('Removed'); } };
+  win.querySelector('#s-lock').onclick = function(){ showLogin(); };
+  win.querySelector('#s-sp-sv').onclick = function(){ var id = win.querySelector('#s-spid').value.trim(); if(id){ LS.setItem('opencore_spotify_client_id', id); alert('Saved'); } else alert('Enter Client ID'); };
+  win.querySelector('#s-sp-login').onclick = function(){ if(window.SpotifyAuth) SpotifyAuth.login(); else alert('Open the Music app first'); };
+  win.querySelector('#s-sp-out').onclick = function(){ if(window.SpotifyAuth) SpotifyAuth.logout(); alert('Logged out'); };
+
+  window.addEventListener('airplanemodechange', function (e) {
+    var el = win.querySelector('#s-am');
+    if (el) el.classList.toggle('on', e.detail.on);
+  });
+
+  // ---------------- USERS ----------------
+  function renderUsers() {
+    var listEl = win.querySelector('#s-users-list');
+    if (!listEl || !window.Accounts) return;
+    var list = window.Accounts.list();
+    var activeId = window.Accounts.getActiveId();
+    listEl.innerHTML = '';
+
+    for (var i = 0; i < list.length; i++) {
+      (function(acc){
+        var isActive = acc.id === activeId;
+        var row = document.createElement('div');
+        row.style.cssText =
+          'display:flex;align-items:center;gap:8px;padding:10px 12px;' +
+          'border:1px solid rgba(255,255,255,0.08);border-radius:8px;' +
+          'margin-bottom:6px;background:' + (isActive ? 'rgba(29,185,84,0.08)' : 'rgba(255,255,255,0.02)') + ';';
+        row.innerHTML =
+          '<div style="font-size:24px;">👤</div>' +
+          '<div style="flex:1;min-width:0;">' +
+            '<div style="color:#fff;font-size:13px;font-weight:600;">' + acc.name +
+              (isActive ? ' <span style="color:#1db954;font-size:10px;font-weight:400;">· active</span>' : '') +
+            '</div>' +
+            '<div style="color:#888;font-size:11px;">' +
+              (acc.hasPassword ? '🔒 Password protected' : 'No password') +
+            '</div>' +
+          '</div>';
+
+        var rename = document.createElement('button');
+        rename.className = 'btn'; rename.textContent = 'Rename';
+        rename.onclick = function () {
+          var n = prompt('New name:', acc.name);
+          if (n === null) return;
+          n = n.trim().slice(0, 20);
+          if (!n) return;
+          window.Accounts.update(acc.id, { name: n });
+          renderUsers();
+        };
+        row.appendChild(rename);
+
+        var pwBtn = document.createElement('button');
+        pwBtn.className = 'btn';
+        pwBtn.textContent = acc.hasPassword ? 'Change PW' : 'Set PW';
+        pwBtn.onclick = function () {
+          var p = prompt(acc.hasPassword ? 'New password (blank to remove):' : 'New password:');
+          if (p === null) return;
+          window.Accounts.update(acc.id, { password: p || '' });
+          renderUsers();
+          alert(p ? 'Password updated' : 'Password removed');
+        };
+        row.appendChild(pwBtn);
+
+        if (!isActive) {
+          var signIn = document.createElement('button');
+          signIn.className = 'btn'; signIn.textContent = 'Sign in';
+          signIn.onclick = function () {
+            var pw = acc.hasPassword ? (prompt('Password:') || '') : '';
+            if (window.Accounts.verifyPassword(acc.id, pw)) {
+              window.Accounts.setActive(acc.id);
+              location.reload();
+            } else alert('Incorrect password');
+          };
+          row.appendChild(signIn);
+        }
+
+        var del = document.createElement('button');
+        del.className = 'btn btd'; del.textContent = 'Delete';
+        del.onclick = function () {
+          if (list.length <= 1) return alert('Cannot delete the only account');
+          if (!confirm('Delete account "' + acc.name + '"? All its files and settings will be lost.')) return;
+          window.Accounts.remove(acc.id);
+          if (isActive) {
+            // Signed out — force picker on next load
+            location.reload();
+          } else {
+            renderUsers();
+          }
+        };
+        row.appendChild(del);
+        listEl.appendChild(row);
+      })(list[i]);
+    }
+  }
+  renderUsers();
+
+  var addBtn = win.querySelector('#s-users-add');
+  if (addBtn) addBtn.onclick = function () {
+    if (!window.Accounts) return alert('Accounts module not loaded');
+    if (!window.Accounts.canCreate()) return alert('Maximum of ' + window.Accounts.MAX + ' accounts reached');
+    var name = prompt('New account name (max 20 chars):');
+    if (name === null) return;
+    name = name.trim().slice(0, 20);
+    if (!name) return alert('Name is required');
+    var pw = prompt('Password (leave blank for none):') || '';
+    var res = window.Accounts.create(name, pw);
+    if (!res.ok) return alert(res.error);
+    renderUsers();
+    alert('Account "' + name + '" created. Use "Switch Account" to sign in.');
+  };
+
+  var switchBtn = win.querySelector('#s-users-switch');
+  if (switchBtn) switchBtn.onclick = function () {
+    if (!confirm('Sign out of the current account and choose another?')) return;
+    window.Accounts.setActive(null);
+    location.reload();
+  };
+}
