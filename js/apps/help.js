@@ -24,7 +24,7 @@ function openHelp(){
   var countEl = c.querySelector('#help-count');
 
   // ============================================================
-  //  Help content — organized by section
+  //  Help content
   // ============================================================
   var SECTIONS = [
     {
@@ -33,11 +33,27 @@ function openHelp(){
       entries: [
         { t: 'Sign in to an account', d: 'When OpencoreOS boots, the account picker appears. Click your account tile. If it has a password, enter it. Otherwise you go straight to the desktop.' },
         { t: 'Add up to 3 accounts', d: 'Go to Settings → Users → + Add Account. Each account has its own files, apps, wallpaper, Spotify login, extensions, and accessibility preferences.' },
-        { t: 'Switch accounts', d: 'Settings → Users → Switch Account. You will be signed out and the account picker will reappear.' },
-        { t: 'Lock the screen', d: 'Start menu → 🔒 Lock. If you have a device PIN set, the PIN pad appears. Otherwise the desktop stays unlocked.' },
+        { t: 'Switch accounts', d: 'Settings → Users → Switch Account, or click the 🔒 tray icon. You are signed out and the account picker reappears.' },
+        { t: 'Lock the screen', d: 'Start menu → 🔒 Lock or the 🔒 tray icon. This signs you out and opens the account picker.' },
         { t: 'Sleep mode', d: 'Start menu → 🌙 Sleep. Click anywhere to wake.' },
         { t: 'Shut down', d: 'Start menu → ⏻ Shutdown. Releases fullscreen, shows a shutdown screen.' },
         { t: 'Restart', d: 'Start menu → 🔄 Restart. Reloads the page, keeps the current account signed in.' }
+      ]
+    },
+    {
+      title: 'Accounts & Profile',
+      icon: '👤',
+      entries: [
+        { t: 'Open the account picker', d: 'Click the 🔒 tray icon or Start → 🔒 Lock. Signs you out and shows every account.' },
+        { t: 'Switch accounts', d: 'In the picker, click any account tile. If it has a password, enter it. Otherwise you sign in directly.' },
+        { t: 'Set a profile image', d: 'In the picker, click the ✏️ pencil on your account tile → Upload Image → pick a PNG or JPG under 500 KB → Save.' },
+        { t: 'Remove profile image', d: 'Pencil → Clear → Save. The tile goes back to the default 👤 icon.' },
+        { t: 'Rename your account', d: 'Pencil → change the Name field → Save.' },
+        { t: 'Change password (requires old password)', d: 'Pencil → Change password. You must enter the current password first, then the new one twice.' },
+        { t: 'Remove password', d: 'Pencil → Remove. You must enter the current password first. Then the account has no password.' },
+        { t: 'Set password for a password-less account', d: 'Pencil → Set password. No old password needed because none exists.' },
+        { t: 'Add another account', d: 'Picker → click the dashed "Add account" tile. Up to 3 accounts total.' },
+        { t: 'Each account is isolated', d: 'Files, wallpaper, extensions, icon overrides, PIN, Spotify login, and accessibility settings are per-account.' }
       ]
     },
     {
@@ -98,6 +114,21 @@ function openHelp(){
         { t: 'Extensions tab', d: 'See installed extensions, open the store, customize each one.' },
         { t: 'Spotify tab', d: 'Paste your Spotify Client ID, log in, or log out. The Client ID is what enables Spotify login.' },
         { t: 'About tab', d: 'Shows the OS version. Click the 🪟 emoji 5 times to unlock Developer Tools.' }
+      ]
+    },
+    {
+      title: 'Task Manager & System Monitor',
+      icon: '📊',
+      entries: [
+        { t: 'Open Task Manager', d: 'Start menu → 📊 Task Manager. Shows live stats about OpencoreOS and your real device.' },
+        { t: 'Performance tab', d: 'Live FPS counter, JavaScript memory usage, page uptime, CPU cores, storage used, battery status, network info.' },
+        { t: 'Processes tab', d: 'Every open window with a Kill button, every installed extension with Activate/Deactivate, plus background services like the recorder and kiosk lock.' },
+        { t: 'Device tab', d: 'Your real browser, OS, screen resolution, pixel ratio, GPU renderer, touch support, timezone, and the full user agent.' },
+        { t: 'Kill a window', d: 'Processes tab → click Kill next to any window to force-close it. Unsaved state in that app is lost.' },
+        { t: 'Read FPS', d: 'Performance tab shows the actual frame rate. Around 60 on most screens, 120 on high-refresh displays.' },
+        { t: 'Memory usage bar', d: 'The JavaScript heap bar is green under 65%, yellow 65–85%, red above 85%.' },
+        { t: 'Live updates', d: 'The FPS and memory counters refresh every second while the Performance tab is open.' },
+        { t: 'GPU info', d: 'Device tab shows your real GPU model via WebGL — for example "Apple M1" or "NVIDIA GeForce RTX 3080".' }
       ]
     },
     {
@@ -174,6 +205,20 @@ function openHelp(){
         { t: 'Restore from Trash', d: 'Start menu → 🗑️ Trash. Click Restore next to any item.' },
         { t: 'Auto-delete', d: 'Items in the trash are permanently deleted after 30 days.' },
         { t: 'Empty trash', d: 'In the Trash window, click Empty trash to delete everything now.' }
+      ]
+    },
+    {
+      title: 'Auto-Delete & Data',
+      icon: '⏳',
+      entries: [
+        { t: 'Trashed apps auto-delete', d: 'Apps you send to the Trash are permanently removed after 30 days.' },
+        { t: 'Purge runs on boot', d: 'Every time OpencoreOS loads, it clears trashed items older than 30 days.' },
+        { t: 'Purge runs every 5 minutes', d: 'While you are using OpencoreOS, the trash is checked every 5 minutes.' },
+        { t: 'Restore before 30 days', d: 'Open 🗑️ Trash from the Start menu and click Restore on any item to bring it back.' },
+        { t: 'Empty trash manually', d: 'In the Trash window, click Empty trash to delete everything immediately.' },
+        { t: 'Account data', d: 'All account data is stored in your browser\'s localStorage under per-account prefixes.' },
+        { t: 'Back up your account', d: 'Open Terminal and type "backup". A .ocbackup file downloads with your files, icons, extensions, and settings.' },
+        { t: 'Restore a backup', d: 'Open Terminal and type "restore". Pick the .ocbackup file and confirm.' }
       ]
     },
     {
@@ -304,7 +349,6 @@ function openHelp(){
     render(search.value);
   });
 
-  // Focus the search field on open
   setTimeout(function () { search.focus(); }, 100);
 
   return win;
