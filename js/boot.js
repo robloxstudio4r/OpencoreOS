@@ -1,5 +1,5 @@
 // ============================================================
-//  boot.js — Boot sequence + Spotify OAuth callback
+//  boot.js — Boot sequence + Spotify OAuth callback + kiosk arm
 // ============================================================
 
 function loadSettings(){
@@ -45,6 +45,32 @@ function handleSpotifyCallbackIfNeeded(){
   });
 }
 
+// ============================================================
+//  Kiosk arming — the browser requires a user gesture before
+//  fullscreen can be requested, so we don't call requestFullscreen()
+//  here. We just tell kiosk.js that it's safe to arm itself once
+//  the desktop is on screen. kiosk.js already listens for the
+//  first click/keydown/touch, so this is only a hint.
+// ============================================================
+function armKioskWhenReady(){
+  if (typeof window.kioskArm === 'function') {
+    try { window.kioskArm(); } catch (e) { console.warn('kioskArm error:', e); }
+  } else {
+    // Retry briefly in case kiosk.js is still loading
+    var tries = 0;
+    var iv = setInterval(function(){
+      tries++;
+      if (typeof window.kioskArm === 'function') {
+        clearInterval(iv);
+        try { window.kioskArm(); } catch (e) { console.warn('kioskArm error:', e); }
+      } else if (tries > 20) {
+        clearInterval(iv);
+        console.warn('kiosk.js did not load — fullscreen lock disabled');
+      }
+    }, 150);
+  }
+}
+
 function bootOpencore(){
   try {
     console.log('Booting OpencoreOS v10.4 (modular)...');
@@ -81,6 +107,10 @@ function bootOpencore(){
       if (typeof showLogin === 'function') showLogin();
       else showFatal('showLogin missing — js/wizards.js did not load.');
     }
+
+    // Arm kiosk fullscreen lock once the desktop UI is on screen.
+    // No fullscreen happens yet — it waits for the user's first click.
+    armKioskWhenReady();
 
     console.log('Boot complete');
   } catch (e) {
