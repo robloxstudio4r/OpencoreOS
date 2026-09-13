@@ -263,4 +263,128 @@ function openSettings(){
           'border:1px solid ' + (isActive ? 'rgba(29,185,84,0.4)' : 'rgba(255,255,255,0.08)') + ';' +
           'border-radius:8px;margin-bottom:6px;background:' + (isActive ? 'rgba(29,185,84,0.08)' : 'rgba(255,255,255,0.02)') + ';';
         row.innerHTML =
-          '<div
+          '<div style="font-size:24px;">' + ext.icon + '</div>' +
+          '<div style="flex:1;min-width:0;">' +
+            '<div style="color:#fff;font-size:13px;font-weight:600;">' + ext.name +
+              (isActive ? ' <span style="color:#1db954;font-size:10px;font-weight:400;">· active</span>' : '') +
+            '</div>' +
+            '<div style="color:#888;font-size:11px;">' + (ext.type === 'theme' ? 'Theme' : ext.type === 'icons' ? 'Icon Pack' : 'Extension') + '</div>' +
+          '</div>';
+        var custBtn = document.createElement('button');
+        custBtn.className = 'btn'; custBtn.textContent = 'Customize';
+        custBtn.onclick = function () {
+          if (typeof openExtensionManager === 'function') openExtensionManager(id);
+        };
+        row.appendChild(custBtn);
+        listEl.appendChild(row);
+      });
+    }
+    render();
+    window.addEventListener('extensionchange', render);
+
+    if (openBtn) openBtn.onclick = function () {
+      if (typeof openExtensionStore === 'function') openExtensionStore();
+      else alert('Extension Store not loaded');
+    };
+  })();
+
+  // ---- Users tab ----
+  function renderUsers() {
+    var listEl = win.querySelector('#s-users-list');
+    if (!listEl || !window.Accounts) return;
+    var list = window.Accounts.list();
+    var activeId = window.Accounts.getActiveId();
+    listEl.innerHTML = '';
+
+    for (var i = 0; i < list.length; i++) {
+      (function(acc){
+        var isActive = acc.id === activeId;
+        var row = document.createElement('div');
+        row.style.cssText =
+          'display:flex;align-items:center;gap:8px;padding:10px 12px;' +
+          'border:1px solid rgba(255,255,255,0.08);border-radius:8px;' +
+          'margin-bottom:6px;background:' + (isActive ? 'rgba(29,185,84,0.08)' : 'rgba(255,255,255,0.02)') + ';';
+        row.innerHTML =
+          '<div style="font-size:24px;">👤</div>' +
+          '<div style="flex:1;min-width:0;">' +
+            '<div style="color:#fff;font-size:13px;font-weight:600;">' + acc.name +
+              (isActive ? ' <span style="color:#1db954;font-size:10px;font-weight:400;">· active</span>' : '') +
+            '</div>' +
+            '<div style="color:#888;font-size:11px;">' +
+              (acc.hasPassword ? '🔒 Password protected' : 'No password') +
+            '</div>' +
+          '</div>';
+        var rename = document.createElement('button');
+        rename.className = 'btn'; rename.textContent = 'Rename';
+        rename.onclick = function () {
+          var n = prompt('New name:', acc.name);
+          if (n === null) return;
+          n = n.trim().slice(0, 20);
+          if (!n) return;
+          window.Accounts.update(acc.id, { name: n });
+          renderUsers();
+        };
+        row.appendChild(rename);
+
+        var pwBtn = document.createElement('button');
+        pwBtn.className = 'btn';
+        pwBtn.textContent = acc.hasPassword ? 'Change PW' : 'Set PW';
+        pwBtn.onclick = function () {
+          var p = prompt(acc.hasPassword ? 'New password (blank to remove):' : 'New password:');
+          if (p === null) return;
+          window.Accounts.update(acc.id, { password: p || '' });
+          renderUsers();
+          alert(p ? 'Password updated' : 'Password removed');
+        };
+        row.appendChild(pwBtn);
+
+        if (!isActive) {
+          var signIn = document.createElement('button');
+          signIn.className = 'btn'; signIn.textContent = 'Sign in';
+          signIn.onclick = function () {
+            var pw = acc.hasPassword ? (prompt('Password:') || '') : '';
+            if (window.Accounts.verifyPassword(acc.id, pw)) {
+              window.Accounts.setActive(acc.id);
+              location.reload();
+            } else alert('Incorrect password');
+          };
+          row.appendChild(signIn);
+        }
+
+        var del = document.createElement('button');
+        del.className = 'btn btd'; del.textContent = 'Delete';
+        del.onclick = function () {
+          if (list.length <= 1) return alert('Cannot delete the only account');
+          if (!confirm('Delete account "' + acc.name + '"?')) return;
+          window.Accounts.remove(acc.id);
+          if (isActive) location.reload(); else renderUsers();
+        };
+        row.appendChild(del);
+        listEl.appendChild(row);
+      })(list[i]);
+    }
+  }
+  renderUsers();
+
+  var addBtn = win.querySelector('#s-users-add');
+  if (addBtn) addBtn.onclick = function () {
+    if (!window.Accounts) return alert('Accounts module not loaded');
+    if (!window.Accounts.canCreate()) return alert('Maximum of ' + window.Accounts.MAX + ' accounts reached');
+    var name = prompt('New account name (max 20 chars):');
+    if (name === null) return;
+    name = name.trim().slice(0, 20);
+    if (!name) return alert('Name is required');
+    var pw = prompt('Password (leave blank for none):') || '';
+    var res = window.Accounts.create(name, pw);
+    if (!res.ok) return alert(res.error);
+    renderUsers();
+    alert('Account "' + name + '" created.');
+  };
+
+  var switchBtn = win.querySelector('#s-users-switch');
+  if (switchBtn) switchBtn.onclick = function () {
+    if (!confirm('Sign out of the current account and choose another?')) return;
+    window.Accounts.setActive(null);
+    location.reload();
+  };
+}
