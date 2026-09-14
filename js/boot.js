@@ -1,6 +1,7 @@
 // ============================================================
-//  boot.js — Boot sequence + Spotify OAuth callback + kiosk arm
-//            + multi-user account picker
+//  boot.js — Boot sequence for OpencoreOS v10.4 (Supabase auth)
+//  Setup wizard only runs if the Supabase user has never
+//  completed it before (tracked on their profile row).
 // ============================================================
 
 function loadSettings(){
@@ -14,6 +15,9 @@ window.addEventListener('resize', function(){
   if(typeof renderDesktop === 'function') renderDesktop();
 });
 
+// ============================================================
+//  Spotify OAuth callback
+// ============================================================
 function handleSpotifyCallbackIfNeeded(){
   if(!window.SpotifyAuth || typeof SpotifyAuth.handleCallback !== 'function'){
     var attempts = 0;
@@ -23,7 +27,9 @@ function handleSpotifyCallbackIfNeeded(){
         clearInterval(iv);
         SpotifyAuth.handleCallback().then(function(ok){
           if(ok) console.log('✓ Spotify login callback handled');
-        }).catch(function(e){ console.error('Spotify callback error:', e); });
+        }).catch(function(e){
+          console.error('Spotify callback error:', e);
+        });
       } else if(attempts > 30){
         clearInterval(iv);
         console.warn('SpotifyAuth never loaded — callback skipped');
@@ -33,9 +39,14 @@ function handleSpotifyCallbackIfNeeded(){
   }
   SpotifyAuth.handleCallback().then(function(ok){
     if(ok) console.log('✓ Spotify login callback handled');
-  }).catch(function(e){ console.error('Spotify callback error:', e); });
+  }).catch(function(e){
+    console.error('Spotify callback error:', e);
+  });
 }
 
+// ============================================================
+//  Kiosk arming
+// ============================================================
 function armKioskWhenReady(){
   if (typeof window.kioskArm === 'function') {
     try { window.kioskArm(); } catch (e) { console.warn('kioskArm error:', e); }
@@ -54,84 +65,88 @@ function armKioskWhenReady(){
   }
 }
 
-function hideEverything() {
-  var s = $('setup'); if (s) s.classList.add('hide');
-  var l = $('login'); if (l) l.classList.remove('on');
-  var u = $('uwiz'); if (u) u.classList.add('hide');
+// ============================================================
+//  Check if this Supabase user has completed setup before
+//  We read oc_setup_done / oc_user_done from the account-scoped
+//  LS keys. If they're missing on first login, we run the wizards
+//  one time and mark them done.
+// ============================================================
+function userHasCompletedSetup() {
+  try {
+    var setupDone = LS.getItem('oc_setup_done') === 'true';
+    var userDone  = LS.getItem('oc_user_done')  === 'true';
+    return setupDone && userDone;
+  } catch (e) {
+    return false;
+  }
 }
 
+// ============================================================
+//  Main boot — called only AFTER Supabase auth succeeds
+//  (auth.js calls window.bootAfterAuth())
+// ============================================================
 function bootOpencore(){
   try {
-    console.log('Booting OpencoreOS v10.4 (modular)...');
+    console.log('Booting OpencoreOS v10.4 (Supabase auth)…');
 
     handleSpotifyCallbackIfNeeded();
 
-    var accounts = (window.Accounts && window.Accounts.list) ? window.Accounts.list() : [];
-    var activeId = (window.Accounts && window.Accounts.getActiveId) ? window.Accounts.getActiveId() : null;
+    var user = window.currentUser;
+    var profile = window.currentProfile;
+    console.log('Signed in as:', user ? user.email : 'unknown');
 
-    // --- CASE 1: No accounts yet — run first-time setup ---
-    if (accounts.length === 0) {
-      console.log('→ No accounts — running setup wizard');
+    // --- Ensure the VFS is loaded for this user ---
+    if (window.VFS && typeof VFS.init === 'function') {
+      Promise.resolve(VFS.init()).then(function () {
+        startDesktop();
+      }).catch(function () {
+        startDesktop();
+      });
+    } else {
+      startDesktop();
+    }
+
+    function startDesktop() {
       loadSettings();
+
       if (typeof loadIcons === 'function') loadIcons();
       if (typeof renderDesktop === 'function') renderDesktop();
-      if (typeof initLogin === 'function') initLogin();
+
+      // Safety net — force-init UI components
       if (typeof initTaskbar === 'function') initTaskbar();
       if (typeof initAppEditorButtons === 'function') initAppEditorButtons();
       if (typeof initSleepOverlay === 'function') initSleepOverlay();
 
-      if (typeof runSetup === 'function') runSetup();
-      else showFatal('runSetup missing — js/wizards.js did not load.');
+      // --- Setup wizard decision ---
+      if (!userHasCompletedSetup()) {
+        console.log('→ First login — running setup wizard');
 
-      armKioskWhenReady();
-      return;
+        // Hide the auth screen
+        var picker = document.getElementById('acctPicker');
+        if (picker) picker.style.display = 'none';
+
+        // Run setup wizard → then user wizard → then desktop
+        if (typeof runSetup === 'function') {
+          runSetup();
+        } else {
+          // No wizard available, mark it done and continue
+          LS.setItem('oc_setup_done', 'true');
+          LS.setItem('oc_user_done', 'true');
+          finishBoot();
+        }
+      } else {
+        console.log('→ Setup already completed — showing desktop');
+        var picker2 = document.getElementById('acctPicker');
+        if (picker2) picker2.style.display = 'none';
+        var setup = $('setup'); if (setup) setup.classList.add('hide');
+        finishBoot();
+      }
+
+      function finishBoot() {
+        armKioskWhenReady();
+        console.log('Boot complete');
+      }
     }
-
-    // --- CASE 2: Accounts exist, nobody signed in — show picker ---
-    if (!activeId) {
-      console.log('→ Showing account picker (' + accounts.length + ' account(s))');
-      hideEverything();
-      if (window.AccountPicker) window.AccountPicker.show();
-      else showFatal('AccountPicker missing — js/account-picker.js did not load.');
-      armKioskWhenReady();
-      return;
-    }
-
-    // --- CASE 3: Signed in — normal boot for this account ---
-    console.log('→ Signed in as', activeId, '— prefix', window.Accounts.activePrefix());
-
-    // Re-init VFS for the active account (it was initialized before prefix was live)
-    if (window.VFS && typeof VFS.init === 'function') VFS.init();
-
-    var setupDone = LS.getItem('oc_setup_done') === 'true';
-    var userDone  = LS.getItem('oc_user_done')  === 'true';
-
-    loadSettings();
-    if (typeof loadIcons === 'function') loadIcons();
-    if (typeof renderDesktop === 'function') renderDesktop();
-    if (typeof initLogin === 'function') initLogin();
-    if (typeof initTaskbar === 'function') initTaskbar();
-    if (typeof initAppEditorButtons === 'function') initAppEditorButtons();
-    if (typeof initSleepOverlay === 'function') initSleepOverlay();
-
-    if (!setupDone) {
-      console.log('→ Running setup wizard for this account');
-      if (typeof runSetup === 'function') runSetup();
-      else showFatal('runSetup missing');
-    } else if (!userDone) {
-      console.log('→ Running user wizard');
-      var s = $('setup'); if (s) s.classList.add('hide');
-      if (typeof runUserWizard === 'function') runUserWizard();
-      else showFatal('runUserWizard missing');
-    } else {
-      console.log('→ Showing login / desktop');
-      var s2 = $('setup'); if (s2) s2.classList.add('hide');
-      if (typeof showLogin === 'function') showLogin();
-      else showFatal('showLogin missing');
-    }
-
-    armKioskWhenReady();
-    console.log('Boot complete');
   } catch (e) {
     console.error('Boot error:', e);
     showFatal('Boot error: ' + e.message + '\n\n' + (e.stack || ''));
@@ -149,5 +164,13 @@ function showFatal(msg){
   }
 }
 
-bootOpencore();
+// ============================================================
+//  Bridge: auth.js calls this when the user is signed in
+//  and their profile is clear (not restricted, no warning).
+// ============================================================
+window.bootAfterAuth = function () {
+  console.log('Auth complete — booting OpencoreOS');
+  bootOpencore();
+};
+
 console.log('OpencoreOS v10.4 loaded');
