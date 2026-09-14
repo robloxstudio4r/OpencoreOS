@@ -1,6 +1,6 @@
 // ============================================================
-//  wizards.js — Setup wizard, user wizard, login screen
-//  Multi-user: creates account 1 at end of first-run setup
+//  wizards.js — Setup wizard + user wizard (Supabase auth)
+//  No local accounts — Supabase handles auth.
 // ============================================================
 
 function runSetup(){
@@ -14,22 +14,17 @@ function runSetup(){
     if(st) st.textContent = steps[Math.min(Math.floor(p / 17), steps.length - 1)];
     if(p >= 100){
       clearInterval(iv);
-      LS.setItem('oc_setup_done','true');
+      LS.setItem('oc_setup_done', 'true');
       setTimeout(function(){
         if(st) st.textContent = 'Installation complete!';
         setTimeout(function(){
           var el = $('setup'); if(el) el.classList.add('hide');
-          if(LS.getItem('oc_user_done') !== 'true') runUserWizard();
-          else {
-            // First-run is done already? Create default account and go to picker
-            if (window.Accounts && window.Accounts.list().length === 0) {
-              var dn = LS.getItem('oc_device_name') || 'Opencore User';
-              window.Accounts.create(dn, '');
-              window.Accounts.setActive('u1');
-              location.reload();
-            } else {
-              showLogin();
-            }
+
+          // Move on to the user wizard (or straight to desktop if it's done)
+          if (LS.getItem('oc_user_done') !== 'true') {
+            runUserWizard();
+          } else {
+            finishSetupAndBoot();
           }
         }, 400);
       }, 300);
@@ -52,7 +47,18 @@ var kbs = [
 ];
 
 function runUserWizard(){
-  uStep = 0; uData.name = ''; uData.lang = 'en'; uData.kb = 'us'; uData.pw = ''; uData.pwSkipped = true;
+  uStep = 0;
+  uData.name = '';
+  uData.lang = 'en';
+  uData.kb = 'us';
+  uData.pw = '';
+  uData.pwSkipped = true;
+
+  // Prefill with the Supabase email's display name if available
+  if (window.currentUser && window.currentUser.email) {
+    uData.name = window.currentUser.email.split('@')[0];
+  }
+
   var el = $('uwiz'); if(el) el.classList.remove('hide');
   renderUserStep();
 }
@@ -86,9 +92,9 @@ function renderUserStep(){
       + '<select id="uk">' + opts2 + '</select>'
       + '<div style="display:flex;gap:8px"><button class="sec" id="ub" style="flex:1">Back</button><button id="unx" style="flex:2">Continue</button></div>' + dotsHTML(2);
   } else if(uStep === 3){
-    html = '<div style="font-size:64px;">🔒</div><h2>Password (optional)</h2><p>Use 6 digits for PIN unlock, or skip.</p>'
-      + '<input type="password" id="up" placeholder="Password (6+ chars)"/>'
-      + '<input type="password" id="up2" placeholder="Confirm password"/>'
+    html = '<div style="font-size:64px;">🔒</div><h2>Device PIN (optional)</h2><p>Used for locking the screen and Developer Tools. Not the same as your login password.</p>'
+      + '<input type="password" id="up" placeholder="PIN (6 digits)"/>'
+      + '<input type="password" id="up2" placeholder="Confirm PIN"/>'
       + '<div style="display:flex;gap:8px"><button class="sec" id="ub" style="flex:1">Back</button><button class="sec" id="usk" style="flex:1">Skip</button><button id="unx" style="flex:2">Set</button></div>' + dotsHTML(3);
   } else {
     var langName = 'English';
@@ -100,7 +106,7 @@ function renderUserStep(){
       + '<div style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05);"><span style="color:#888">Device:</span> ' + (uData.name || 'Opencore-PC') + '</div>'
       + '<div style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05);"><span style="color:#888">Language:</span> ' + langName + '</div>'
       + '<div style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05);"><span style="color:#888">Keyboard:</span> ' + kbName + '</div>'
-      + '<div style="padding:6px 0;"><span style="color:#888">Password:</span> ' + (uData.pwSkipped ? 'Skipped' : 'Set') + '</div>'
+      + '<div style="padding:6px 0;"><span style="color:#888">Device PIN:</span> ' + (uData.pwSkipped ? 'Skipped' : 'Set') + '</div>'
       + '</div><button id="uf" style="width:100%">Get Started</button>' + dotsHTML(4);
   }
   c.innerHTML = html;
@@ -122,10 +128,11 @@ function nextUserStep(){
   else if(uStep === 3){
     var p1 = $('up'); var p2 = $('up2');
     if(p1 && p1.value){
-      if(p1.value.length < 6){ alert('Password must be 6+ chars.'); return; }
-      if(p2 && p1.value !== p2.value){ alert('Passwords do not match.'); return; }
-      uData.pw = p1.value; uData.pwSkipped = false;
-      if(/^\d{6}$/.test(p1.value)) LS.setItem('oc_pin', p1.value);
+      if(!/^\d{6}$/.test(p1.value)){ alert('PIN must be 6 digits.'); return; }
+      if(p2 && p1.value !== p2.value){ alert('PINs do not match.'); return; }
+      uData.pw = p1.value;
+      uData.pwSkipped = false;
+      LS.setItem('oc_pin', p1.value);
     }
   }
   uStep++;
@@ -136,36 +143,48 @@ function finishUserWizard(){
   LS.setItem('oc_device_name', uData.name || 'Opencore-PC');
   LS.setItem('oc_lang', uData.lang);
   LS.setItem('oc_kb', uData.kb);
-  LS.setItem('oc_user_done','true');
-
-  // Create account 1 if there are no accounts yet
-  if (window.Accounts && window.Accounts.list().length === 0) {
-    var name = uData.name || 'Opencore User';
-    var pw = uData.pw || '';
-    var res = window.Accounts.create(name, pw);
-    if (res.ok) {
-      window.Accounts.setActive(res.account.id);
-      console.log('Created account 1:', res.account.id);
-    } else {
-      console.warn('Account creation failed:', res.error);
-    }
-  }
+  LS.setItem('oc_user_done', 'true');
 
   var el = $('uwiz'); if(el) el.classList.add('hide');
 
-  // Reload so VFS + all data is re-initialized under the new account's prefix
-  if (window.Accounts && window.Accounts.getActiveId()) {
-    setTimeout(function () { location.reload(); }, 400);
-    return;
-  }
-
-  if(typeof loadSettings === 'function') loadSettings();
-  showLogin();
-  setTimeout(function(){ alert('Welcome, ' + (uData.name || 'Opencore User') + '!'); }, 300);
+  // No local account creation — Supabase already has the user
+  finishSetupAndBoot();
 }
 
 // ============================================================
-//  LOGIN SCREEN
+//  Common finish: hide wizards and boot the desktop
+// ============================================================
+function finishSetupAndBoot(){
+  // Hide every pre-desktop screen
+  var s = $('setup'); if(s) s.classList.add('hide');
+  var u = $('uwiz');  if(u) u.classList.add('hide');
+  var p = $('acctPicker'); if(p) p.style.display = 'none';
+  var l = $('login'); if(l) l.classList.remove('on');
+
+  // Load settings, desktop icons, etc.
+  if (typeof loadSettings === 'function') loadSettings();
+  if (typeof loadIcons === 'function') loadIcons();
+  if (typeof renderDesktop === 'function') renderDesktop();
+  if (typeof initTaskbar === 'function') initTaskbar();
+  if (typeof initAppEditorButtons === 'function') initAppEditorButtons();
+  if (typeof initSleepOverlay === 'function') initSleepOverlay();
+
+  // Arm kiosk
+  if (typeof armKioskWhenReady === 'function') armKioskWhenReady();
+
+  // Welcome message on first time only
+  if (!window.__welcomed) {
+    window.__welcomed = true;
+    setTimeout(function(){
+      try { alert('Welcome, ' + (uData.name || 'Opencore User') + '!'); } catch (e) {}
+    }, 300);
+  }
+
+  console.log('Setup complete — desktop ready');
+}
+
+// ============================================================
+//  PIN LOGIN (still works for device lock, but not for auth)
 // ============================================================
 var pin = '';
 
