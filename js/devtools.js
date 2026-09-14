@@ -79,7 +79,8 @@
       { id: 'vfs',     label: 'VFS' },
       { id: 'apps',    label: 'Apps' },
       { id: 'windows', label: 'Windows' },
-      { id: 'flags',   label: 'Flags' }
+      { id: 'flags',   label: 'Flags' },
+      { id: 'admin',   label: 'Admin' }
     ];
 
     function renderTabs() {
@@ -115,6 +116,7 @@
         '<div id="dev-console-out" style="white-space:pre-wrap;line-height:1.5;padding:4px 2px;color:#cfd8dc;max-height:calc(100% - 40px);overflow-y:auto;">'
         + '<div style="color:#66d9ef;">OpencoreOS Dev Console</div>'
         + '<div style="color:#666;">Type any JavaScript. Enter to run. ↑/↓ for history.</div>'
+        + '<div style="color:#8ab4f8;margin-top:4px;">Admin tip: type <b>adminPanel()</b> to open user management.</div>'
         + '<div style="height:8px;"></div>'
         + '</div>'
         + '<div style="display:flex;border-top:1px solid #1e2028;padding-top:6px;margin-top:6px;">'
@@ -523,7 +525,7 @@
         function () { location.reload(); });
 
       // ============================================================
-      //  RECOVERY (hidden from Start menu, only here)
+      //  RECOVERY
       // ============================================================
 
       flag('Open Recovery Environment',
@@ -547,6 +549,121 @@
             alert('Recovery module not loaded. Check that js/apps/recovery.js exists.');
           }
         });
+
+      // ============================================================
+      //  ADMIN (Supabase)
+      // ============================================================
+
+      flag('🛡️  Open Admin Panel',
+        'Manage all users: restrict, unrestrict, warn. Admins only.',
+        '#1e4d6b',
+        function () {
+          if (typeof window.adminPanel === 'function') {
+            window.adminPanel();
+          } else {
+            alert('Admin panel not loaded. Check that js/admin-panel.js exists.');
+          }
+        });
+
+      flag('Am I an admin?',
+        'Checks your role in Supabase.',
+        '#1e4d6b',
+        function () {
+          if (!window.supabaseClient) { alert('Supabase not loaded.'); return; }
+          var user = window.OpencoreAuth && window.OpencoreAuth.getCurrentUser
+            ? window.OpencoreAuth.getCurrentUser() : null;
+          if (!user) { alert('Not signed in.'); return; }
+          supabase.from('profiles').select('role').eq('id', user.id).single()
+            .then(function (res) {
+              if (res.error) { alert('Error: ' + res.error.message); return; }
+              alert('Your role: ' + (res.data ? res.data.role : 'unknown'));
+            });
+        });
+    }
+
+    // ==========================================================
+    //  TAB: Admin
+    // ==========================================================
+    function renderAdmin() {
+      body.innerHTML = '';
+      var wrap = document.createElement('div');
+      wrap.style.cssText = 'display:flex;flex-direction:column;gap:10px;';
+      body.appendChild(wrap);
+
+      // Header
+      var header = document.createElement('div');
+      header.style.cssText = 'color:#8ab4f8;font-size:13px;font-weight:600;';
+      header.textContent = 'Admin Controls';
+      wrap.appendChild(header);
+
+      // Status card
+      var card = document.createElement('div');
+      card.style.cssText =
+        'background:#141720;border:1px solid #1e2028;border-radius:6px;padding:12px;';
+      card.innerHTML =
+        '<div style="color:#888;font-size:11px;margin-bottom:8px;">Current session</div>'
+        + '<div id="dev-admin-user" style="color:#fff;">Loading…</div>';
+      wrap.appendChild(card);
+
+      // Button: Open admin panel
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = '🛡️  Open Admin Panel';
+      btn.style.cssText =
+        'background:#1e4d6b;border:none;color:#fff;padding:10px 16px;' +
+        'border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;';
+      btn.onclick = function () {
+        if (typeof window.adminPanel === 'function') window.adminPanel();
+        else alert('adminPanel() not loaded. Make sure js/admin-panel.js is included.');
+      };
+      wrap.appendChild(btn);
+
+      // Button: list users count
+      var btnList = document.createElement('button');
+      btnList.type = 'button';
+      btnList.textContent = '📋  Show user count';
+      btnList.style.cssText =
+        'background:#1e4d6b;border:none;color:#fff;padding:10px 16px;' +
+        'border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;';
+      btnList.onclick = function () {
+        if (!window.supabaseClient) return alert('Supabase not loaded');
+        supabase.from('profiles').select('id', { count: 'exact', head: true })
+          .then(function (res) {
+            if (res.error) return alert(res.error.message);
+            alert('Total users: ' + (res.count || 0));
+          });
+      };
+      wrap.appendChild(btnList);
+
+      // Note
+      var note = document.createElement('div');
+      note.style.cssText = 'color:#666;font-size:11px;margin-top:8px;line-height:1.6;';
+      note.innerHTML =
+        'Admins can restrict, unrestrict, and warn users.<br>' +
+        'Only accounts with <b style="color:#1db954;">role = admin</b> can open the panel.';
+      wrap.appendChild(note);
+
+      // Load current user info
+      var userEl = card.querySelector('#dev-admin-user');
+      function loadUserInfo() {
+        if (!window.supabaseClient) { userEl.textContent = 'Supabase not loaded.'; return; }
+        var user = window.OpencoreAuth && window.OpencoreAuth.getCurrentUser
+          ? window.OpencoreAuth.getCurrentUser() : null;
+        if (!user) { userEl.textContent = 'Not signed in.'; return; }
+
+        supabase.from('profiles').select('email, role, restricted').eq('id', user.id).single()
+          .then(function (res) {
+            if (res.error) { userEl.textContent = 'Error: ' + res.error.message; return; }
+            var p = res.data || {};
+            userEl.innerHTML =
+              '<div><b style="color:#fff;">' + (p.email || 'unknown') + '</b></div>'
+              + '<div style="font-size:11px;color:#888;margin-top:4px;">'
+                + 'Role: <span style="color:' + (p.role === 'admin' ? '#1db954' : '#ffd400') + ';">' + (p.role || 'user') + '</span>'
+                + ' · Restricted: ' + (p.restricted ? '🚫 yes' : '✅ no')
+              + '</div>';
+          });
+      }
+      loadUserInfo();
     }
 
     // ==========================================================
@@ -560,11 +677,12 @@
       else if (currentTab === 'apps') renderApps();
       else if (currentTab === 'windows') renderWindows();
       else if (currentTab === 'flags') renderFlags();
+      else if (currentTab === 'admin') renderAdmin();
     }
 
     renderTabs();
     renderTab();
-    setStatus('Developer Tools — signed in as ' + (window.Accounts ? (window.Accounts.getActiveAccount() || {}).name || 'unknown' : 'unknown'));
+    setStatus('Developer Tools — signed in as ' + (window.currentUser ? (window.currentUser.email || 'unknown') : 'unknown'));
 
     return win;
   }
