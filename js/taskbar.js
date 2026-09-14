@@ -2,7 +2,7 @@
 //  taskbar.js — OpencoreOS v10.4
 //  Taskbar, start menu, system tray, Shutdown, Accessibility,
 //  Screenshot, Screen Recording, Captures, Trash, Help,
-//  Task Manager, Checklist. Lock opens the account picker.
+//  Task Manager, Checklist, Sign Out.
 // ============================================================
 
 function updateTaskbar(){
@@ -44,8 +44,14 @@ function updateBattery(){
 }
 setInterval(updateBattery, 30000);
 
-// ---- Helper: lock → open the account picker ----
+// ---- Helper: lock → sign out (Supabase Auth) or fallback ----
 function doLockToPicker(){
+  // If Supabase auth is loaded, sign out and reload → auth screen appears
+  if (window.OpencoreAuth && typeof window.OpencoreAuth.signOut === 'function') {
+    window.OpencoreAuth.signOut();
+    return;
+  }
+  // Legacy fallback (local accounts)
   if (window.Accounts && typeof window.Accounts.setActive === 'function') {
     try { window.Accounts.setActive(null); } catch (e) {}
   }
@@ -171,6 +177,36 @@ function initTaskbar(){
       ov.textContent = 'Shutting down...';
       document.body.appendChild(ov);
     }
+  };
+
+  // ---------------- Sign Out ----------------
+  var mso = $('mso');
+  if (mso) mso.onclick = function(e){
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    var smEl = $('sm');
+    if (smEl) smEl.classList.remove('on');
+
+    if (!confirm('Sign out of OpencoreOS?')) return;
+
+    // Prefer the OpencoreAuth wrapper (Supabase)
+    if (typeof window.OpencoreAuth !== 'undefined' && typeof window.OpencoreAuth.signOut === 'function') {
+      window.OpencoreAuth.signOut();
+      return;
+    }
+    // Direct Supabase fallback
+    if (window.supabaseClient && window.supabaseClient.auth) {
+      window.supabaseClient.auth.signOut().then(function () {
+        location.reload();
+      }).catch(function () {
+        location.reload();
+      });
+      return;
+    }
+    // Legacy fallback
+    if (window.Accounts && typeof window.Accounts.setActive === 'function') {
+      try { window.Accounts.setActive(null); } catch (err) {}
+    }
+    location.reload();
   };
 
   // ---------------- System tray ----------------
