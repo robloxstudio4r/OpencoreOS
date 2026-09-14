@@ -2,10 +2,8 @@
 //  supabase-client.js — Supabase client for OpencoreOS
 // ============================================================
 
-// ---- REPLACE THESE WITH YOUR PROJECT VALUES ----
-var SUPABASE_URL = 'https://YOUR-PROJECT.supabase.co';
-var SUPABASE_ANON_KEY = 'YOUR-ANON-KEY-HERE';
-// ------------------------------------------------
+var SUPABASE_URL = 'https://korsbxildopwzdwrdeed.supabase.co';
+var SUPABASE_ANON_KEY = 'sb_publishable_qBisY8Xwnkb1-EctdcWT7g_ib6QT0Mt';
 
 var supabase = null;
 
@@ -29,9 +27,15 @@ var supabase = null;
 
   ensureSupabaseLibrary(function () {
     try {
-      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: false
+        }
+      });
       window.supabaseClient = supabase;
-      console.log('Supabase client initialized');
+      console.log('Supabase client initialized with', SUPABASE_URL);
     } catch (e) {
       console.error('Supabase init failed:', e);
     }
