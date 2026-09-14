@@ -28,6 +28,20 @@
     var picker = document.getElementById('acctPicker');
     if (!picker) return;
 
+    // Make sure nothing else is covering the screen
+    var setup = document.getElementById('setup');
+    if (setup) setup.classList.add('hide');
+    var uwiz = document.getElementById('uwiz');
+    if (uwiz) uwiz.classList.add('hide');
+    var login = document.getElementById('login');
+    if (login) login.classList.remove('on');
+    var dt = document.getElementById('dt');
+    if (dt) dt.style.display = 'none';
+    var sm = document.getElementById('sm');
+    if (sm) sm.classList.remove('on');
+    var tb = document.getElementById('tb');
+    if (tb) tb.style.display = 'none';
+
     picker.innerHTML =
       '<div style="font-size:44px;font-weight:200;letter-spacing:2px;margin-bottom:6px;">OpencoreOS</div>'
       + '<div style="color:#888;font-size:13px;margin-bottom:36px;">Sign in or create an account</div>'
@@ -121,6 +135,11 @@
             currentProfile = p2;
             window.currentProfile = p2;
             routeAfterProfile(user, p2);
+          })
+          .catch(function (err) {
+            console.error('Could not create profile row:', err);
+            // Continue anyway — user can still use the OS
+            routeAfterProfile(user, { id: user.id, email: user.email, role: 'user' });
           });
         return;
       }
@@ -180,7 +199,7 @@
           + 'color:#fff;padding:10px 22px;border-radius:8px;cursor:pointer;font-size:13px;">Sign Out</button>'
       + '</div>';
     picker.querySelector('#restrict-logout').onclick = function () {
-      supabase.auth.signOut().then(function () { location.reload(); });
+      doSignOut();
     };
   }
 
@@ -219,6 +238,56 @@
   }
 
   // ============================================================
+  //  SIGN OUT — clear session and show auth screen, no reload
+  // ============================================================
+  function doSignOut() {
+    if (!supabase) supabase = window.supabaseClient;
+
+    // Reset cached state FIRST so nothing tries to boot with stale data
+    currentUser = null;
+    currentProfile = null;
+    window.currentUser = null;
+    window.currentProfile = null;
+
+    function finishSignOut() {
+      // Hide any open windows
+      try {
+        if (window.ST && ST.windows) {
+          for (var i = ST.windows.length - 1; i >= 0; i--) {
+            var w = ST.windows[i];
+            if (w && w.el && w.el.parentNode) w.el.parentNode.removeChild(w.el);
+          }
+          ST.windows = [];
+        }
+        if (typeof updateTaskbar === 'function') updateTaskbar();
+      } catch (e) {}
+
+      // Reset the desktop / taskbar visibility
+      var dt = document.getElementById('dt');
+      if (dt) dt.style.display = 'none';
+      var tb = document.getElementById('tb');
+      if (tb) tb.style.display = 'none';
+      var sm = document.getElementById('sm');
+      if (sm) sm.classList.remove('on');
+      var login = document.getElementById('login');
+      if (login) login.classList.remove('on');
+      var setup = document.getElementById('setup');
+      if (setup) setup.classList.add('hide');
+      var uwiz = document.getElementById('uwiz');
+      if (uwiz) uwiz.classList.add('hide');
+
+      // Show the auth screen
+      showAuthScreen();
+    }
+
+    if (supabase) {
+      supabase.auth.signOut().then(finishSignOut).catch(finishSignOut);
+    } else {
+      finishSignOut();
+    }
+  }
+
+  // ============================================================
   //  INIT — check existing session
   // ============================================================
   function init() {
@@ -235,9 +304,14 @@
         showAuthScreen();
       });
 
-      // Listen for auth state changes (sign in from another tab, token refresh)
+      // Listen for auth state changes (sign out from another tab)
       supabase.auth.onAuthStateChange(function (event, session) {
         if (event === 'SIGNED_OUT') {
+          // Reset cached state and show auth
+          currentUser = null;
+          currentProfile = null;
+          window.currentUser = null;
+          window.currentProfile = null;
           showAuthScreen();
         }
       });
@@ -251,14 +325,7 @@
     showAuthScreen: showAuthScreen,
     getCurrentUser: function () { return currentUser; },
     getCurrentProfile: function () { return currentProfile; },
-    signOut: function () {
-      if (!supabase) supabase = window.supabaseClient;
-      supabase.auth.signOut().then(function () {
-        location.reload();
-      }).catch(function () {
-        location.reload();
-      });
-    }
+    signOut: doSignOut
   };
 
   if (document.readyState === 'loading') {
