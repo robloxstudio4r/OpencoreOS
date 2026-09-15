@@ -32,6 +32,7 @@ function launch(appId, extra){
   if(appId === 'files')    return openFiles('/');
   if(appId === 'terminal') return openTerminal();
   if(appId === 'notepad')  return openNotepad(extra);
+  if(appId === 'email')    return openEmail();
   if(appId === 'calculator') return openCalculator();
   if(appId === 'browser')  return openBrowser();
   if(appId === 'music')    return openMusic();
