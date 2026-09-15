@@ -39,15 +39,12 @@ function loadIcons(){
     var saved = LS.getItem('oc_icons_v1');
     if(saved){
       icons = JSON.parse(saved);
-      // Add any new default icons the user hasn't seen yet
       for(var i=0; i<DEFAULT_ICONS.length; i++){
         var found = false;
         for(var j=0; j<icons.length; j++){
           if(icons[j].id === DEFAULT_ICONS[i].id){ found = true; break; }
         }
-        if(!found) {
-          icons.push(JSON.parse(JSON.stringify(DEFAULT_ICONS[i])));
-        }
+        if(!found) icons.push(JSON.parse(JSON.stringify(DEFAULT_ICONS[i])));
       }
     } else {
       icons = JSON.parse(JSON.stringify(DEFAULT_ICONS));
@@ -56,43 +53,31 @@ function loadIcons(){
     icons = JSON.parse(JSON.stringify(DEFAULT_ICONS));
   }
 
-  // Remove Recovery from any existing icon list (feature is hidden)
   icons = icons.filter(function (ic) { return ic.id !== 'recovery'; });
-
-  // Ensure every icon has a valid position (fixes icons stuck off-screen)
   ensureValidPositions();
 }
 
-// ---- Ensure every visible icon has a valid grid position ----
 function ensureValidPositions() {
   var used = {};
-  // First pass: mark all taken slots by icons that already have valid positions
   for (var i = 0; i < icons.length; i++) {
     var ic = icons[i];
     if (ic.removed) continue;
     if (typeof ic.x !== 'number' || typeof ic.y !== 'number' || ic.x < 0 || ic.y < 0) continue;
     var key = ic.x + ',' + ic.y;
-    if (used[key]) {
-      // Collision — mark this one as needing reassignment
-      ic._needsSlot = true;
-    } else {
-      used[key] = true;
-    }
+    if (used[key]) ic._needsSlot = true;
+    else used[key] = true;
   }
-  // Second pass: assign free slots to anything missing or collided
   for (var k = 0; k < icons.length; k++) {
     var icon = icons[k];
     if (icon.removed) continue;
     var invalid = (typeof icon.x !== 'number' || typeof icon.y !== 'number' || icon.x < 0 || icon.y < 0 || icon._needsSlot);
     if (!invalid) continue;
-    // Find first free slot
     for (var y = 0; y < 20; y++) {
       var placed = false;
       for (var x = 0; x < 4; x++) {
         var key2 = x + ',' + y;
         if (!used[key2]) {
-          icon.x = x;
-          icon.y = y;
+          icon.x = x; icon.y = y;
           used[key2] = true;
           delete icon._needsSlot;
           placed = true;
@@ -107,7 +92,6 @@ function ensureValidPositions() {
 
 function saveIcons(){ try { LS.setItem('oc_icons_v1', JSON.stringify(icons)); } catch(e){} }
 
-// ---- Icon lookup helpers ----
 function findIconEntry(appId) {
   for (var i = 0; i < icons.length; i++) {
     if (icons[i].id === appId) return icons[i];
@@ -146,19 +130,16 @@ function findFreeSlot() {
   return { x: 0, y: rows + 2 };
 }
 
-// ---- Add app back to desktop ----
 function addAppToDesktop(appId) {
   var entry = findIconEntry(appId);
   if (entry) {
     entry.removed = false;
-    // Make sure it has a valid position
     if (typeof entry.x !== 'number' || typeof entry.y !== 'number' || entry.x < 0 || entry.y < 0) {
       var pos = findFreeSlot();
       entry.x = pos.x;
       entry.y = pos.y;
     }
   } else {
-    // Look in DEFAULT_ICONS
     for (var i = 0; i < DEFAULT_ICONS.length; i++) {
       if (DEFAULT_ICONS[i].id === appId) {
         var clone = JSON.parse(JSON.stringify(DEFAULT_ICONS[i]));
@@ -173,13 +154,11 @@ function addAppToDesktop(appId) {
     }
   }
   if (!entry) return false;
-
   saveIcons();
   renderDesktop();
   return true;
 }
 
-// ---- Remove app from desktop ----
 function removeAppFromDesktop(appId) {
   var entry = findIconEntry(appId);
   if (!entry) return false;
@@ -189,21 +168,18 @@ function removeAppFromDesktop(appId) {
   return true;
 }
 
-// ---- Render desktop ----
 function renderDesktop(){
   var dt = $('dt'); if(!dt) return;
   dt.innerHTML = '';
 
-  for(var i=0; i<icons.length; i++){
+  for(let i=0; i<icons.length; i++){
     if(icons[i].removed) continue;
-    var icon = icons[i];
+    let icon = icons[i];
 
-    // Skip if the icon position is invalid
     if (typeof icon.x !== 'number' || typeof icon.y !== 'number' || icon.x < 0 || icon.y < 0) continue;
 
     var pos = positionToXY(icon);
 
-    // Custom icon from Extensions
     var customIcon = '';
     if (window.Extensions && typeof window.Extensions.getIconOverride === 'function') {
       customIcon = window.Extensions.getIconOverride(icon.id);
@@ -225,7 +201,6 @@ function renderDesktop(){
     }
     btn.innerHTML = iconHTML + '<span class="lb">' + icon.name + '</span>';
 
-    // Lock badge
     if (window.AppLock && window.AppLock.isLocked && window.AppLock.isLocked(icon.id)) {
       var lockBadge = document.createElement('span');
       lockBadge.textContent = '🔒';
@@ -235,23 +210,22 @@ function renderDesktop(){
       btn.appendChild(lockBadge);
     }
 
-    // Hide if the app is in the trash
     if (window.AppTrash && window.AppTrash.isTrashed && window.AppTrash.isTrashed(icon.id)) {
       btn.style.display = 'none';
     }
 
     attachIconHandlers(btn, icon);
 
-    // Long-press / right-click menu
     if (window.AppLock && window.AppLock.attachLongPress) {
-      window.AppLock.attachLongPress(btn, icon.id, {
-        onRename: function (el, appId) {
-          openAppEditor(icon, el.getBoundingClientRect().left, el.getBoundingClientRect().top);
-        }
-      });
+      (function(theIcon) {
+        window.AppLock.attachLongPress(btn, theIcon.id, {
+          onRename: function (el, appId) {
+            openAppEditor(theIcon, el.getBoundingClientRect().left, el.getBoundingClientRect().top);
+          }
+        });
+      })(icon);
     }
 
-    // Drag-to-trash
     btn.setAttribute('draggable', 'true');
     btn.addEventListener('dragstart', function (e) {
       try { e.dataTransfer.setData('text/app-id', icon.id); } catch (x) {}
@@ -266,7 +240,6 @@ function renderDesktop(){
   }
 }
 
-// ---- Icon interaction: drag, click, long-press ----
 function attachIconHandlers(btn, icon){
   var holdTimer = null, holdFired = false, dragMode = false, moved = false;
   var startX = 0, startY = 0, startLeft = 0, startTop = 0;
@@ -330,7 +303,6 @@ function attachIconHandlers(btn, icon){
   }
 }
 
-// ---- App editor dialog ----
 var editorTargetIcon = null;
 
 function openAppEditor(icon, mx, my){
@@ -395,7 +367,6 @@ function initAppEditorButtons(){
     }
   });
 
-  // ---- Right-click on Start menu items → Add / Remove from desktop ----
   document.addEventListener('contextmenu', function (e) {
     var mi = e.target.closest && e.target.closest('.smi[data-a]');
     if (!mi) return;
