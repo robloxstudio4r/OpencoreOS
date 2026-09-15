@@ -105,6 +105,11 @@
     currentUser = user;
     console.log('Signed in as:', user.email);
 
+    // Record this login for the admin panel (increments login_count, updates last_seen)
+    try {
+      supabase.rpc('record_login').then(function () {}, function () {});
+    } catch (e) {}
+
     loadProfile(user.id).then(function (profile) {
       currentProfile = profile;
       window.currentUser = user;
@@ -207,7 +212,6 @@
     window.currentProfile = null;
 
     function finish() {
-      // Close all windows
       try {
         if (window.ST && ST.windows) {
           for (var i = ST.windows.length - 1; i >= 0; i--) {
