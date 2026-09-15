@@ -1,6 +1,6 @@
 // ============================================================
 //  email.js — OpencoreOS Mail
-//  Internal messaging between @opencore.io users
+//  Internal messaging + 16 email themes (Extensions tab)
 // ============================================================
 
 function openEmail(){
@@ -9,11 +9,137 @@ function openEmail(){
   var user = window.currentUser;
   if (!user) { alert('Not signed in.'); return; }
 
+  var THEME_KEY = 'oc_email_theme';
+  var THEME_STYLE_ID = 'em-theme-style';
+
+  // ============================================================
+  //  16 EMAIL THEMES
+  // ============================================================
+  var THEMES = [
+    { id:'classic', name:'Classic', icon:'📧',
+      bg:'#141414', panel:'#1a1a1a', border:'#2a2a2a', text:'#dddddd', muted:'#888888',
+      accent:'#1db954', accentText:'#ffffff', hover:'rgba(255,255,255,0.05)' },
+
+    { id:'gmail', name:'Gmail', icon:'📬',
+      bg:'#f6f8fc', panel:'#ffffff', border:'#e8eaed', text:'#202124', muted:'#5f6368',
+      accent:'#1a73e8', accentText:'#ffffff', hover:'#f1f3f4' },
+
+    { id:'outlook', name:'Outlook', icon:'💼',
+      bg:'#f3f2f1', panel:'#ffffff', border:'#edebe9', text:'#323130', muted:'#605e5c',
+      accent:'#0078d4', accentText:'#ffffff', hover:'#eff6fc' },
+
+    { id:'darkmoon', name:'Dark Moon', icon:'🌙',
+      bg:'#0d0d15', panel:'#14141f', border:'#1e1e2e', text:'#d0d0e0', muted:'#7070a0',
+      accent:'#8888ff', accentText:'#ffffff', hover:'rgba(136,136,255,0.08)' },
+
+    { id:'paper', name:'Paper', icon:'📄',
+      bg:'#f4efe4', panel:'#fdfaf3', border:'#e0d8c8', text:'#3a2e1a', muted:'#8a7a5a',
+      accent:'#8a6a3a', accentText:'#ffffff', hover:'#f0e8d8' },
+
+    { id:'sunset', name:'Sunset', icon:'🌅',
+      bg:'#2a1520', panel:'#3a1a2a', border:'#4a2030', text:'#ffd0a0', muted:'#b08080',
+      accent:'#ff6b35', accentText:'#ffffff', hover:'rgba(255,107,53,0.1)' },
+
+    { id:'ocean', name:'Ocean', icon:'🌊',
+      bg:'#0a1929', panel:'#102540', border:'#1a3a5a', text:'#b3e5fc', muted:'#5a8aac',
+      accent:'#4fc3f7', accentText:'#0a1929', hover:'rgba(79,195,247,0.1)' },
+
+    { id:'forest', name:'Forest', icon:'🌲',
+      bg:'#0d2818', panel:'#1a3d2b', border:'#2a4d3a', text:'#c8e6c9', muted:'#6a9a70',
+      accent:'#81c784', accentText:'#0d2818', hover:'rgba(129,199,132,0.1)' },
+
+    { id:'rose', name:'Rose', icon:'🌹',
+      bg:'#fff0f5', panel:'#ffffff', border:'#ffd0e0', text:'#4a1a3a', muted:'#b070a0',
+      accent:'#e91e63', accentText:'#ffffff', hover:'#ffe0f0' },
+
+    { id:'neon', name:'Neon', icon:'🌆',
+      bg:'#0a0020', panel:'#14003a', border:'#00ffff', text:'#c0ffff', muted:'#00aaaa',
+      accent:'#00ffff', accentText:'#000000', hover:'rgba(0,255,255,0.1)' },
+
+    { id:'retro', name:'Retro Amber', icon:'📺',
+      bg:'#1a0e00', panel:'#0a0500', border:'#ffb000', text:'#ffb000', muted:'#a07000',
+      accent:'#ffb000', accentText:'#000000', hover:'rgba(255,176,0,0.1)' },
+
+    { id:'minimal', name:'Minimal', icon:'⬜',
+      bg:'#fafafa', panel:'#ffffff', border:'#e8e8e8', text:'#212121', muted:'#757575',
+      accent:'#212121', accentText:'#ffffff', hover:'#f0f0f0' },
+
+    { id:'terminal', name:'Terminal', icon:'🖥️',
+      bg:'#000000', panel:'#0a0a0a', border:'#00ff00', text:'#00ff00', muted:'#008800',
+      accent:'#00ff00', accentText:'#000000', hover:'rgba(0,255,0,0.1)' },
+
+    { id:'candy', name:'Candy', icon:'🍬',
+      bg:'#f5e6ff', panel:'#ffffff', border:'#e0c0ff', text:'#4a2a6a', muted:'#9060b0',
+      accent:'#b06bff', accentText:'#ffffff', hover:'#f0e0ff' },
+
+    { id:'cyberpunk', name:'Cyberpunk', icon:'⚡',
+      bg:'#0a0015', panel:'#1a0030', border:'#ff00aa', text:'#ff88dd', muted:'#aa0088',
+      accent:'#ff00aa', accentText:'#ffffff', hover:'rgba(255,0,170,0.12)' },
+
+    { id:'monochrome', name:'Monochrome', icon:'◐',
+      bg:'#1a1a1a', panel:'#222222', border:'#3a3a3a', text:'#e0e0e0', muted:'#888888',
+      accent:'#e0e0e0', accentText:'#000000', hover:'rgba(255,255,255,0.08)' }
+  ];
+
+  // ---------- Theme CSS ----------
+  function buildThemeCSS(t) {
+    return [
+      '#em-app{background:' + t.bg + '!important;color:' + t.text + '!important;}',
+      '#em-app #em-side{background:' + t.panel + '!important;border-color:' + t.border + '!important;}',
+      '#em-app #em-side-addr{background:' + t.accent + '22!important;color:' + t.accent + '!important;}',
+      '#em-app .em-folder{color:' + t.muted + '!important;}',
+      '#em-app .em-folder:hover{background:' + t.hover + '!important;}',
+      '#em-app .em-folder.active{background:' + t.accent + '22!important;color:' + t.accent + '!important;font-weight:600;}',
+      '#em-app #em-compose{background:' + t.accent + '!important;color:' + t.accentText + '!important;}',
+      '#em-app #em-toolbar{background:' + t.panel + '!important;border-color:' + t.border + '!important;}',
+      '#em-app #em-title{color:' + t.text + '!important;}',
+      '#em-app #em-refresh,#em-app #em-empty-trash{border-color:' + t.border + '!important;color:' + t.text + '!important;}',
+      '#em-app #em-list{background:' + t.bg + '!important;}',
+      '#em-app .em-row{border-color:' + t.border + '!important;color:' + t.text + '!important;}',
+      '#em-app .em-row:hover{background:' + t.hover + '!important;}',
+      '#em-app .em-row.unread{background:' + t.accent + '12!important;}',
+      '#em-app .em-row .er-from{color:' + t.text + '!important;}',
+      '#em-app .em-row.unread .er-from{color:' + t.text + '!important;font-weight:600;}',
+      '#em-app .em-row .er-date{color:' + t.muted + '!important;}',
+      '#em-app .em-row .er-sub{color:' + t.text + '!important;}',
+      '#em-app .em-row.unread .er-sub{color:' + t.text + '!important;}',
+      '#em-app .em-row .er-preview{color:' + t.muted + '!important;}',
+      '#em-app #em-status{background:' + t.panel + '!important;border-color:' + t.border + '!important;color:' + t.muted + '!important;}',
+      '#em-app #em-ext-view{background:' + t.bg + '!important;color:' + t.text + '!important;}',
+      '#em-app .em-ext-card{background:' + t.panel + '!important;border-color:' + t.border + '!important;}',
+      '#em-app .em-ext-card:hover{border-color:' + t.accent + '!important;}',
+      '#em-app .em-ext-card.active{border-color:' + t.accent + '!important;box-shadow:0 0 0 2px ' + t.accent + ';background:' + t.accent + '10!important;}',
+      '#em-app .em-ext-name{color:' + t.text + '!important;}',
+      '#em-app .em-ext-sub{color:' + t.muted + '!important;}'
+    ].join('\n');
+  }
+
+  function applyTheme(id) {
+    var t = null;
+    for (var i = 0; i < THEMES.length; i++) if (THEMES[i].id === id) { t = THEMES[i]; break; }
+    if (!t) t = THEMES[0];
+
+    try { LS.setItem(THEME_KEY, t.id); } catch (e) {}
+
+    var styleEl = document.getElementById(THEME_STYLE_ID);
+    if (!styleEl) {
+      styleEl = document.createElement('style');
+      styleEl.id = THEME_STYLE_ID;
+      document.head.appendChild(styleEl);
+    }
+    styleEl.textContent = buildThemeCSS(t);
+  }
+
+  function currentThemeId() {
+    try { return LS.getItem(THEME_KEY) || 'classic'; } catch (e) { return 'classic'; }
+  }
+
+  // ---------- Window ----------
   var win = makeWindow('email', 'Email', '📧',
     '<div id="em-app" style="display:flex;flex-direction:column;height:100%;background:#141414;color:#ddd;font-family:system-ui,sans-serif;font-size:13px;">'
       + '<div id="em-root" style="display:flex;flex:1;overflow:hidden;"></div>'
       + '<div id="em-status" style="padding:6px 14px;border-top:1px solid #2a2a2a;color:#666;font-size:11px;">Loading…</div>'
-    + '</div>', 860, 620);
+    + '</div>', 900, 640);
 
   var c = win.querySelector('#em-app');
   var root = c.querySelector('#em-root');
@@ -22,7 +148,10 @@ function openEmail(){
   var myAddress = null;
   var currentFolder = 'inbox';
 
-  // ---------- Get my address ----------
+  // Apply theme immediately
+  applyTheme(currentThemeId());
+
+  // ---------- Load my address ----------
   function loadMyAddress() {
     return supabase.from('mail_accounts').select('address').eq('user_id', user.id).single()
       .then(function (res) {
@@ -32,7 +161,7 @@ function openEmail(){
   }
 
   // ============================================================
-  //  SETUP SCREEN — pick username
+  //  SETUP SCREEN
   // ============================================================
   function showSetup() {
     root.innerHTML =
@@ -87,9 +216,7 @@ function openEmail(){
     }
 
     btn.onclick = submit;
-    input.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') submit();
-    });
+    input.addEventListener('keydown', function (e) { if (e.key === 'Enter') submit(); });
     input.focus();
   }
 
@@ -98,7 +225,6 @@ function openEmail(){
   // ============================================================
   function showInbox() {
     root.innerHTML =
-      // Sidebar
       '<div id="em-side" style="width:180px;border-right:1px solid #2a2a2a;padding:12px 8px;display:flex;flex-direction:column;gap:2px;">'
         + '<div style="color:#fff;font-weight:600;margin-bottom:12px;padding:0 6px;font-size:14px;">📧 Mail</div>'
         + '<div id="em-side-addr" style="padding:8px 12px;color:#1db954;font-size:11px;'
@@ -111,6 +237,8 @@ function openEmail(){
         + folderBtn('starred', '⭐ Starred')
         + folderBtn('sent', '📤 Sent')
         + folderBtn('trash', '🗑️ Trash')
+        + '<div style="flex:1;"></div>'
+        + folderBtn('extensions', '🧩 Extensions')
       + '</div>'
       + '<div id="em-main" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">'
         + '<div id="em-toolbar" style="padding:10px 16px;border-bottom:1px solid #2a2a2a;display:flex;align-items:center;gap:10px;">'
@@ -126,24 +254,36 @@ function openEmail(){
       + '</div>';
 
     root.querySelector('#em-compose').onclick = openCompose;
-    root.querySelector('#em-refresh').onclick = loadFolder;
+    root.querySelector('#em-refresh').onclick = function () {
+      if (currentFolder === 'extensions') showExtensions();
+      else loadFolder();
+    };
 
     var sideFolders = root.querySelectorAll('.em-folder');
     sideFolders.forEach(function (f) {
       f.onclick = function () {
         currentFolder = f.getAttribute('data-folder');
         sideFolders.forEach(function (x) {
+          x.classList.remove('active');
           x.style.background = '';
           x.style.color = '#aaa';
           x.style.fontWeight = '400';
         });
+        f.classList.add('active');
         f.style.background = 'rgba(29,185,84,0.15)';
         f.style.color = '#1db954';
         f.style.fontWeight = '600';
-        loadFolder();
+
+        if (currentFolder === 'extensions') {
+          showExtensions();
+        } else {
+          loadFolder();
+        }
       };
     });
-    // Highlight inbox by default
+
+    // Highlight Inbox by default
+    sideFolders[0].classList.add('active');
     sideFolders[0].style.background = 'rgba(29,185,84,0.15)';
     sideFolders[0].style.color = '#1db954';
     sideFolders[0].style.fontWeight = '600';
@@ -154,6 +294,9 @@ function openEmail(){
         .then(function () { loadFolder(); });
     };
 
+    // Reapply theme (since DOM was rebuilt)
+    applyTheme(currentThemeId());
+
     loadFolder();
   }
 
@@ -163,7 +306,9 @@ function openEmail(){
       + label + '</div>';
   }
 
-  // ---------- Load current folder ----------
+  // ============================================================
+  //  LOAD FOLDER
+  // ============================================================
   function loadFolder() {
     var listEl = root.querySelector('#em-list');
     var titleEl = root.querySelector('#em-title');
@@ -188,10 +333,8 @@ function openEmail(){
         listEl.innerHTML = '<div style="color:#f66;padding:20px;">Error: ' + res.error.message + '</div>';
         return;
       }
-      var rows = res.data || [];
-      renderList(rows);
-      statusEl.textContent = rows.length + ' message' + (rows.length === 1 ? '' : 's') +
-        ' — ' + myAddress;
+      renderList(res.data || []);
+      statusEl.textContent = (res.data || []).length + ' message' + ((res.data || []).length === 1 ? '' : 's') + ' — ' + myAddress;
     });
   }
 
@@ -199,48 +342,134 @@ function openEmail(){
     var listEl = root.querySelector('#em-list');
     listEl.innerHTML = '';
     if (!rows.length) {
-      listEl.innerHTML = '<div style="color:#666;text-align:center;padding:60px 20px;">'
-        + 'No messages here yet.</div>';
+      listEl.innerHTML = '<div style="color:#666;text-align:center;padding:60px 20px;">No messages here yet.</div>';
       return;
     }
 
     rows.forEach(function (em) {
-      var row = document.createElement('div');
       var isUnread = !em.is_read && currentFolder === 'inbox';
+      var row = document.createElement('div');
+      row.className = 'em-row' + (isUnread ? ' unread' : '');
       row.style.cssText =
-        'padding:12px 18px;border-bottom:1px solid rgba(255,255,255,0.05);cursor:pointer;' +
-        (isUnread ? 'background:rgba(29,185,84,0.05);' : '');
-
-      row.onmouseenter = function () { row.style.background = 'rgba(255,255,255,0.04)'; };
-      row.onmouseleave = function () {
-        row.style.background = isUnread ? 'rgba(29,185,84,0.05)' : '';
-      };
+        'padding:12px 18px;border-bottom:1px solid rgba(255,255,255,0.05);cursor:pointer;';
 
       var otherParty = (currentFolder === 'sent') ? em.to_address : em.from_address;
-      var dateStr = em.created_at ? new Date(em.created_at).toLocaleString() : '';
+      var dateStr = em.created_at ? new Date(em.created_at).toLocaleDateString() : '';
 
       row.innerHTML =
         '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">'
           + (isUnread ? '<div style="width:8px;height:8px;border-radius:50%;background:#1db954;flex-shrink:0;"></div>' : '')
-          + '<div style="flex:1;color:' + (isUnread ? '#fff' : '#bbb') + ';'
-            + 'font-weight:' + (isUnread ? '600' : '400') + ';font-size:13px;'
-            + 'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'
-            + escapeHtml(otherParty)
-          + '</div>'
-          + '<div style="color:#666;font-size:11px;white-space:nowrap;">' + dateStr + '</div>'
+          + '<div class="er-from" style="flex:1;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'
+            + (isUnread ? 'font-weight:600;' : '') + '">' + escapeHtml(otherParty) + '</div>'
+          + '<div class="er-date" style="font-size:11px;white-space:nowrap;">' + dateStr + '</div>'
           + (em.is_starred ? '<div style="color:#ffd400;">⭐</div>' : '')
         + '</div>'
-        + '<div style="color:' + (isUnread ? '#ddd' : '#888') + ';font-size:13px;'
-          + 'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:3px;">'
+        + '<div class="er-sub" style="font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:3px;">'
           + escapeHtml(em.subject || '(no subject)')
         + '</div>'
-        + '<div style="color:#666;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'
+        + '<div class="er-preview" style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'
           + escapeHtml((em.body || '').slice(0, 90))
         + '</div>';
 
       row.onclick = function () { openMessage(em); };
       listEl.appendChild(row);
     });
+  }
+
+  // ============================================================
+  //  EXTENSIONS TAB
+  // ============================================================
+  function showExtensions() {
+    var listEl = root.querySelector('#em-list');
+    var titleEl = root.querySelector('#em-title');
+    var emptyBtn = root.querySelector('#em-empty-trash');
+    if (!listEl) return;
+
+    titleEl.textContent = '🧩 Email Extensions';
+    emptyBtn.style.display = 'none';
+
+    var currentId = currentThemeId();
+
+    listEl.innerHTML = '';
+    listEl.style.padding = '16px';
+
+    var header = document.createElement('div');
+    header.style.cssText = 'color:#888;font-size:12px;margin-bottom:16px;line-height:1.5;';
+    header.innerHTML = 'Change the look of your entire mailbox.<br>'
+      + '<b>' + THEMES.length + '</b> themes available. Click any to apply.';
+    listEl.appendChild(header);
+
+    var grid = document.createElement('div');
+    grid.style.cssText =
+      'display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;';
+
+    THEMES.forEach(function (t) {
+      var isActive = t.id === currentId;
+      var card = document.createElement('div');
+      card.className = 'em-ext-card' + (isActive ? ' active' : '');
+      card.style.cssText =
+        'border:2px solid rgba(255,255,255,0.08);border-radius:10px;overflow:hidden;' +
+        'cursor:pointer;background:rgba(255,255,255,0.02);transition:transform 0.15s,border-color 0.15s;';
+      card.onmouseenter = function () { card.style.transform = 'scale(1.02)'; };
+      card.onmouseleave = function () { card.style.transform = ''; };
+
+      // Preview swatch
+      var preview = document.createElement('div');
+      preview.style.cssText =
+        'width:100%;height:90px;background:' + t.bg + ';' +
+        'display:flex;flex-direction:column;padding:6px;gap:3px;';
+      var bar1 = document.createElement('div');
+      bar1.style.cssText =
+        'background:' + t.panel + ';border:1px solid ' + t.border + ';' +
+        'border-radius:3px;height:14px;width:60%;';
+      preview.appendChild(bar1);
+      var bar2 = document.createElement('div');
+      bar2.style.cssText =
+        'background:' + t.accent + '33;border:1px solid ' + t.accent + '55;' +
+        'border-radius:3px;height:18px;width:100%;';
+      preview.appendChild(bar2);
+      var bar3 = document.createElement('div');
+      bar3.style.cssText =
+        'background:' + t.accent + '33;border:1px solid ' + t.accent + '55;' +
+        'border-radius:3px;height:18px;width:80%;';
+      preview.appendChild(bar3);
+      card.appendChild(preview);
+
+      // Name
+      var nameEl = document.createElement('div');
+      nameEl.className = 'em-ext-name';
+      nameEl.style.cssText =
+        'padding:8px 10px;font-size:12px;font-weight:600;' +
+        'background:' + t.panel + ';color:' + t.text + ';' +
+        'display:flex;align-items:center;gap:6px;';
+      nameEl.innerHTML = '<span style="font-size:14px;">' + t.icon + '</span>'
+        + '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'
+        + t.name + (isActive ? ' ✓' : '') + '</span>';
+      card.appendChild(nameEl);
+
+      card.onclick = function () {
+        applyTheme(t.id);
+        showExtensions();
+      };
+
+      grid.appendChild(card);
+    });
+
+    listEl.appendChild(grid);
+
+    var resetBtn = document.createElement('button');
+    resetBtn.type = 'button';
+    resetBtn.textContent = 'Reset to Classic';
+    resetBtn.style.cssText =
+      'margin-top:20px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);' +
+      'color:#fff;padding:8px 18px;border-radius:6px;cursor:pointer;font-size:12px;';
+    resetBtn.onclick = function () {
+      applyTheme('classic');
+      showExtensions();
+    };
+    listEl.appendChild(resetBtn);
+
+    statusEl.textContent = 'Theme: ' + (currentId === 'classic' ? 'Classic' : currentId);
   }
 
   // ============================================================
@@ -265,7 +494,7 @@ function openEmail(){
             + '</div>'
           + '</div>'
         + '</div>'
-        + '<div style="flex:1;overflow-y:auto;padding:18px;white-space:pre-wrap;line-height:1.7;'
+        + '<div id="er-body" style="flex:1;overflow-y:auto;padding:18px;white-space:pre-wrap;line-height:1.7;'
           + 'color:#e0e0e0;font-size:13px;"></div>'
         + '<div style="padding:12px 18px;border-top:1px solid #2a2a2a;display:flex;gap:8px;flex-wrap:wrap;">'
           + (currentFolder === 'inbox'
@@ -371,7 +600,6 @@ function openEmail(){
     if (prefill.to) toEl.value = prefill.to;
     if (prefill.subject) subEl.value = prefill.subject;
 
-    // ---------- Autocomplete ----------
     var allAddresses = null;
     function loadAddresses() {
       if (allAddresses) return Promise.resolve(allAddresses);
@@ -383,7 +611,7 @@ function openEmail(){
 
     function suggest() {
       var val = toEl.value.trim().toLowerCase();
-      if (!val || val.indexOf('@') !== -1 && val.length > val.indexOf('@') + 1) {
+      if (!val || (val.indexOf('@') !== -1 && val.length > val.indexOf('@') + 1)) {
         suggEl.style.display = 'none';
         return;
       }
@@ -416,7 +644,6 @@ function openEmail(){
       if (!cc.contains(e.target)) suggEl.style.display = 'none';
     });
 
-    // ---------- Send ----------
     cc.querySelector('#ec-send').onclick = function () {
       var to = toEl.value.trim().toLowerCase();
       var subject = subEl.value.trim();
@@ -461,7 +688,6 @@ function openEmail(){
     setTimeout(function () { toEl.focus(); }, 100);
   }
 
-  // ---------- Helpers ----------
   function escapeHtml(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
@@ -478,6 +704,12 @@ function openEmail(){
       statusEl.textContent = 'Set up your @opencore.io address';
       showSetup();
     }
+  });
+
+  // Clean up theme CSS when window closes
+  win.addEventListener('remove', function () {
+    var styleEl = document.getElementById(THEME_STYLE_ID);
+    if (styleEl && styleEl.parentNode) styleEl.parentNode.removeChild(styleEl);
   });
 
   return win;
