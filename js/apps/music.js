@@ -1,23 +1,40 @@
 // ============================================================
 //  music.js — Spotify app for OpencoreOS v10.4
-//  Buttons: prev / play-pause / next — always visible, always synced
-//  Syncs with mini-player via window.updateMiniPlayer(state)
+//  Loads the Web Playback SDK, waits for it, handles errors
 // ============================================================
 
 var spotifyLoadStarted = false;
 var spotifyReadyCallbacks = [];
+var spotifySdkLoaded = false;
+var spotifySdkFailed = false;
 
+// ---------- SDK loader ----------
 function ensureSpotifyLoaded(callback){
+  // Already have the auth module?
   if(window.SpotifyAuth){ callback(); return; }
+
   spotifyReadyCallbacks.push(callback);
   if(spotifyLoadStarted) return;
   spotifyLoadStarted = true;
 
-  var sdk = document.createElement('script');
-  sdk.src = 'https://sdk.scdn.co/spotify-player.js';
-  sdk.async = true;
-  document.head.appendChild(sdk);
+  // 1. Load the Spotify Web Playback SDK
+  if (!window.Spotify && !spotifySdkLoaded && !spotifySdkFailed) {
+    var sdk = document.createElement('script');
+    sdk.src = 'https://sdk.scdn.co/spotify-player.js';
+    sdk.async = true;
+    sdk.onload = function(){
+      spotifySdkLoaded = true;
+      console.log('✓ Spotify Web Playback SDK script loaded from music.js');
+    };
+    sdk.onerror = function(){
+      spotifySdkFailed = true;
+      console.error('✗ Spotify Web Playback SDK failed to load');
+      alert('Spotify SDK could not load.\n\nThis usually means:\n• An ad blocker is blocking sdk.scdn.co\n• Your network is blocking the CDN\n\nTry disabling extensions and reload.');
+    };
+    document.head.appendChild(sdk);
+  }
 
+  // 2. Load the auth module
   var auth = document.createElement('script');
   auth.src = 'js/spotify-auth.js';
   auth.async = true;
@@ -25,7 +42,7 @@ function ensureSpotifyLoaded(callback){
     var attempts = 0;
     var iv = setInterval(function(){
       attempts++;
-      if(window.SpotifyAuth || attempts > 30){
+      if(window.SpotifyAuth || attempts > 60){
         clearInterval(iv);
         var cbs = spotifyReadyCallbacks.slice();
         spotifyReadyCallbacks = [];
@@ -41,7 +58,7 @@ function ensureSpotifyLoaded(callback){
   document.head.appendChild(auth);
 }
 
-// ---------- shared player state so mini-player + app agree ----------
+// ---------- Shared player state ----------
 var SpotifyPlayerState = {
   lastState: null,
   listeners: [],
@@ -76,7 +93,6 @@ function openMusic(){
       var isIn = window.SpotifyAuth && SpotifyAuth.isLoggedIn();
       console.log('Music app — logged in:', isIn);
 
-      // ------- full UI: search row, login banner, player bar (ALWAYS present), results, status -------
       c.innerHTML =
         '<div style="display:flex;gap:8px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,0.06);margin-bottom:10px;flex-wrap:wrap;">'
           + '<input id="mus-q" placeholder="Search Spotify..." style="flex:1;background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.1);color:#fff;padding:8px 12px;border-radius:6px;outline:none;font-size:13px;min-width:150px;"' + (isIn ? '' : ' disabled') + '/>'
@@ -87,8 +103,6 @@ function openMusic(){
           + '<div style="flex:1;color:#ccc;font-size:12px;"><strong style="color:#1db954;">Login to Spotify</strong><br>Opens Spotify login, then returns here.</div>'
           + '<button type="button" id="mus-login-btn" style="background:#1db954;border:none;color:#fff;padding:6px 16px;border-radius:6px;cursor:pointer;font-weight:600;font-size:12px;">Login</button>'
         + '</div>'
-
-        // ---- player bar: ALWAYS rendered, buttons disabled until ready ----
         + '<div id="mus-player-bar" style="display:flex;align-items:center;gap:12px;padding:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;margin-bottom:12px;">'
           + '<img id="mus-art" src="" style="width:56px;height:56px;border-radius:6px;object-fit:cover;background:rgba(255,255,255,0.06);"/>'
           + '<div style="flex:1;min-width:0;">'
@@ -101,7 +115,6 @@ function openMusic(){
             + '<button type="button" id="mus-next" title="Next" style="background:transparent;border:1px solid rgba(255,255,255,0.15);color:#fff;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:14px;">⏭</button>'
           + '</div>'
         + '</div>'
-
         + '<div id="mus-results">' + (!isIn ? '<p style="color:#888;text-align:center;padding:20px;">Log in to search</p>' : '') + '</div>'
         + '<div id="mus-status" style="color:#888;font-size:11px;margin-top:8px;text-align:center;">' + (isIn ? 'Initializing player...' : '') + '</div>';
 
@@ -123,7 +136,6 @@ function openMusic(){
         lB.onclick = function(e){
           if (e) { e.preventDefault(); e.stopPropagation(); }
           try {
-            // READ FROM SCOPED LS (per-account), fall back to global localStorage
             var clientId = null;
             try { clientId = LS.getItem('opencore_spotify_client_id'); } catch (x) {}
             if (!clientId) {
@@ -140,7 +152,7 @@ function openMusic(){
         };
       }
 
-      // ---------- button handlers (always bound, even before a track plays) ----------
+      // ---------- buttons ----------
       if (playBtn) playBtn.onclick = function(){
         SpotifyAuth.togglePlay().then(function(ok){
           if (!ok) console.warn('togglePlay returned false');
@@ -157,7 +169,6 @@ function openMusic(){
         }).catch(function(e){ console.error('previousTrack error:', e); });
       };
 
-      // ---------- render state into the bar ----------
       function renderPlayer(state){
         if (!state || !state.track_window || !state.track_window.current_track) {
           titleEl.textContent = 'Not playing';
@@ -175,23 +186,37 @@ function openMusic(){
         playBtn.textContent = state.paused ? '▶' : '⏸';
       }
 
-      // subscribe so this window redraws whenever state changes
       SpotifyPlayerState.add(renderPlayer);
-      // if a state already exists (another window started playback), show it now
       if (SpotifyPlayerState.lastState) renderPlayer(SpotifyPlayerState.lastState);
 
-      // ---------- start the SDK player ----------
+      // ---------- init SDK player ----------
       if (isIn) {
-        SpotifyAuth.initPlayer({
-          onReady: function(){
-            st.textContent = '✓ Player ready';
+        // Check for SDK availability, retry if not ready yet
+        var sdkCheckAttempts = 0;
+        var sdkCheck = setInterval(function(){
+          sdkCheckAttempts++;
+          if (typeof window.Spotify !== 'undefined' && window.Spotify && window.Spotify.Player) {
+            clearInterval(sdkCheck);
+            st.textContent = '✓ Spotify SDK ready — initializing player…';
             st.style.color = '#1db954';
-          },
-          onStateChange: function(s){
-            SpotifyPlayerState.set(s);      // fan out to mini-player AND any open music windows
-            if (window.updateMiniPlayer) window.updateMiniPlayer(s);
+
+            SpotifyAuth.initPlayer({
+              onReady: function(){
+                st.textContent = '✓ Player ready — search for a song and click Play';
+                st.style.color = '#1db954';
+              },
+              onStateChange: function(s){
+                SpotifyPlayerState.set(s);
+                if (window.updateMiniPlayer) window.updateMiniPlayer(s);
+              }
+            });
+          } else if (sdkCheckAttempts > 30) {
+            clearInterval(sdkCheck);
+            st.textContent = '✗ Spotify SDK not loaded — check the browser console';
+            st.style.color = '#ff8a8a';
+            console.warn('Spotify SDK never became available. typeof window.Spotify =', typeof window.Spotify);
           }
-        });
+        }, 500);
       }
 
       // ---------- search ----------
