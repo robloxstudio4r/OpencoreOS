@@ -1,29 +1,31 @@
 // ============================================================
 //  admin-panel.js — Admin panel via Supabase
-//  Open with: adminPanel() in DevTools Console
+//  Open with: adminPanel() in the DevTools Console
 // ============================================================
 
 function adminPanel() {
-  if (!window.supabaseClient) {
-    console.error('Supabase not loaded.');
-    return;
-  }
+  if (!window.supabaseClient) { alert('Supabase not loaded.'); return; }
 
   var user = window.OpencoreAuth && window.OpencoreAuth.getCurrentUser
     ? window.OpencoreAuth.getCurrentUser() : null;
-  if (!user) {
-    console.error('Not signed in.');
-    return;
-  }
+  if (!user) { alert('Not signed in.'); return; }
 
-  supabase.from('profiles').select('role').eq('id', user.id).single()
+  console.log('Checking admin status for', user.email);
+
+  supabase.from('profiles').select('role, restricted').eq('id', user.id).single()
     .then(function (res) {
-      if (res.error || !res.data || res.data.role !== 'admin') {
-        alert('Access denied. Admins only.');
+      if (res.error) {
+        alert('Error reading profile:\n\n' + res.error.message + '\n\nCode: ' + (res.error.code || 'none'));
+        return;
+      }
+      if (!res.data) { alert('No profile row found.'); return; }
+      if (res.data.role !== 'admin') {
+        alert('Your role is "' + res.data.role + '", not admin.\n\nRun in Supabase SQL:\n\nupdate profiles set role = \'admin\' where email = \'' + user.email + '\';');
         return;
       }
       openPanel();
-    });
+    })
+    .catch(function (e) { alert('Admin check failed: ' + e.message); });
 }
 
 function openPanel() {
@@ -42,14 +44,15 @@ function openPanel() {
   var statusEl = c.querySelector('#ap-status');
 
   function render() {
-    listEl.innerHTML = '';
+    listEl.innerHTML = '<div style="color:#888;padding:20px;text-align:center;">Loading…</div>';
     supabase.from('profiles').select('*').order('created_at', { ascending: false })
       .then(function (res) {
         if (res.error) {
-          listEl.innerHTML = '<div style="color:#f66;">Error: ' + res.error.message + '</div>';
+          listEl.innerHTML = '<div style="color:#f66;padding:20px;">Error: ' + res.error.message + '</div>';
           return;
         }
         var users = res.data || [];
+        listEl.innerHTML = '';
         statusEl.textContent = users.length + ' user(s)';
 
         users.forEach(function (u) {
@@ -70,7 +73,6 @@ function openPanel() {
             + '</div>';
           row.appendChild(info);
 
-          // Restrict / Unrestrict
           var restrictBtn = document.createElement('button');
           restrictBtn.type = 'button';
           restrictBtn.textContent = u.restricted ? 'Unrestrict' : 'Restrict';
@@ -81,9 +83,7 @@ function openPanel() {
             'padding:5px 12px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:600;';
           restrictBtn.onclick = function () {
             var reason = '';
-            if (!u.restricted) {
-              reason = prompt('Reason for restricting ' + u.email + ':') || '';
-            }
+            if (!u.restricted) reason = prompt('Reason for restricting ' + u.email + ':') || '';
             supabase.from('profiles').update({
               restricted: !u.restricted,
               restriction_reason: u.restricted ? null : reason
@@ -94,7 +94,6 @@ function openPanel() {
           };
           row.appendChild(restrictBtn);
 
-          // Warn
           var warnBtn = document.createElement('button');
           warnBtn.type = 'button';
           warnBtn.textContent = 'Warn';
