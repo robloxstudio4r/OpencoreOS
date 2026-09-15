@@ -1,7 +1,5 @@
 // ============================================================
-//  storage.js — OpencoreOS v10.4
-//  LS is scoped by the signed-in Supabase user ID.
-//  Every account gets its own namespace automatically.
+//  storage.js — Scoped by Supabase user ID
 // ============================================================
 
 var LS_base = (function(){
@@ -23,18 +21,13 @@ var LS_base = (function(){
   }
 })();
 
-// ---- Live LS: scoped by the current Supabase user ID ----
 (function () {
   function currentUserId() {
-    // Prefer the live Supabase session user
     if (window.currentUser && window.currentUser.id) return window.currentUser.id;
-    // Fallback: try OpencoreAuth
     if (window.OpencoreAuth && window.OpencoreAuth.getCurrentUser) {
       var u = window.OpencoreAuth.getCurrentUser();
       if (u && u.id) return u.id;
     }
-    // Not signed in — use a placeholder prefix so pre-auth writes
-    // don't accidentally leak into a real user's namespace.
     return '__signedout__';
   }
 
@@ -106,8 +99,6 @@ window.onerror = function(m,u,l,c,e){
 var $ = function(id){ return document.getElementById(id); };
 var $$ = function(s){ return document.querySelectorAll(s); };
 
-// VFS is provided by vfs-supabase.js — this placeholder just prevents
-// crashes if any code runs before vfs-supabase.js loads.
 if (!window.VFS) {
   window.VFS = {
     root: null,
