@@ -1,7 +1,6 @@
 // ============================================================
-//  spotify-auth.js — Bulletproof version for OpencoreOS v10.4
-//  Handles PKCE OAuth + Web Playback SDK + search.
-//  Never throws at load time.
+//  spotify-auth.js — Spotify auth + Web Playback SDK
+//  Full diagnostic flow. Detects Free vs Premium.
 // ============================================================
 
 var SpotifyAuth = (function () {
@@ -19,8 +18,10 @@ var SpotifyAuth = (function () {
   var onReadyCallback = null;
   var onStateChangeCallback = null;
   var pendingInit = false;
+  var accountInfo = null;
+  var isPremium = false;
 
-  // -------- Safe storage --------
+  // -------- Storage --------
   function store() {
     try {
       if (window.LS && typeof window.LS.getItem === 'function') return window.LS;
@@ -62,8 +63,6 @@ var SpotifyAuth = (function () {
   function redirectUri() {
     return window.location.origin + window.location.pathname;
   }
-
-  // Read client ID from scoped or unscoped storage
   function readClientId() {
     var v = null;
     try { v = S.getItem(CLIENT_ID_KEY); } catch (e) {}
@@ -169,7 +168,6 @@ var SpotifyAuth = (function () {
     } catch (e) {}
   }
 
-  // -------- Token refresh --------
   function getValidToken() {
     return new Promise(function (resolve) {
       try {
@@ -206,7 +204,6 @@ var SpotifyAuth = (function () {
     });
   }
 
-  // -------- Logout --------
   function logout() {
     try {
       S.removeItem(ACCESS_TOKEN_KEY);
@@ -215,6 +212,8 @@ var SpotifyAuth = (function () {
       if (sdkPlayer) { try { sdkPlayer.disconnect(); } catch (e) {} }
       sdkPlayer = null;
       deviceId = null;
+      isPremium = false;
+      accountInfo = null;
       console.log('Logged out of Spotify');
     } catch (e) {}
   }
@@ -223,31 +222,71 @@ var SpotifyAuth = (function () {
     try { return !!S.getItem(REFRESH_TOKEN_KEY); } catch (e) { return false; }
   }
 
+  // -------- Premium check --------
+  function checkPremium() {
+    return new Promise(function (resolve) {
+      getValidToken().then(function (token) {
+        if (!token) return resolve({ premium: false, reason: 'no-token' });
+        fetch('https://api.spotify.com/v1/me', {
+          headers: { 'Authorization': 'Bearer ' + token }
+        })
+          .then(function (r) { return r.json(); })
+          .then(function (data) {
+            accountInfo = data;
+            console.log('Spotify account:', data.display_name || data.id, '| product:', data.product);
+            if (data.product === 'premium') {
+              isPremium = true;
+              resolve({ premium: true, user: data });
+            } else {
+              isPremium = false;
+              resolve({ premium: false, reason: 'not-premium', user: data });
+            }
+          })
+          .catch(function (err) {
+            console.error('Premium check failed:', err);
+            resolve({ premium: false, reason: 'api-error', error: err });
+          });
+      });
+    });
+  }
+
   // -------- Web Playback SDK --------
   function initPlayer(opts) {
     onReadyCallback = opts && opts.onReady ? opts.onReady : null;
     onStateChangeCallback = opts && opts.onStateChange ? opts.onStateChange : null;
 
-    if (typeof window.Spotify === 'undefined' || !window.Spotify || !window.Spotify.Player) {
-      console.warn('Spotify SDK not available yet — waiting for onSpotifyWebPlaybackSDKReady');
-      pendingInit = true;
-      return;
-    }
-    createPlayer();
+    // First: verify Premium. Without it, nothing works.
+    checkPremium().then(function (result) {
+      if (!result.premium) {
+        var msg;
+        if (result.reason === 'not-premium') {
+          msg = 'Your Spotify account is "' + (result.user && result.user.product) + '" (Free). The Web Playback SDK requires Spotify Premium. You can search and browse, but playback will not work.';
+        } else if (result.reason === 'no-token') {
+          msg = 'Not logged in. Click Login first.';
+        } else {
+          msg = 'Could not verify your Spotify account.';
+        }
+        console.warn('Premium check failed:', msg);
+        window.__spotifyPremiumWarning = msg;
+        if (onStateChangeCallback) {
+          try { onStateChangeCallback({ premiumError: msg }); } catch (e) {}
+        }
+        return;
+      }
+      console.log('✓ Spotify Premium confirmed. Creating player...');
+      createPlayer();
+    });
   }
 
   function createPlayer() {
-    if (sdkPlayer) {
-      console.log('Spotify player already exists');
-      return;
-    }
+    if (sdkPlayer) return;
     if (typeof window.Spotify === 'undefined' || !window.Spotify.Player) {
-      console.warn('Spotify SDK still not loaded — cannot create player');
+      console.warn('Spotify SDK not loaded — waiting for onSpotifyWebPlaybackSDKReady');
       pendingInit = true;
       return;
     }
     try {
-      console.log('Creating Spotify Web Playback player...');
+      console.log('Creating Spotify Player instance...');
       sdkPlayer = new window.Spotify.Player({
         name: 'OpencoreOS Player',
         getOAuthToken: function (cb) {
@@ -275,34 +314,33 @@ var SpotifyAuth = (function () {
 
       sdkPlayer.addListener('initialization_error', function (e) {
         console.error('SDK init error:', e && e.message);
-        alert('Spotify SDK could not initialize: ' + (e && e.message));
+        if (onStateChangeCallback) onStateChangeCallback({ sdkError: 'Init error: ' + (e && e.message) });
       });
       sdkPlayer.addListener('authentication_error', function (e) {
         console.error('SDK auth error:', e && e.message);
-        alert('Spotify authentication error: ' + (e && e.message));
+        if (onStateChangeCallback) onStateChangeCallback({ sdkError: 'Auth error: ' + (e && e.message) });
       });
       sdkPlayer.addListener('account_error', function (e) {
         console.error('SDK account error:', e && e.message);
-        alert('Spotify account error: ' + (e && e.message) + '\n\nSpotify Premium is required for playback.');
+        if (onStateChangeCallback) onStateChangeCallback({ sdkError: 'Account error: ' + (e && e.message) + ' — Spotify Premium is required.' });
       });
 
       sdkPlayer.connect();
+      console.log('Spotify Player.connect() called');
     } catch (err) {
       console.error('Could not create Spotify player:', err);
       sdkPlayer = null;
     }
   }
 
-  // Register the SDK-ready handler immediately
   function registerSdkReadyHandler() {
     window.onSpotifyWebPlaybackSDKReady = function () {
-      console.log('✓ Spotify Web Playback SDK is ready');
+      console.log('✓ onSpotifyWebPlaybackSDKReady fired');
       if (pendingInit) {
         pendingInit = false;
         createPlayer();
       }
     };
-    // If SDK already loaded, fire manually
     if (typeof window.Spotify !== 'undefined' && window.Spotify.Player) {
       window.onSpotifyWebPlaybackSDKReady();
     }
@@ -314,7 +352,8 @@ var SpotifyAuth = (function () {
     return new Promise(function (resolve, reject) {
       getValidToken().then(function (token) {
         if (!token) return reject(new Error('Not logged in.'));
-        if (!deviceId) return reject(new Error('Player not ready. Wait a moment and try again.'));
+        if (!isPremium) return reject(new Error('Spotify Premium is required for playback. Upgrade your account at spotify.com/premium'));
+        if (!deviceId) return reject(new Error('Player not ready yet. Wait a moment and try again.'));
         fetch('https://api.spotify.com/v1/me/player/play?device_id=' + deviceId, {
           method: 'PUT',
           headers: {
@@ -360,7 +399,6 @@ var SpotifyAuth = (function () {
     if (sdkPlayer) try { sdkPlayer.setVolume(v); } catch (e) {}
   }
 
-  // -------- Search --------
   function search(q) {
     return new Promise(function (resolve, reject) {
       getValidToken().then(function (token) {
@@ -378,7 +416,6 @@ var SpotifyAuth = (function () {
     });
   }
 
-  // -------- Public API --------
   return {
     login: login,
     logout: logout,
@@ -392,7 +429,10 @@ var SpotifyAuth = (function () {
     setVolume: setVolume,
     search: search,
     getValidToken: getValidToken,
+    checkPremium: checkPremium,
+    isPremium: function () { return isPremium; },
     isSdkReady: function () { return !!(window.Spotify && window.Spotify.Player); },
-    isPlayerReady: function () { return !!deviceId; }
+    isPlayerReady: function () { return !!deviceId; },
+    getDeviceId: function () { return deviceId; }
   };
 })();
