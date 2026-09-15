@@ -29,7 +29,8 @@ var DEFAULT_ICONS = [
   {id:'science', name:'Science', icon:'🔬', x:3, y:0},
   {id:'infinity', name:'Infinity Drink', icon:'🥤', x:3, y:1},
   {id:'settings', name:'Settings', icon:'⚙️', x:3, y:2},
-  {id:'checklist', name:'Checklist', icon:'✅', x:3, y:3}
+  {id:'checklist', name:'Checklist', icon:'✅', x:3, y:3},
+  {id:'email', name:'Email', icon:'📧', x:3, y:4}
 ];
 
 var icons = [];
