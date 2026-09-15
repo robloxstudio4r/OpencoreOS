@@ -16,7 +16,7 @@ function openHelp(){
       + '<div style="padding:8px 14px;border-top:1px solid #2a2a2a;color:#666;font-size:11px;text-align:center;">'
         + 'OpencoreOS v10.4 — Help Guide'
       + '</div>'
-    + '</div>', 720, 600);
+    + '</div>', 760, 620);
 
   var c = win.querySelector('#help-app');
   var body = c.querySelector('#help-body');
@@ -28,42 +28,41 @@ function openHelp(){
       title: 'Getting Started',
       icon: '🚀',
       entries: [
-        { t: 'Sign in to an account', d: 'When OpencoreOS boots, the account picker appears. Click your account tile. If it has a password, enter it. Otherwise you go straight to the desktop.' },
-        { t: 'Add up to 3 accounts', d: 'Go to Settings → Users → + Add Account. Each account has its own files, apps, wallpaper, Spotify login, extensions, and accessibility preferences.' },
-        { t: 'Switch accounts', d: 'Settings → Users → Switch Account, or click the 🔒 tray icon. You are signed out and the account picker reappears.' },
-        { t: 'Lock the screen', d: 'Start menu → 🔒 Lock or the 🔒 tray icon. This signs you out and opens the account picker.' },
+        { t: 'Sign in', d: 'OpencoreOS uses Supabase accounts. On first visit you see a sign-in screen. Click Create Account, enter an email + password (6+ chars), and you are signed in immediately — no email confirmation needed.' },
+        { t: 'Sign out', d: 'Start menu → 🚪 Sign Out. Clears your session and returns to the auth screen. Also on the 🔒 tray icon.' },
+        { t: 'Lock the screen', d: 'Start menu → 🔒 Lock or the 🔒 tray icon. Both sign you out and show the auth screen.' },
         { t: 'Sleep mode', d: 'Start menu → 🌙 Sleep. Click anywhere to wake.' },
         { t: 'Shut down', d: 'Start menu → ⏻ Shutdown. Releases fullscreen, shows a shutdown screen.' },
-        { t: 'Restart', d: 'Start menu → 🔄 Restart. Reloads the page, keeps the current account signed in.' }
+        { t: 'Restart', d: 'Start menu → 🔄 Restart. Reloads the page, keeps your session.' },
+        { t: 'First-run wizard', d: 'The very first time you sign in, a setup wizard runs (formatting drive, then a 5-step user wizard). It only runs once per account.' }
       ]
     },
     {
       title: 'Accounts & Profile',
       icon: '👤',
       entries: [
-        { t: 'Open the account picker', d: 'Click the 🔒 tray icon or Start → 🔒 Lock. Signs you out and shows every account.' },
-        { t: 'Switch accounts', d: 'In the picker, click any account tile. If it has a password, enter it. Otherwise you sign in directly.' },
-        { t: 'Set a profile image', d: 'In the picker, click the ✏️ pencil on your account tile → Upload Image → pick a PNG or JPG under 500 KB → Save.' },
-        { t: 'Remove profile image', d: 'Pencil → Clear → Save. The tile goes back to the default 👤 icon.' },
-        { t: 'Rename your account', d: 'Pencil → change the Name field → Save.' },
-        { t: 'Change password (requires old password)', d: 'Pencil → Change password. You must enter the current password first, then the new one twice.' },
-        { t: 'Remove password', d: 'Pencil → Remove. You must enter the current password first. Then the account has no password.' },
-        { t: 'Set password for a password-less account', d: 'Pencil → Set password. No old password needed because none exists.' },
-        { t: 'Add another account', d: 'Picker → click the dashed "Add account" tile. Up to 3 accounts total.' },
-        { t: 'Each account is isolated', d: 'Files, wallpaper, extensions, icon overrides, PIN, Spotify login, and accessibility settings are per-account.' }
+        { t: 'Supabase accounts', d: 'All accounts are stored in Supabase, not locally. Every device sees the same account when you sign in with the same email.' },
+        { t: 'Set a profile image', d: 'Sign out → click the ✏️ pencil on your account tile → Upload Image → pick a PNG or JPG under 500 KB → Save.' },
+        { t: 'Rename yourself', d: 'Pencil → change the Name field → Save.' },
+        { t: 'Change password', d: 'Pencil → Change password. You must enter the current password first, then the new one twice.' },
+        { t: 'Remove password', d: 'Pencil → Remove. Requires current password first.' },
+        { t: 'Per-account data', d: 'Files, wallpaper, extensions, icon overrides, device PIN, Spotify login, email, checklists, calendar events — all isolated per Supabase account.' },
+        { t: 'Restricted by admin', d: 'If the admin restricts your account, you see "Your access to Opencore has been restricted" and cannot use the OS until unrestricted.' },
+        { t: 'Admin warnings', d: 'If the admin sends you a warning, you must click "I Understand" before continuing to use OpencoreOS.' }
       ]
     },
     {
       title: 'Desktop & Windows',
       icon: '🖥️',
       entries: [
-        { t: 'Move an icon', d: 'Click and drag any desktop icon to move it to a new grid position. The position is saved automatically.' },
-        { t: 'Rename an icon', d: 'Long-press (or right-click) an icon → Rename, or use the built-in Edit App dialog.' },
-        { t: 'Remove from desktop', d: 'Long-press (or right-click) an icon → Remove. The app stays in the Start menu. You can add it back later.' },
-        { t: 'Add an app back to the desktop', d: 'Right-click any app in the Start menu → "Add to desktop". It reappears on the desktop in a free grid slot.' },
+        { t: 'Move an icon', d: 'Click and drag any desktop icon to a new grid position. Saved automatically.' },
+        { t: 'Rename an icon', d: 'Right-click the icon → Rename, or long-press for 650ms.' },
+        { t: 'Remove from desktop', d: 'Right-click → Remove from desktop. The app still lives in the Start menu.' },
+        { t: 'Add back to desktop', d: 'Right-click the app in the Start menu → "Add to desktop". Finds a free grid slot automatically.' },
         { t: 'Reset icons', d: 'Settings → System → Reset Desktop Icons. Restores the default layout.' },
-        { t: 'Open the Start menu', d: 'Click the 🪟 Start button at the bottom-left, or press it with keyboard focus.' },
-        { t: 'Close a window', d: 'Click the ✕ in the window title bar.' },
+        { t: 'Reset stuck layout', d: 'If icons are missing or misplaced, run LS.removeItem("oc_icons_v1") in the DevTools Console and reload.' },
+        { t: 'Open Start menu', d: 'Click the 🪟 Start button at bottom-left.' },
+        { t: 'Close window', d: 'Click the ✕ in the window title bar.' },
         { t: 'Minimize', d: 'Click the − in the title bar. Restore from the taskbar.' }
       ]
     },
@@ -71,15 +70,16 @@ function openHelp(){
       title: 'Files & VFS',
       icon: '📁',
       entries: [
-        { t: 'Browse files', d: 'Open Files. The virtual file system has Documents, Pictures, Audio, and System32 folders.' },
-        { t: 'Search files', d: 'Type in the search bar at the top of Files to filter the current folder live.' },
-        { t: 'Create a file', d: 'In Terminal: "touch myfile.txt" then "echo hello > myfile.txt" (or use Notepad).' },
-        { t: 'Create a folder', d: 'In Terminal: "mkdir MyFolder". Or use the "+ Folder" button in Files.' },
-        { t: 'Delete a file', d: 'Click the 🗑️ next to a file in Files. It goes to the Recycle Bin, not permanently.' },
-        { t: 'Recycle Bin', d: 'Click the 🗑️ Bin button in Files. Deleted items stay there for 30 days, then auto-delete.' },
-        { t: 'Restore a file', d: 'In the Bin, click Restore next to any item. Folders come back with all their files intact.' },
-        { t: 'Save a file from Notepad', d: 'File → Save, or Ctrl+S. It saves to the current VFS folder.' },
-        { t: 'System32 is protected', d: 'You cannot write or delete inside /System32. It contains core system files.' }
+        { t: 'Files are in the cloud', d: 'Your VFS is stored in Supabase, not locally. Sign in on any device and your files are there.' },
+        { t: 'Browse', d: 'Open Files. Default folders: Documents, Pictures, Audio, System32.' },
+        { t: 'Search', d: 'Type in the search bar at the top of Files to filter the current folder live.' },
+        { t: 'Create a folder', d: 'Click "+ Folder" in Files, or in Terminal: mkdir MyFolder.' },
+        { t: 'Create a file', d: 'In Terminal: touch myfile.txt, then echo hello > myfile.txt. Or use Notepad.' },
+        { t: 'Delete a file', d: 'Click 🗑️ next to a file in Files. It moves to the Recycle Bin, not permanently.' },
+        { t: 'Recycle Bin', d: 'Click 🗑️ Bin in the header. Files stay there 30 days, then auto-delete.' },
+        { t: 'Restore files', d: 'In the Bin, click Restore. Folders come back with all their contents.' },
+        { t: 'Delete forever', d: 'In the Bin, click ✕ next to an item, or "Empty Bin" to wipe everything.' },
+        { t: 'System32 is protected', d: 'You cannot write or delete inside /System32.' }
       ]
     },
     {
@@ -87,213 +87,273 @@ function openHelp(){
       icon: '💻',
       entries: [
         { t: 'help', d: 'Shows the command list.' },
-        { t: 'ls [path]', d: 'Lists files in the current directory or the given path.' },
-        { t: 'cd <path>', d: 'Changes directory. "cd .." goes up, "cd /" goes to root.' },
-        { t: 'cat <file>', d: 'Prints the contents of a file.' },
+        { t: 'ls [path]', d: 'Lists files in a directory.' },
+        { t: 'cd <path>', d: 'Changes directory. "cd .." goes up, "cd /" to root.' },
+        { t: 'cat <file>', d: 'Prints a file\'s contents.' },
         { t: 'mkdir <name>', d: 'Creates a folder.' },
         { t: 'touch <name>', d: 'Creates an empty file.' },
         { t: 'rm <name>', d: 'Deletes a file or folder.' },
-        { t: 'echo <text>', d: 'Prints text back.' },
+        { t: 'echo <text>', d: 'Prints text.' },
         { t: 'whoami', d: 'Shows the current user.' },
-        { t: 'date', d: 'Shows the current date and time.' },
+        { t: 'date', d: 'Shows the current date/time.' },
         { t: 'ver', d: 'Shows the OS version.' },
         { t: 'exit', d: 'Closes the Terminal.' },
-        { t: 'backup', d: 'Downloads a .ocbackup file containing this account\'s files, settings, and apps.' },
-        { t: 'restore', d: 'Opens a file picker to restore a .ocbackup file into the current account.' }
+        { t: 'backup', d: 'Downloads a .ocbackup file with your files, settings, and apps.' },
+        { t: 'restore', d: 'Opens a file picker to restore a backup.' }
       ]
     },
     {
-      title: 'Settings',
-      icon: '⚙️',
+      title: 'Email',
+      icon: '📧',
       entries: [
-        { t: 'System tab', d: 'Rename device, view file count and storage used, reset desktop icons.' },
-        { t: 'Network tab', d: 'Toggle Wi-Fi, view connection type, see online status.' },
-        { t: 'Bluetooth tab', d: 'Toggle Bluetooth, scan for BLE devices (heart rate monitors, fitness bands, etc.).' },
-        { t: 'Security tab', d: 'Set or remove a 6-digit PIN, lock the screen now. The System32 admin PIN is shown here as a reminder.' },
-        { t: 'Users tab', d: 'Add up to 3 accounts, rename them, set passwords, sign in as a different account, delete accounts.' },
-        { t: 'A11y tab', d: 'Narrator, magnifier, text size, high contrast, focus ring, reduce motion. All per-account.' },
-        { t: 'Extensions tab', d: 'See installed extensions, open the store, customize each one.' },
-        { t: 'Spotify tab', d: 'Paste your Spotify Client ID, log in, or log out. The Client ID is what enables Spotify login.' },
-        { t: 'About tab', d: 'Shows the OS version. Click the 🪟 emoji 5 times to unlock Developer Tools.' }
-      ]
-    },
-    {
-      title: 'Task Manager & System Monitor',
-      icon: '📊',
-      entries: [
-        { t: 'Open Task Manager', d: 'Start menu → 📊 Task Manager. Shows live stats about OpencoreOS and your real device.' },
-        { t: 'Performance tab', d: 'Live FPS counter, JavaScript memory usage, page uptime, CPU cores, storage used, battery status, network info.' },
-        { t: 'Processes tab', d: 'Every open window with a Kill button, every installed extension with Activate/Deactivate, plus background services like the recorder and kiosk lock.' },
-        { t: 'Device tab', d: 'Your real browser, OS, screen resolution, pixel ratio, GPU renderer, touch support, timezone, and the full user agent.' },
-        { t: 'Kill a window', d: 'Processes tab → click Kill next to any window to force-close it. Unsaved state in that app is lost.' },
-        { t: 'Read FPS', d: 'Performance tab shows the actual frame rate. Around 60 on most screens, 120 on high-refresh displays.' },
-        { t: 'Memory usage bar', d: 'The JavaScript heap bar is green under 65%, yellow 65–85%, red above 85%.' },
-        { t: 'Live updates', d: 'The FPS and memory counters refresh every second while the Performance tab is open.' },
-        { t: 'GPU info', d: 'Device tab shows your real GPU model via WebGL — for example "Apple M1" or "NVIDIA GeForce RTX 3080".' }
-      ]
-    },
-    {
-      title: 'Checklist',
-      icon: '✅',
-      entries: [
-        { t: 'Open Checklist', d: 'Start menu → ✅ Checklist. Create as many lists as you want.' },
-        { t: 'Create a new list', d: 'On the main view, click the + button (top-right) → enter a name, pick an icon, pick a color → Save.' },
-        { t: 'Add an item', d: 'Inside a list, click the + button → type the item, optionally set a due date and note → Save.' },
-        { t: 'Check off items', d: 'Click the checkbox on any item to mark it done. Click again to uncheck.' },
-        { t: 'Due dates', d: 'Set a due date when creating an item. Today shows in yellow, overdue in red, future in blue.' },
-        { t: 'Notes on items', d: 'Add a note to any item for extra details. It appears in italic below the item text.' },
-        { t: 'Filter items', d: 'In the toolbar inside a list, choose All / Active / Done to focus on what you need.' },
-        { t: 'Edit an item', d: 'Click the ✏️ next to any item to change its text, due date, or note.' },
-        { t: 'Delete an item', d: 'Click the 🗑️ next to any item and confirm.' },
-        { t: 'Edit or delete a list', d: 'On the main view, click the ⋯ next to a list → Edit list or Delete list.' },
-        { t: 'Progress bar', d: 'Each list on the main view shows how many items are done and a percentage progress bar.' }
-      ]
-    },
-    {
-      title: 'Spotify Music',
-      icon: '🎵',
-      entries: [
-        { t: 'Set up Spotify', d: 'Go to Settings → Spotify. Paste your Client ID from developer.spotify.com/dashboard. Click Save. Then Login.' },
-        { t: 'Play music', d: 'Open Music (Spotify). Search for a song, then click Play on any result.' },
-        { t: 'Playback controls', d: 'Prev, Play/Pause, Next buttons in the Music app and in the mini-player at the bottom of the screen.' },
-        { t: 'Mini-player', d: 'Appears when a song starts. Stays visible even if you close the Music window. Controls work from here.' },
-        { t: 'Spotify Premium required', d: 'The Web Playback SDK only works with Spotify Premium. Free accounts can search but not play.' }
-      ]
-    },
-    {
-      title: 'Weather',
-      icon: '🌤️',
-      entries: [
-        { t: 'Open Weather', d: 'Start menu → 🌤️ Weather. The app auto-detects your location on open.' },
-        { t: 'Location permission', d: 'Your browser will ask for location permission the first time. Click Allow to see weather for your area.' },
-        { t: 'Celsius / Fahrenheit', d: 'Use the °C / °F toggle in the top-right to switch units. Your choice is saved per-account.' },
-        { t: 'Refresh', d: 'Click the Refresh button to re-fetch weather for your current location.' },
-        { t: 'Live data', d: 'Weather comes from Open-Meteo, a free and keyless API. No signup required.' },
-        { t: 'If location fails', d: 'You\'ll see a "Try again" button. Check your browser\'s site permissions for location.' }
+        { t: 'Open Email', d: 'Start menu → 📧 Email, or double-click the desktop icon.' },
+        { t: 'Create your address', d: 'First time you open it, pick a username. Your address becomes username@opencore.io.' },
+        { t: 'Username rules', d: '3–30 characters. Letters, digits, dot, underscore, and hyphen only. Must be unique across OpencoreOS.' },
+        { t: 'Send mail', d: 'Click ✏️ Compose. Enter a recipient address. Autocomplete shows matching @opencore.io users as you type.' },
+        { t: 'Recipients', d: 'You can only send mail to other @opencore.io users. Non-Opencore addresses are rejected server-side.' },
+        { t: 'Folders', d: 'Inbox, Starred, Sent, Trash. Click any folder in the left sidebar.' },
+        { t: 'Read mail', d: 'Click any message row. Unread messages show a green dot and bold sender.' },
+        { t: 'Reply', d: 'In the message viewer, click ↩ Reply. Pre-fills the recipient and subject.' },
+        { t: 'Star a message', d: 'Click ☆ Star in the message viewer. Starred messages appear in the Starred folder.' },
+        { t: 'Delete a message', d: 'Click 🗑️ Delete. The message moves to Trash.' },
+        { t: 'Restore from Trash', d: 'Open Trash folder → open a message → ↩ Restore.' },
+        { t: 'Empty Trash', d: 'In Trash, click "Empty Trash" in the toolbar to permanently delete everything.' },
+        { t: 'Email Extensions', d: 'Click 🧩 Extensions at the bottom of the sidebar. 16 themes for your mailbox.' },
+        { t: 'Email theme list', d: 'Classic, Gmail, Outlook, Dark Moon, Paper, Sunset, Ocean, Forest, Rose, Neon, Retro Amber, Minimal, Terminal, Candy, Cyberpunk, Monochrome.' },
+        { t: 'Change email theme', d: 'Click any theme card → applies instantly. Your choice is saved per-account.' }
       ]
     },
     {
       title: 'Calendar & Events',
       icon: '📅',
       entries: [
-        { t: 'Open Calendar', d: 'Start menu → 📅 Calendar. Shows the current month by default.' },
-        { t: 'Navigate months', d: 'Use ‹ and › buttons in the header. Click Today to jump back to the current month.' },
-        { t: 'Add an event', d: 'Click the + button (top-right) → fill in title, date, optional time, optional description, and color → Save.' },
-        { t: 'View event details', d: 'Click an event chip on the calendar grid to see its full details.' },
-        { t: 'Edit an event', d: 'In the event viewer, click ✏️ to change any field. Changes apply instantly.' },
-        { t: 'Delete an event', d: 'In the event viewer, click 🗑️ and confirm.' },
-        { t: 'See all events on a day', d: 'Click any day cell (not the chip) to open a Day View listing every event on that day.' },
-        { t: 'Event colors', d: 'Choose from 8 colors when creating an event. The color appears as a border on the chip and viewer.' }
+        { t: 'Open Calendar', d: 'Start menu → 📅 Calendar. Shows the current month.' },
+        { t: 'Navigate months', d: 'Use ‹ and › buttons. Click Today to jump back.' },
+        { t: 'Add an event', d: 'Click + (top-right) → title, date, optional time, optional description, and color → Save.' },
+        { t: 'View event', d: 'Click an event chip on the calendar grid to see full details.' },
+        { t: 'Edit event', d: 'In the event viewer, click ✏️ to change any field.' },
+        { t: 'Delete event', d: 'In the event viewer, click 🗑️ and confirm.' },
+        { t: 'Day view', d: 'Click a day cell (not an event chip) to see all events that day.' },
+        { t: 'Colors', d: '8 colors to choose from when creating an event.' }
+      ]
+    },
+    {
+      title: 'Checklist',
+      icon: '✅',
+      entries: [
+        { t: 'Open Checklist', d: 'Start menu → ✅ Checklist.' },
+        { t: 'Create a list', d: 'On the main view, click + → enter a name, pick an icon, pick a color → Save.' },
+        { t: 'Add an item', d: 'Inside a list, click + → type item, optionally set due date and note → Save.' },
+        { t: 'Check items off', d: 'Click the checkbox. Click again to uncheck.' },
+        { t: 'Due date badges', d: 'Today shows yellow, overdue shows red, future shows blue.' },
+        { t: 'Notes on items', d: 'Add a note for extra details. Shows in italic under the item text.' },
+        { t: 'Filter', d: 'All / Active / Done buttons in the toolbar inside a list.' },
+        { t: 'Edit an item', d: 'Click ✏️ next to any item.' },
+        { t: 'Delete an item', d: 'Click 🗑️ next to any item.' },
+        { t: 'Edit or delete a list', d: 'On the main view, click ⋯ next to a list → Edit list or Delete list.' },
+        { t: 'Progress', d: 'Each list shows a percentage and colored progress bar.' }
+      ]
+    },
+    {
+      title: 'Task Manager',
+      icon: '📊',
+      entries: [
+        { t: 'Open', d: 'Start menu → 📊 Task Manager.' },
+        { t: 'Performance tab', d: 'Live FPS counter, JavaScript heap, page uptime, CPU cores, storage, battery, network.' },
+        { t: 'Processes tab', d: 'Every open window with a Kill button, every installed extension, background services.' },
+        { t: 'Device tab', d: 'Real browser, OS, screen resolution, pixel ratio, GPU renderer, touch support, timezone, full user agent.' },
+        { t: 'Kill a window', d: 'Processes tab → Kill. Unsaved state in that app is lost.' },
+        { t: 'FPS meter', d: 'Around 60 on most screens, 120 on high-refresh displays.' },
+        { t: 'Memory bar', d: 'Green under 65%, yellow 65–85%, red above 85%.' }
       ]
     },
     {
       title: 'Photos & Videos',
       icon: '🎨',
       entries: [
-        { t: 'Open Photo Editor', d: 'Start menu → Photo Editor. Or desktop icon.' },
-        { t: 'Open a photo', d: 'In the editor, click 📂 Open (from your computer) or 📁 VFS (from OpencoreOS files).' },
-        { t: 'Draw on a photo', d: 'Use the Brush, Eraser, Line, Rect, Circle, or Text tools.' },
-        { t: 'Apply filters', d: 'Use the sliders in the right panel: brightness, contrast, saturation, grayscale, sepia, blur.' },
-        { t: 'Crop / rotate / flip', d: 'Toolbar buttons: ✂ Crop, ↻ Rotate, ⇄ Flip H, ⇅ Flip V.' },
-        { t: 'Undo / redo', d: '↶ Undo and ↷ Redo buttons. Up to 30 steps.' },
-        { t: 'Snap a frame from a video', d: 'Open a video in the editor, pause at the frame you want, click 📸 Snap Frame.' },
-        { t: 'Save your edits', d: '💾 Save writes to /Pictures in your VFS. ⬇ Download sends a PNG to your computer.' }
+        { t: 'Open Photo Editor', d: 'Start menu → Photo Editor.' },
+        { t: 'Open a photo', d: '📂 Open (from device) or 📁 VFS (from OpencoreOS files).' },
+        { t: 'Draw tools', d: 'Brush, Eraser, Line, Rect, Circle, Text.' },
+        { t: 'Filters', d: 'Brightness, contrast, saturation, grayscale, sepia, blur — sliders in the right panel.' },
+        { t: 'Crop / rotate / flip', d: '✂ Crop, ↻ Rotate, ⇄ Flip H, ⇅ Flip V.' },
+        { t: 'Undo / redo', d: '↶ and ↷. Up to 30 steps.' },
+        { t: 'Snap a video frame', d: 'Open a video, pause at the frame, click 📸 Snap Frame.' },
+        { t: 'Save', d: '💾 Save writes to /Pictures. ⬇ Download sends a PNG to your computer.' }
+      ]
+    },
+    {
+      title: 'Image Viewer',
+      icon: '🖼️',
+      entries: [
+        { t: 'Opens automatically', d: 'Any time you click an image or View on a screenshot toast.' },
+        { t: 'Zoom', d: 'Scroll wheel, or + / − buttons. Up to 800%.' },
+        { t: 'Pan', d: 'Click and drag the image.' },
+        { t: 'Rotate', d: '↻ button rotates 90° clockwise.' },
+        { t: 'Reset', d: '⟲ button, or double-click the image.' },
+        { t: 'Download', d: '⬇ button saves the image to your computer.' },
+        { t: 'Delete', d: '🗑️ button (only if the image is a VFS file).' },
+        { t: 'Keyboard', d: '+ / - to zoom, arrow keys for next/previous when opened from a gallery.' }
       ]
     },
     {
       title: 'Screenshots & Recording',
       icon: '📸',
       entries: [
-        { t: 'Take a screenshot', d: 'Click the 📷 tray icon. Choose Full screen, Window, Region, or Camera. Saved to /Pictures/Screenshots.' },
-        { t: 'Record the screen', d: 'Click the ⭐ tray icon. Choose what to record. The icon turns red 🔴 while recording. Click again to stop.' },
-        { t: 'Include microphone', d: 'When you start recording, a dialog asks if you want mic audio.' },
-        { t: 'View captures', d: 'Start menu → 📸 Captures. Shows screenshots and recordings in two tabs.' },
-        { t: 'Where recordings go', d: 'Saved as .webm files in /Pictures/Recordings.' }
+        { t: 'Screenshot', d: 'Click 📷 tray icon. Choose Full screen, Window, Region, or Camera. Saved to /Pictures/Screenshots.' },
+        { t: 'Record screen', d: 'Click ⭐ tray icon. Choose what to record. Tray turns 🔴 while recording. Click again to stop.' },
+        { t: 'Include mic', d: 'A dialog asks if you want mic audio before recording starts.' },
+        { t: 'View captures', d: 'Start menu → 📸 Captures. Screenshots and recordings in two tabs.' },
+        { t: 'Recordings format', d: '.webm files in /Pictures/Recordings.' }
       ]
     },
     {
       title: 'Extensions & Themes',
       icon: '🧩',
       entries: [
-        { t: 'Open Extension Store', d: 'Start menu → 🧩 Extensions. Or double-click the desktop icon.' },
-        { t: '10 built-in extensions', d: 'Aero Glass, Neon Cyber, Paper Light, Terminal Green, Windows 95, macOS Dark, Synthwave, High Contrast, Frost, Custom Icons.' },
-        { t: 'Install an extension', d: 'Click Install on any card in the store.' },
-        { t: 'Activate a theme', d: 'After installing a theme, click Activate. Only one theme runs at a time.' },
-        { t: 'Customize appearance', d: 'Click Customize on an installed extension → Appearance tab. Change accent color or wallpaper.' },
-        { t: 'Change app icons', d: 'Click Customize → App Icons tab. Click Emoji or Upload for any app. Reset restores the default.' },
-        { t: 'Uninstall', d: 'Click the × button on any installed extension card.' }
+        { t: 'Open Extension Store', d: 'Start menu → 🧩 Extensions, or double-click the desktop icon.' },
+        { t: '50 built-in extensions', d: 'Themes, icon packs, and style changes for the whole OS.' },
+        { t: 'Install', d: 'Click Install on any card.' },
+        { t: 'Activate a theme', d: 'After installing, click Activate. Only one theme active at a time.' },
+        { t: 'Customize', d: 'Click Customize on any installed extension → Appearance tab. Change accent color or wallpaper.' },
+        { t: 'Change app icons', d: 'Click Customize → App Icons tab. Click Emoji, Upload, or VFS for any app. Reset restores default.' },
+        { t: 'Uninstall', d: 'Click × on any installed extension card.' },
+        { t: 'Popular themes', d: 'Neon Cyber, Vaporwave, Matrix, Windows XP, Comic Book, Steampunk, Hacker, Gold Luxe, RGB Gaming, and 40+ more.' }
+      ]
+    },
+    {
+      title: 'Wallpaper',
+      icon: '🖼️',
+      entries: [
+        { t: 'Open', d: 'Start menu → 🖼️ Wallpaper.' },
+        { t: '25 wallpapers', d: 'Rainbow, Retro Wave, Aurora, Midnight, Sunset Beach, Forest Mist, Lava Lamp, Cyberpunk, Cotton Candy, Ocean Deep, Desert Dunes, Cosmic Dust, Minty Fresh, Golden Hour, Electric Blue, Rose Gold + 8 originals.' },
+        { t: 'Apply', d: 'Click any tile — applies instantly.' },
+        { t: 'Upload from device', d: '📂 Upload button — pick any image from your computer.' },
+        { t: 'From OpencoreOS', d: '📁 From Opencore — pick a screenshot or saved photo from your VFS.' },
+        { t: 'From URL', d: '🔗 URL — paste an image URL.' },
+        { t: 'Clear', d: '✕ Clear removes the wallpaper entirely.' },
+        { t: 'Per-account', d: 'Each Supabase account has its own wallpaper.' }
+      ]
+    },
+    {
+      title: 'Weather',
+      icon: '🌤️',
+      entries: [
+        { t: 'Open', d: 'Start menu → 🌤️ Weather. Auto-detects your location.' },
+        { t: 'Location permission', d: 'Browser asks the first time. Click Allow for local weather.' },
+        { t: 'Celsius / Fahrenheit', d: 'Toggle °C / °F in the header. Choice is saved.' },
+        { t: 'Refresh', d: 'Re-fetches current weather.' },
+        { t: 'Data source', d: 'Open-Meteo — free, no API key required.' },
+        { t: 'Location denied', d: 'You see a "Try again" button. Check browser site permissions.' }
+      ]
+    },
+    {
+      title: 'Spotify Music',
+      icon: '🎵',
+      entries: [
+        { t: 'Set up', d: 'Settings → Spotify → paste Client ID from developer.spotify.com/dashboard → Save → Login.' },
+        { t: 'Redirect URI', d: 'Must exactly match what\'s in your Spotify app settings. Typically https://roblostudio4r.github.io/opencore/' },
+        { t: 'Play music', d: 'Open Music. Search, click Play on any result.' },
+        { t: 'Controls', d: 'Prev, Play/Pause, Next — in the app and in the mini-player.' },
+        { t: 'Mini-player', d: 'Appears when a song starts. Stays visible even if you close Music.' },
+        { t: 'Premium required', d: 'The Web Playback SDK requires Spotify Premium. Free accounts can search but not play.' }
+      ]
+    },
+    {
+      title: 'Browser',
+      icon: '🌐',
+      entries: [
+        { t: 'Open', d: 'Start menu → 🌐 Browser.' },
+        { t: 'Enter a URL', d: 'Type and press Enter or click Go. Bare domains like "wikipedia.org" get https:// prepended.' },
+        { t: 'Search', d: 'Type anything that isn\'t a URL → searches DuckDuckGo.' },
+        { t: 'Back / Forward', d: 'Navigation buttons in the toolbar.' },
+        { t: 'Reload', d: '↻ button.' },
+        { t: 'Open in new tab', d: '🔗 button opens the current URL in a real browser tab.' },
+        { t: 'Blocked sites', d: 'Many sites (Google, YouTube) block embedding. You\'ll see an error with an "Open in New Tab" button.' }
       ]
     },
     {
       title: 'Accessibility',
       icon: '♿',
       entries: [
-        { t: 'Narrator', d: 'Reads UI elements aloud as you hover and click. Ctrl+Alt+N toggles it.' },
-        { t: 'Magnifier', d: 'Zooms the whole desktop. Ctrl+Alt+M toggles it.' },
-        { t: 'Magnifier lens', d: 'A large circle follows your cursor showing the element under it in big text.' },
-        { t: 'Text size', d: 'Slider from 80% to 250%. Ctrl+Alt+= and Ctrl+Alt+- adjust it.' },
+        { t: 'Narrator', d: 'Reads UI elements aloud. Ctrl+Alt+N toggles.' },
+        { t: 'Magnifier', d: 'Zooms the whole desktop. Ctrl+Alt+M toggles.' },
+        { t: 'Magnifier lens', d: 'A circle follows your cursor showing the element under it in big text.' },
+        { t: 'Text size', d: '80% to 250%. Ctrl+Alt+= and Ctrl+Alt+- adjust it.' },
         { t: 'High contrast', d: 'Boost contrast and sharpen edges.' },
-        { t: 'Focus ring', d: 'Large yellow outline on keyboard-focused elements. Press Tab to navigate.' },
-        { t: 'Reduce motion', d: 'Disables all animations and transitions.' }
+        { t: 'Focus ring', d: 'Large yellow outline on keyboard-focused elements.' },
+        { t: 'Reduce motion', d: 'Disables all animations and transitions.' },
+        { t: 'Open panel', d: 'Start menu → ♿ Accessibility, or the ♿ tray icon.' }
       ]
     },
     {
       title: 'App Lock & Trash',
       icon: '🔒',
       entries: [
-        { t: 'Lock an app', d: 'Long-press (or right-click) any app icon → 🔒 Lock this app. No password needed to lock.' },
-        { t: 'Unlock an app', d: 'Long-press the locked app → 🔓 Unlock this app. You must enter the password.' },
-        { t: 'Use device password or custom', d: 'Long-press → 🔑 Password: Device → change. Choose 1 for device PIN, 2 for a custom password.' },
-        { t: 'Launch a locked app', d: 'Clicking the app opens a password prompt first.' },
-        { t: 'Move to Trash', d: 'Drag any app onto the 🗑️ Trash icon in the bottom-right of the desktop. Or long-press → Move to trash.' },
-        { t: 'Restore from Trash', d: 'Start menu → 🗑️ Trash. Click Restore next to any item.' },
-        { t: 'Auto-delete apps', d: 'Apps in the trash are permanently deleted after 30 days.' },
-        { t: 'Empty trash', d: 'In the Trash window, click Empty trash to delete everything now.' }
+        { t: 'Lock an app', d: 'Right-click any icon → 🔒 Lock this app. No password needed to lock.' },
+        { t: 'Unlock an app', d: 'Right-click → 🔓 Unlock this app. Requires the password.' },
+        { t: 'Device or custom password', d: 'Right-click → 🔑 Password: Device → change. Choose 1 for device PIN, 2 for custom.' },
+        { t: 'Launch locked app', d: 'Clicking the app prompts for the password first.' },
+        { t: 'Move to Trash', d: 'Drag any app onto the 🗑️ Trash icon, or right-click → Move to trash.' },
+        { t: 'Restore from Trash', d: 'Start menu → 🗑️ Trash → Restore.' },
+        { t: 'Auto-delete apps', d: 'Apps in Trash are permanently deleted after 30 days.' },
+        { t: 'Empty Trash', d: 'In the Trash window, click "Empty trash".' }
       ]
     },
     {
       title: 'Auto-Delete & Data',
       icon: '⏳',
       entries: [
-        { t: 'Trashed apps auto-delete', d: 'Apps you send to the Trash are permanently removed after 30 days.' },
-        { t: 'Trashed files auto-delete', d: 'Files in the Recycle Bin are permanently removed after 30 days.' },
-        { t: 'Purge runs on boot', d: 'Every time OpencoreOS loads, it clears items older than 30 days.' },
-        { t: 'Purge runs every 5 minutes', d: 'While you are using OpencoreOS, both bins are checked every 5 minutes.' },
-        { t: 'Back up your account', d: 'Open Terminal and type "backup". A .ocbackup file downloads with your files, icons, extensions, and settings.' },
-        { t: 'Restore a backup', d: 'Open Terminal and type "restore". Pick the .ocbackup file and confirm.' }
+        { t: 'App trash auto-delete', d: 'Trashed apps are permanently removed after 30 days.' },
+        { t: 'File bin auto-delete', d: 'Files in the Recycle Bin are permanently removed after 30 days.' },
+        { t: 'Purge on boot', d: 'Every page load clears old trashed items.' },
+        { t: 'Purge every 5 min', d: 'Both bins are checked while the OS is running.' },
+        { t: 'Backup account', d: 'Terminal → backup. Downloads .ocbackup with files, icons, extensions, and settings.' },
+        { t: 'Restore backup', d: 'Terminal → restore. Pick the file and confirm.' }
       ]
     },
     {
       title: 'Developer Tools',
       icon: '🛠️',
       entries: [
-        { t: 'Unlock Dev Tools', d: 'Settings → About → click the 🪟 emoji 5 times in a row → enter your device password (or devil.9oce if none is set).' },
-        { t: 'Console tab', d: 'Run JavaScript live in the page. Type and press Enter.' },
-        { t: 'Storage tab', d: 'See, edit, and delete every key in your account\'s scoped storage.' },
-        { t: 'VFS tab', d: 'Browse the virtual filesystem. Click files to view, delete with ×.' },
-        { t: 'Apps tab', d: 'Launch any registered app by its internal ID.' },
-        { t: 'Windows tab', d: 'See every open window. Focus or force-close any of them.' },
-        { t: 'Flags tab', d: 'Wipe account, reset icons, clear Spotify tokens, force setup wizard, open Recovery, or full-reset the OS.' }
+        { t: 'Unlock', d: 'Settings → About → click the 🪟 emoji 5 times → enter device password (or devil.9oce if none set).' },
+        { t: 'Console tab', d: 'Run JavaScript live. Type and press Enter.' },
+        { t: 'Storage tab', d: 'View, edit, and delete every key in your account\'s storage.' },
+        { t: 'VFS tab', d: 'Browse your files. Click to view, ✕ to delete.' },
+        { t: 'Apps tab', d: 'Launch any registered app by ID.' },
+        { t: 'Windows tab', d: 'See every open window. Focus or force-close.' },
+        { t: 'Flags tab', d: 'Wipe account, reset icons, clear Spotify tokens, force setup wizard, open Recovery, full reset.' },
+        { t: 'Admin tab', d: 'Open the Admin Panel (admins only) or check your role.' }
+      ]
+    },
+    {
+      title: 'Admin Panel',
+      icon: '🛡️',
+      entries: [
+        { t: 'Open', d: 'DevTools → Admin tab → "Open Admin Panel", or type adminPanel() in the DevTools Console.' },
+        { t: 'Admins only', d: 'You must have role = admin in Supabase. Contact your admin if you need access.' },
+        { t: 'View all users', d: 'Every OpencoreOS account with email, role, restriction status, warnings, and login history.' },
+        { t: 'Search users', d: 'Type in the search box to filter by email.' },
+        { t: 'Restrict', d: 'Click 🚫 Restrict. Enter a reason. User sees "Your access has been restricted" on next sign-in.' },
+        { t: 'Unrestrict', d: 'Click ✅ Unrestrict to restore access.' },
+        { t: 'Warn', d: 'Click ⚠️ Warn. Enter a message. User must click "I Understand" before continuing.' },
+        { t: 'Make admin', d: 'Click ⬆ Make admin to grant admin rights.' },
+        { t: 'Demote', d: 'Click ⬇ Demote to remove admin rights.' },
+        { t: 'Reset password', d: 'Click 🔑 Reset password to send a password reset email.' },
+        { t: 'View files', d: 'Click 📁 Files to see a read-only view of a user\'s VFS.' },
+        { t: 'Delete user', d: 'Click 🗑 Delete to permanently remove an account and everything in it.' },
+        { t: 'Export', d: 'Click 📤 Export to download the user list as JSON.' },
+        { t: 'Cannot see passwords', d: 'Passwords are bcrypt-hashed in Supabase. Even admins cannot see them — this is by design, on every platform.' }
       ]
     },
     {
       title: 'Recovery & Reset',
       icon: '♻️',
       entries: [
-        { t: 'Where is Recovery?', d: 'Recovery is hidden. Open it only from Developer Tools → Flags → Open Recovery Environment.' },
-        { t: 'Restore System32', d: 'In Recovery, click Restore System32 to recreate missing core files.' },
-        { t: 'Wipe current account', d: 'In Recovery, click Wipe Current Account. Only affects the signed-in account.' },
-        { t: 'Full reset', d: 'In Recovery, click Full Reset. You must enter the device password AND the master password (devil.9oce). If no PIN is set, you enter devil.9oce twice. Then type RESET.' },
-        { t: 'What full reset wipes', d: 'Every account, every file, every setting, every saved Spotify token. Cannot be undone.' }
-      ]
-    },
-    {
-      title: 'Backup & Restore',
-      icon: '💾',
-      entries: [
-        { t: 'Back up your account', d: 'Open Terminal, type "backup". A .ocbackup file downloads with your files, icons, settings, and Spotify tokens.' },
-        { t: 'Restore a backup', d: 'Open Terminal, type "restore". Pick the .ocbackup file. Confirm. Your account is restored.' },
-        { t: 'Scope of backups', d: 'Backups only contain the current account\'s data, not other users\' accounts.' }
+        { t: 'Where is Recovery?', d: 'Hidden. Open from DevTools → Flags → Open Recovery Environment.' },
+        { t: 'Restore System32', d: 'Recreates missing core system files.' },
+        { t: 'Wipe current account', d: 'Only affects the signed-in account.' },
+        { t: 'Full reset', d: 'Requires device password AND master password (devil.9oce). If no PIN is set, you enter devil.9oce twice. Type RESET to confirm.' },
+        { t: 'What full reset wipes', d: 'Every account on this browser, every file, every setting, every saved Spotify token. Cannot be undone.' }
       ]
     },
     {
@@ -306,19 +366,20 @@ function openHelp(){
         { t: 'Ctrl+Alt+-', d: 'Decrease text size.' },
         { t: 'Enter', d: 'Submit in Terminal or search fields.' },
         { t: 'Arrow Up / Down', d: 'Navigate Terminal history.' },
-        { t: 'Escape', d: 'Close the current modal or context menu.' },
-        { t: 'Tab', d: 'Move focus through UI (works best with Focus Ring enabled).' }
+        { t: 'Escape', d: 'Close a modal or context menu.' },
+        { t: 'Tab', d: 'Move focus through UI.' }
       ]
     },
     {
       title: 'Tips & Tricks',
       icon: '💡',
       entries: [
-        { t: 'Fallback device password', d: 'If you never set a PIN, the master password for Developer Tools and Recovery is devil.9oce.' },
-        { t: 'Kiosk fullscreen', d: 'The first click after loading puts OpencoreOS into fullscreen. Press Escape — it snaps back. Only Shutdown releases it.' },
-        { t: 'Right-click anywhere', d: 'Right-clicking an app icon opens the App Lock + Trash menu. Right-clicking a Start menu item lets you add or remove it from the desktop.' },
-        { t: 'Per-account everything', d: 'Extensions, accessibility, wallpaper, files, icons, Spotify login, PIN, checklists, calendar events — all isolated per account.' },
-        { t: 'Reset the whole OS', d: 'Recovery → Full Reset. Or DevTools → Flags → Full Reset.' },
+        { t: 'Fallback password', d: 'If you never set a PIN, the master password for Developer Tools and Recovery is devil.9oce.' },
+        { t: 'Kiosk fullscreen', d: 'The first click after loading puts OpencoreOS into fullscreen. Escape snaps back. Only Shutdown releases it.' },
+        { t: 'Right-click everywhere', d: 'App icons → App Lock/Trash menu. Start menu items → Add/Remove from desktop.' },
+        { t: 'Per-account everything', d: 'Wallpapers, files, extensions, icons, Spotify, PIN, checklists, calendar, email themes — all isolated.' },
+        { t: 'Sync across devices', d: 'Sign in with the same Supabase account on another device. Your files, wallpaper, and mail are all there.' },
+        { t: 'Reset the OS', d: 'Recovery → Full Reset. Or DevTools → Flags → Full Reset.' },
         { t: 'Search field', d: 'The search box at the top of this Help window filters topics as you type.' }
       ]
     }
