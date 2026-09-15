@@ -1,6 +1,5 @@
 // ============================================================
-//  auth.js — Supabase Auth for OpencoreOS
-//  Login / signup screen + restriction + warning enforcement
+//  auth.js — Supabase Auth (login, signup, restriction, warning)
 // ============================================================
 
 (function () {
@@ -10,7 +9,6 @@
   var currentProfile = null;
   var supabase = null;
 
-  // ---------- Wait for the Supabase client ----------
   function waitForSupabase(cb) {
     if (window.supabaseClient) { cb(); return; }
     var tries = 0;
@@ -21,26 +19,17 @@
     }, 100);
   }
 
-  // ============================================================
-  //  AUTH SCREEN
-  // ============================================================
   function showAuthScreen() {
     var picker = document.getElementById('acctPicker');
     if (!picker) return;
 
-    // Make sure nothing else is covering the screen
-    var setup = document.getElementById('setup');
-    if (setup) setup.classList.add('hide');
-    var uwiz = document.getElementById('uwiz');
-    if (uwiz) uwiz.classList.add('hide');
-    var login = document.getElementById('login');
-    if (login) login.classList.remove('on');
-    var dt = document.getElementById('dt');
-    if (dt) dt.style.display = 'none';
-    var sm = document.getElementById('sm');
-    if (sm) sm.classList.remove('on');
-    var tb = document.getElementById('tb');
-    if (tb) tb.style.display = 'none';
+    // Hide everything else
+    var s = document.getElementById('setup');      if (s) s.classList.add('hide');
+    var u = document.getElementById('uwiz');       if (u) u.classList.add('hide');
+    var l = document.getElementById('login');      if (l) l.classList.remove('on');
+    var d = document.getElementById('dt');         if (d) d.style.display = 'none';
+    var t = document.getElementById('tb');         if (t) t.style.display = 'none';
+    var m = document.getElementById('sm');         if (m) m.classList.remove('on');
 
     picker.innerHTML =
       '<div style="font-size:44px;font-weight:200;letter-spacing:2px;margin-bottom:6px;">OpencoreOS</div>'
@@ -67,7 +56,6 @@
     var emailEl = picker.querySelector('#auth-email');
     var pwEl = picker.querySelector('#auth-password');
     var errEl = picker.querySelector('#auth-error');
-
     function setError(msg) { errEl.textContent = msg || ''; }
 
     function doSignIn() {
@@ -96,7 +84,6 @@
       supabase.auth.signUp({ email: email, password: pw }).then(function (res) {
         picker.querySelector('#auth-signup').textContent = 'Create Account';
         if (res.error) { setError(res.error.message); return; }
-        // Auto sign in (auto-confirm is on)
         supabase.auth.signInWithPassword({ email: email, password: pw }).then(function (r2) {
           if (r2.error) { setError(r2.error.message); return; }
           onSignedIn(r2.data.user);
@@ -114,9 +101,6 @@
     emailEl.focus();
   }
 
-  // ============================================================
-  //  ON SIGNED IN
-  // ============================================================
   function onSignedIn(user) {
     currentUser = user;
     console.log('Signed in as:', user.email);
@@ -126,48 +110,33 @@
       window.currentUser = user;
       window.currentProfile = profile;
 
-      // Ensure the profile row exists (in case the trigger didn't fire)
       if (!profile) {
-        console.warn('No profile row found — creating one');
+        console.warn('No profile row — creating one');
         supabase.from('profiles').insert({ id: user.id, email: user.email })
           .then(function () { return loadProfile(user.id); })
           .then(function (p2) {
             currentProfile = p2;
             window.currentProfile = p2;
-            routeAfterProfile(user, p2);
+            routeAfterProfile(user, p2 || { id: user.id, email: user.email, role: 'user' });
           })
-          .catch(function (err) {
-            console.error('Could not create profile row:', err);
-            // Continue anyway — user can still use the OS
+          .catch(function () {
             routeAfterProfile(user, { id: user.id, email: user.email, role: 'user' });
           });
         return;
       }
-
       routeAfterProfile(user, profile);
     });
   }
 
   function routeAfterProfile(user, profile) {
-    if (profile && profile.restricted) {
-      showRestrictionScreen(profile);
-      return;
-    }
+    if (profile && profile.restricted) { showRestrictionScreen(profile); return; }
+    if (profile && profile.warning_message && !profile.warning_acknowledged) { showWarningScreen(profile); return; }
 
-    if (profile && profile.warning_message && !profile.warning_acknowledged) {
-      showWarningScreen(profile);
-      return;
-    }
-
-    // All clear — hide the auth screen and boot
     var picker = document.getElementById('acctPicker');
     if (picker) picker.style.display = 'none';
 
-    if (typeof window.bootAfterAuth === 'function') {
-      window.bootAfterAuth();
-    } else if (typeof bootOpencore === 'function') {
-      bootOpencore();
-    }
+    if (typeof window.bootAfterAuth === 'function') window.bootAfterAuth();
+    else if (typeof bootOpencore === 'function') bootOpencore();
   }
 
   function loadProfile(userId) {
@@ -178,9 +147,6 @@
       });
   }
 
-  // ============================================================
-  //  RESTRICTION SCREEN
-  // ============================================================
   function showRestrictionScreen(profile) {
     var picker = document.getElementById('acctPicker');
     if (!picker) return;
@@ -198,14 +164,9 @@
         + '<button id="restrict-logout" style="background:transparent;border:1px solid rgba(255,255,255,0.15);'
           + 'color:#fff;padding:10px 22px;border-radius:8px;cursor:pointer;font-size:13px;">Sign Out</button>'
       + '</div>';
-    picker.querySelector('#restrict-logout').onclick = function () {
-      doSignOut();
-    };
+    picker.querySelector('#restrict-logout').onclick = doSignOut;
   }
 
-  // ============================================================
-  //  WARNING SCREEN
-  // ============================================================
   function showWarningScreen(profile) {
     var picker = document.getElementById('acctPicker');
     if (!picker) return;
@@ -237,20 +198,16 @@
     });
   }
 
-  // ============================================================
-  //  SIGN OUT — clear session and show auth screen, no reload
-  // ============================================================
   function doSignOut() {
     if (!supabase) supabase = window.supabaseClient;
 
-    // Reset cached state FIRST so nothing tries to boot with stale data
     currentUser = null;
     currentProfile = null;
     window.currentUser = null;
     window.currentProfile = null;
 
-    function finishSignOut() {
-      // Hide any open windows
+    function finish() {
+      // Close all windows
       try {
         if (window.ST && ST.windows) {
           for (var i = ST.windows.length - 1; i >= 0; i--) {
@@ -262,52 +219,24 @@
         if (typeof updateTaskbar === 'function') updateTaskbar();
       } catch (e) {}
 
-      // Reset the desktop / taskbar visibility
-      var dt = document.getElementById('dt');
-      if (dt) dt.style.display = 'none';
-      var tb = document.getElementById('tb');
-      if (tb) tb.style.display = 'none';
-      var sm = document.getElementById('sm');
-      if (sm) sm.classList.remove('on');
-      var login = document.getElementById('login');
-      if (login) login.classList.remove('on');
-      var setup = document.getElementById('setup');
-      if (setup) setup.classList.add('hide');
-      var uwiz = document.getElementById('uwiz');
-      if (uwiz) uwiz.classList.add('hide');
-
-      // Show the auth screen
       showAuthScreen();
     }
 
-    if (supabase) {
-      supabase.auth.signOut().then(finishSignOut).catch(finishSignOut);
-    } else {
-      finishSignOut();
-    }
+    if (supabase) supabase.auth.signOut().then(finish).catch(finish);
+    else finish();
   }
 
-  // ============================================================
-  //  INIT — check existing session
-  // ============================================================
   function init() {
     waitForSupabase(function () {
       supabase = window.supabaseClient;
 
       supabase.auth.getSession().then(function (res) {
-        if (res.data && res.data.session && res.data.session.user) {
-          onSignedIn(res.data.session.user);
-        } else {
-          showAuthScreen();
-        }
-      }).catch(function () {
-        showAuthScreen();
-      });
+        if (res.data && res.data.session && res.data.session.user) onSignedIn(res.data.session.user);
+        else showAuthScreen();
+      }).catch(function () { showAuthScreen(); });
 
-      // Listen for auth state changes (sign out from another tab)
       supabase.auth.onAuthStateChange(function (event, session) {
         if (event === 'SIGNED_OUT') {
-          // Reset cached state and show auth
           currentUser = null;
           currentProfile = null;
           window.currentUser = null;
@@ -318,9 +247,6 @@
     });
   }
 
-  // ============================================================
-  //  PUBLIC API
-  // ============================================================
   window.OpencoreAuth = {
     showAuthScreen: showAuthScreen,
     getCurrentUser: function () { return currentUser; },
@@ -328,9 +254,6 @@
     signOut: doSignOut
   };
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
 })();
