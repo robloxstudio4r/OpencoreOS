@@ -1,6 +1,6 @@
 // ============================================================
-//  extmanager.js — Per-extension Customize window
-//  Lets users override appearance + per-app icons
+//  extmanager.js — Customize window for each extension
+//  Wallpaper: upload from device OR pick from OpencoreOS VFS
 // ============================================================
 
 function openExtensionManager(extId){
@@ -15,14 +15,13 @@ function openExtensionManager(extId){
         + '<button type="button" data-tab="icons" class="ext-tab">App Icons</button>'
       + '</div>'
       + '<div id="ext-mgr-body" style="flex:1;overflow-y:auto;padding:14px;"></div>'
-    + '</div>', 620, 560);
+    + '</div>', 640, 600);
 
   var c = win.querySelector('#ext-mgr');
   var tabsEl = c.querySelector('#ext-mgr-tabs');
   var body = c.querySelector('#ext-mgr-body');
   var current = 'look';
 
-  // -------- Tab switching --------
   var tabs = tabsEl.querySelectorAll('.ext-tab');
   for (var t = 0; t < tabs.length; t++) {
     (function (b) {
@@ -47,25 +46,161 @@ function openExtensionManager(extId){
   tabs[0].style.borderBottom = '2px solid #1db954';
 
   // ============================================================
+  //  Wallpaper application (works with data URL or http URL)
+  // ============================================================
+  function applyWallpaper(dataOrUrl) {
+    var dt = document.getElementById('dt');
+    if (!dt) return;
+    if (!dataOrUrl) {
+      dt.style.background = '';
+      return;
+    }
+    if (dataOrUrl.indexOf('data:') === 0 || dataOrUrl.indexOf('http') === 0) {
+      dt.style.background = 'url(' + dataOrUrl + ') center/cover no-repeat';
+    } else {
+      dt.style.background = dataOrUrl;
+    }
+  }
+
+  function setWallpaperForExt(id, dataOrUrl) {
+    try {
+      LS.setItem('oc_ext_wallpaper_' + id, dataOrUrl);
+    } catch (e) {
+      alert('Could not save wallpaper — image is too large. Try a smaller image (under 2 MB).');
+      return;
+    }
+    if (window.Extensions.getActiveTheme() === id) {
+      applyWallpaper(dataOrUrl);
+    } else {
+      // Still apply globally — user wanted "change wallpaper to anything"
+      applyWallpaper(dataOrUrl);
+    }
+  }
+
+  // ---------- VFS picker ----------
+  function pickFromVFS(callback) {
+    var picker = document.createElement('div');
+    picker.style.cssText =
+      'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:2147483645;' +
+      'display:flex;align-items:center;justify-content:center;' +
+      'font-family:system-ui,-apple-system,sans-serif;';
+    var box = document.createElement('div');
+    box.style.cssText =
+      'background:#1a1c22;color:#fff;padding:20px;border-radius:14px;' +
+      'width:520px;max-width:90vw;max-height:80vh;display:flex;flex-direction:column;' +
+      'border:1px solid rgba(255,255,255,0.1);box-shadow:0 20px 60px rgba(0,0,0,0.6);';
+
+    box.innerHTML =
+      '<div style="font-size:16px;font-weight:600;margin-bottom:12px;">Pick an image from OpencoreOS</div>'
+      + '<div id="vfs-picker-list" style="flex:1;overflow-y:auto;background:rgba(0,0,0,0.3);'
+        + 'border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:8px;min-height:200px;">'
+        + '<div style="color:#888;text-align:center;padding:30px;">Loading…</div>'
+      + '</div>'
+      + '<div style="display:flex;gap:8px;margin-top:12px;">'
+        + '<button type="button" id="vfs-picker-cancel" style="flex:1;background:rgba(255,255,255,0.08);'
+          + 'border:1px solid rgba(255,255,255,0.12);color:#fff;padding:10px;border-radius:8px;'
+          + 'cursor:pointer;font-size:13px;">Cancel</button>'
+      + '</div>';
+
+    picker.appendChild(box);
+    document.body.appendChild(picker);
+
+    var listEl = box.querySelector('#vfs-picker-list');
+
+    // Collect all image files from common VFS folders
+    function collectImages() {
+      var folders = ['/Pictures', '/Documents', '/', '/Pictures/Screenshots'];
+      var found = [];
+
+      function walk(folder, depth) {
+        if (depth > 2) return;
+        var list;
+        try { list = VFS.list(folder); } catch (e) { return; }
+        if (!list) return;
+        for (var i = 0; i < list.length; i++) {
+          var item = list[i];
+          if (item.type === 'file') {
+            // Check extension
+            var name = item.name.toLowerCase();
+            if (/\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(name)) {
+              var fullPath = (folder === '/' ? '' : folder) + '/' + item.name;
+              // Avoid duplicates
+              if (found.indexOf(fullPath) === -1) found.push(fullPath);
+            }
+          } else if (item.type === 'folder' && depth < 2) {
+            walk((folder === '/' ? '' : folder) + '/' + item.name, depth + 1);
+          }
+        }
+      }
+
+      folders.forEach(function (f) { walk(f, 0); });
+      return found;
+    }
+
+    var paths = collectImages();
+
+    if (!paths.length) {
+      listEl.innerHTML = '<div style="color:#888;text-align:center;padding:30px;">'
+        + 'No images found in your OpencoreOS files.<br><br>'
+        + 'Save a screenshot or photo first, then try again.</div>';
+    } else {
+      listEl.innerHTML = '';
+      paths.forEach(function (path) {
+        var item = document.createElement('div');
+        item.style.cssText =
+          'display:flex;align-items:center;gap:10px;padding:8px 10px;' +
+          'border-radius:6px;cursor:pointer;';
+        item.onmouseenter = function () { item.style.background = 'rgba(255,255,255,0.06)'; };
+        item.onmouseleave = function () { item.style.background = ''; };
+        item.innerHTML =
+          '<span style="font-size:20px;">🖼️</span>'
+          + '<span style="flex:1;color:#fff;font-family:Menlo,monospace;font-size:11px;'
+            + 'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'
+            + path.split('/').pop() + '</span>'
+          + '<span style="color:#888;font-size:10px;">' + path + '</span>';
+        item.onclick = function () {
+          try {
+            var content = VFS.read(path);
+            if (!content) { alert('Could not read file.'); return; }
+            if (content.indexOf('data:image') === 0) {
+              picker.remove();
+              callback(content);
+            } else if (/^[A-Za-z0-9+/=\s]+$/.test(content) && content.length > 100) {
+              picker.remove();
+              callback('data:image/png;base64,' + content.replace(/\s/g, ''));
+            } else {
+              alert('This file is not a valid image.');
+            }
+          } catch (e) {
+            alert('Error reading file: ' + e.message);
+          }
+        };
+        listEl.appendChild(item);
+      });
+    }
+
+    box.querySelector('#vfs-picker-cancel').onclick = function () { picker.remove(); };
+    picker.onclick = function (e) { if (e.target === picker) picker.remove(); };
+  }
+
+  // ============================================================
   //  Appearance tab
   // ============================================================
   function renderAppearance() {
     body.innerHTML = '';
 
-    // Section: extension info
     var head = document.createElement('div');
     head.style.cssText = 'margin-bottom:14px;';
     head.innerHTML =
-      '<div style="display:flex;align-items:center;gap:10px;">' +
-        '<div style="font-size:36px;">' + ext.icon + '</div>' +
-        '<div>' +
-          '<div style="font-size:16px;font-weight:600;color:#fff;">' + ext.name + '</div>' +
-          '<div style="color:#888;font-size:11px;">' + ext.desc + '</div>' +
-        '</div>' +
-      '</div>';
+      '<div style="display:flex;align-items:center;gap:10px;">'
+        + '<div style="font-size:36px;">' + ext.icon + '</div>'
+        + '<div>'
+          + '<div style="font-size:16px;font-weight:600;color:#fff;">' + ext.name + '</div>'
+          + '<div style="color:#888;font-size:11px;">' + ext.desc + '</div>'
+        + '</div>'
+      + '</div>';
     body.appendChild(head);
 
-    // Section: activate theme
     if (ext.type === 'theme') {
       var active = window.Extensions.getActiveTheme() === ext.id;
       var row = document.createElement('div');
@@ -74,12 +209,12 @@ function openExtensionManager(extId){
         'background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);' +
         'border-radius:10px;margin-bottom:12px;';
       row.innerHTML =
-        '<div style="flex:1;">' +
-          '<div style="color:#fff;font-weight:600;">Activate this theme</div>' +
-          '<div style="color:#888;font-size:11px;">Only one theme active at a time.</div>' +
-        '</div>' +
-        '<button type="button" id="extm-act" style="background:' + (active ? '#1db954' : 'rgba(255,255,255,0.08)') + ';border:1px solid rgba(255,255,255,0.12);color:#fff;padding:7px 16px;border-radius:6px;cursor:pointer;font-weight:600;font-size:12px;">' +
-          (active ? '✓ Active' : 'Activate') +
+        '<div style="flex:1;">'
+          + '<div style="color:#fff;font-weight:600;">Activate this theme</div>'
+          + '<div style="color:#888;font-size:11px;">Only one theme active at a time.</div>'
+        + '</div>'
+        + '<button type="button" id="extm-act" style="background:' + (active ? '#1db954' : 'rgba(255,255,255,0.08)') + ';border:1px solid rgba(255,255,255,0.12);color:#fff;padding:7px 16px;border-radius:6px;cursor:pointer;font-weight:600;font-size:12px;">'
+          + (active ? '✓ Active' : 'Activate') +
         '</button>';
       body.appendChild(row);
       row.querySelector('#extm-act').onclick = function () {
@@ -88,14 +223,14 @@ function openExtensionManager(extId){
       };
     }
 
-    // Section: custom accent color
+    // Accent color
     var accentRow = document.createElement('div');
     accentRow.style.cssText =
       'padding:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);' +
       'border-radius:10px;margin-bottom:12px;';
     accentRow.innerHTML =
-      '<div style="color:#fff;font-weight:600;margin-bottom:6px;">Accent Color</div>' +
-      '<div style="color:#888;font-size:11px;margin-bottom:8px;">Applied to buttons and highlights.</div>';
+      '<div style="color:#fff;font-weight:600;margin-bottom:6px;">Accent Color</div>'
+      + '<div style="color:#888;font-size:11px;margin-bottom:8px;">Applied to buttons and highlights.</div>';
     var colorInp = document.createElement('input');
     colorInp.type = 'color';
     var storedColor = '';
@@ -104,27 +239,41 @@ function openExtensionManager(extId){
     colorInp.style.cssText = 'width:100%;height:36px;background:transparent;border:1px solid #2a2a2a;border-radius:6px;cursor:pointer;';
     colorInp.oninput = function () {
       try { LS.setItem('oc_ext_accent_' + ext.id, colorInp.value); } catch (e) {}
-      applyAccent(ext.id, colorInp.value);
+      var el = document.getElementById('oc-ext-theme');
+      if (el) el.textContent += '\n:root{--ext-accent:' + colorInp.value + '!important;}';
     };
     accentRow.appendChild(colorInp);
     body.appendChild(accentRow);
 
-    // Section: wallpaper override
+    // ---------- WALLPAPER SECTION ----------
     var wpRow = document.createElement('div');
     wpRow.style.cssText =
       'padding:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);' +
       'border-radius:10px;margin-bottom:12px;';
     wpRow.innerHTML =
-      '<div style="color:#fff;font-weight:600;margin-bottom:6px;">Wallpaper</div>' +
-      '<div style="color:#888;font-size:11px;margin-bottom:8px;">Upload an image or paste a URL for this extension.</div>';
+      '<div style="color:#fff;font-weight:600;margin-bottom:6px;">Wallpaper</div>'
+      + '<div style="color:#888;font-size:11px;margin-bottom:10px;">Any image works — photos, drawings, screenshots, GIFs.</div>';
 
-    var wpBtns = document.createElement('div');
-    wpBtns.style.cssText = 'display:flex;gap:6px;';
+    // Preview thumbnail
+    var currentWp = '';
+    try { currentWp = LS.getItem('oc_ext_wallpaper_' + ext.id) || ''; } catch (e) {}
+    if (currentWp) {
+      var preview = document.createElement('div');
+      preview.style.cssText =
+        'width:100%;height:100px;border-radius:8px;margin-bottom:10px;' +
+        'background:url(' + currentWp + ') center/cover no-repeat;' +
+        'border:1px solid rgba(255,255,255,0.15);';
+      wpRow.appendChild(preview);
+    }
 
+    var btns = document.createElement('div');
+    btns.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;';
+
+    // Upload from device
     var upload = document.createElement('button');
     upload.type = 'button';
-    upload.textContent = 'Upload Image';
-    upload.style.cssText = 'flex:1;background:#1e4d6b;border:none;color:#fff;padding:7px 12px;border-radius:6px;cursor:pointer;font-size:12px;';
+    upload.textContent = '📂 From Device';
+    upload.style.cssText = 'flex:1;min-width:120px;background:#1e4d6b;border:none;color:#fff;padding:9px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;';
     upload.onclick = function () {
       var inp = document.createElement('input');
       inp.type = 'file';
@@ -132,6 +281,9 @@ function openExtensionManager(extId){
       inp.onchange = function () {
         var f = inp.files && inp.files[0];
         if (!f) return;
+        if (f.size > 2 * 1024 * 1024) {
+          if (!confirm('This image is ' + (f.size / 1024 / 1024).toFixed(1) + ' MB. Large wallpapers may fail to save. Continue?')) return;
+        }
         var reader = new FileReader();
         reader.onload = function () {
           setWallpaperForExt(ext.id, reader.result);
@@ -141,49 +293,48 @@ function openExtensionManager(extId){
       };
       inp.click();
     };
-    wpBtns.appendChild(upload);
+    btns.appendChild(upload);
 
+    // Pick from OpencoreOS files
+    var fromVFS = document.createElement('button');
+    fromVFS.type = 'button';
+    fromVFS.textContent = '📁 From OpencoreOS';
+    fromVFS.style.cssText = 'flex:1;min-width:120px;background:#1e4d6b;border:none;color:#fff;padding:9px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;';
+    fromVFS.onclick = function () {
+      pickFromVFS(function (dataUrl) {
+        setWallpaperForExt(ext.id, dataUrl);
+        renderBody();
+      });
+    };
+    btns.appendChild(fromVFS);
+
+    // URL
     var useUrl = document.createElement('button');
     useUrl.type = 'button';
-    useUrl.textContent = 'Paste URL';
-    useUrl.style.cssText = 'flex:1;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);color:#fff;padding:7px 12px;border-radius:6px;cursor:pointer;font-size:12px;';
+    useUrl.textContent = '🔗 URL';
+    useUrl.style.cssText = 'flex:1;min-width:100px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);color:#fff;padding:9px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;';
     useUrl.onclick = function () {
       var url = prompt('Image URL:');
       if (!url) return;
       setWallpaperForExt(ext.id, url);
       renderBody();
     };
-    wpBtns.appendChild(useUrl);
+    btns.appendChild(useUrl);
 
+    // Clear
     var clearWp = document.createElement('button');
     clearWp.type = 'button';
-    clearWp.textContent = 'Clear';
-    clearWp.style.cssText = 'background:#4a2028;border:none;color:#ff8a8a;padding:7px 12px;border-radius:6px;cursor:pointer;font-size:12px;';
+    clearWp.textContent = '✕ Clear';
+    clearWp.style.cssText = 'background:#4a2028;border:none;color:#ff8a8a;padding:9px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;';
     clearWp.onclick = function () {
       try { LS.removeItem('oc_ext_wallpaper_' + ext.id); } catch (e) {}
+      applyWallpaper('');
       renderBody();
     };
-    wpBtns.appendChild(clearWp);
+    btns.appendChild(clearWp);
 
-    wpRow.appendChild(wpBtns);
+    wpRow.appendChild(btns);
     body.appendChild(wpRow);
-  }
-
-  function setWallpaperForExt(id, dataOrUrl) {
-    try { LS.setItem('oc_ext_wallpaper_' + id, dataOrUrl); } catch (e) { alert('Too large to save.'); return; }
-    // Apply immediately if this theme is active
-    if (window.Extensions.getActiveTheme() === id) {
-      var dt = document.getElementById('dt');
-      if (dt) dt.style.background = 'url(' + dataOrUrl + ') center/cover';
-    }
-  }
-
-  function applyAccent(id, color) {
-    if (window.Extensions.getActiveTheme() !== id) return;
-    var el = document.getElementById('oc-ext-theme');
-    if (!el) return;
-    // Append a color override
-    el.textContent += '\n:root{--ext-accent:' + color + '!important;}';
   }
 
   // ============================================================
@@ -211,7 +362,9 @@ function openExtensionManager(extId){
     { id: 'photoeditor', name: 'Photo Editor', default: '🎨' },
     { id: 'vapor', name: 'Vapor', default: '💨' },
     { id: 'science', name: 'Science', default: '🔬' },
-    { id: 'infinity', name: 'Infinity Drink', default: '🥤' }
+    { id: 'infinity', name: 'Infinity Drink', default: '🥤' },
+    { id: 'checklist', name: 'Checklist', default: '✅' },
+    { id: 'extstore', name: 'Extensions', default: '🧩' }
   ];
 
   function renderIcons() {
@@ -220,8 +373,8 @@ function openExtensionManager(extId){
     var head = document.createElement('div');
     head.style.cssText = 'margin-bottom:14px;color:#888;font-size:12px;line-height:1.6;';
     head.innerHTML =
-      'Set a custom icon for any app.<br>' +
-      'Type an <b>emoji</b> or <b>upload an image</b>. Click <b>Reset</b> to restore the default.';
+      'Set a custom icon for any app.<br>'
+      + 'Type an <b>emoji</b> or <b>upload an image</b>. Click <b>Reset</b> to restore the default.';
     body.appendChild(head);
 
     var grid = document.createElement('div');
@@ -237,7 +390,6 @@ function openExtensionManager(extId){
         'background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.08);' +
         'border-radius:10px;';
 
-      // Preview
       var preview = document.createElement('div');
       preview.style.cssText =
         'width:42px;height:42px;display:flex;align-items:center;justify-content:center;' +
@@ -251,13 +403,11 @@ function openExtensionManager(extId){
       }
       row.appendChild(preview);
 
-      // Name
       var name = document.createElement('div');
       name.style.cssText = 'flex:1;color:#fff;font-weight:600;font-size:13px;';
       name.textContent = app.name;
       row.appendChild(name);
 
-      // Buttons
       var btns = document.createElement('div');
       btns.style.cssText = 'display:flex;gap:6px;';
 
@@ -298,6 +448,20 @@ function openExtensionManager(extId){
       };
       btns.appendChild(uploadBtn);
 
+      var vfsBtn = document.createElement('button');
+      vfsBtn.type = 'button';
+      vfsBtn.textContent = 'VFS';
+      vfsBtn.style.cssText = 'background:#1e4d6b;border:none;color:#fff;padding:6px 10px;border-radius:6px;cursor:pointer;font-size:11px;';
+      vfsBtn.onclick = function () {
+        pickFromVFS(function (dataUrl) {
+          if (dataUrl.length > 300 * 1024) return alert('Image too large for an icon. Use a smaller image.');
+          window.Extensions.setIconOverride(app.id, dataUrl);
+          window.Extensions.applyAll();
+          renderIcons();
+        });
+      };
+      btns.appendChild(vfsBtn);
+
       var resetBtn = document.createElement('button');
       resetBtn.type = 'button';
       resetBtn.textContent = 'Reset';
@@ -313,7 +477,6 @@ function openExtensionManager(extId){
       grid.appendChild(row);
     });
 
-    // Reset all button
     var resetAll = document.createElement('button');
     resetAll.type = 'button';
     resetAll.textContent = 'Reset ALL icons';
@@ -329,9 +492,6 @@ function openExtensionManager(extId){
     body.appendChild(resetAll);
   }
 
-  // ============================================================
-  //  Body dispatcher
-  // ============================================================
   function renderBody() {
     if (current === 'look') renderAppearance();
     else if (current === 'icons') renderIcons();
