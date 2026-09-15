@@ -1,8 +1,7 @@
 // ============================================================
 //  spotify-auth.js — Bulletproof version for OpencoreOS v10.4
-//  Never throws at load time. Never crashes the host page.
-//  Handles PKCE OAuth flow + Web Playback SDK + search.
-//  Multi-user: uses the account-scoped LS so tokens are per-user.
+//  Handles PKCE OAuth + Web Playback SDK + search.
+//  Never throws at load time.
 // ============================================================
 
 var SpotifyAuth = (function () {
@@ -19,25 +18,18 @@ var SpotifyAuth = (function () {
   var deviceId = null;
   var onReadyCallback = null;
   var onStateChangeCallback = null;
-  var sdkReady = false;
   var pendingInit = false;
 
-  // -------- Safe storage: prefer account-scoped LS --------
+  // -------- Safe storage --------
   function store() {
-    // 1) Prefer the account-scoped LS (multi-user)
     try {
-      if (window.LS && typeof window.LS.getItem === 'function' && typeof window.LS.setItem === 'function') {
-        return window.LS;
-      }
+      if (window.LS && typeof window.LS.getItem === 'function') return window.LS;
     } catch (e) {}
-
-    // 2) Fall back to raw localStorage
     try {
       window.localStorage.setItem('__spotify_test__', '1');
       window.localStorage.removeItem('__spotify_test__');
       return window.localStorage;
     } catch (e) {
-      // 3) In-memory fallback
       var m = {};
       return {
         getItem: function (k) { return Object.prototype.hasOwnProperty.call(m, k) ? m[k] : null; },
@@ -48,7 +40,7 @@ var SpotifyAuth = (function () {
   }
   var S = store();
 
-  // -------- PKCE helpers --------
+  // -------- PKCE --------
   function generateRandomString(len) {
     var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     var values = new Uint32Array(len);
@@ -57,24 +49,21 @@ var SpotifyAuth = (function () {
     for (var i = 0; i < len; i++) out += chars[values[i] % chars.length];
     return out;
   }
-
   function sha256(plain) {
     var encoder = new TextEncoder();
     return crypto.subtle.digest('SHA-256', encoder.encode(plain));
   }
-
   function base64url(buffer) {
     var bytes = new Uint8Array(buffer);
     var str = '';
     for (var i = 0; i < bytes.byteLength; i++) str += String.fromCharCode(bytes[i]);
     return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
   }
-
   function redirectUri() {
     return window.location.origin + window.location.pathname;
   }
 
-  // Read client ID from either scoped or unscoped storage
+  // Read client ID from scoped or unscoped storage
   function readClientId() {
     var v = null;
     try { v = S.getItem(CLIENT_ID_KEY); } catch (e) {}
@@ -83,7 +72,7 @@ var SpotifyAuth = (function () {
     return v || '';
   }
 
-  // -------- Login (redirect to Spotify) --------
+  // -------- Login --------
   function login() {
     try {
       var clientId = readClientId();
@@ -91,10 +80,8 @@ var SpotifyAuth = (function () {
         alert('Please set your Spotify Client ID in Settings → Spotify first.');
         return;
       }
-
       var verifier = generateRandomString(64);
       S.setItem(VERIFIER_KEY, verifier);
-
       sha256(verifier).then(function (hashed) {
         var challenge = base64url(hashed);
         var url = 'https://accounts.spotify.com/authorize?' +
@@ -115,7 +102,7 @@ var SpotifyAuth = (function () {
     }
   }
 
-  // -------- Handle OAuth callback (returns Promise) --------
+  // -------- Callback --------
   function handleCallback() {
     return new Promise(function (resolve) {
       try {
@@ -242,6 +229,7 @@ var SpotifyAuth = (function () {
     onStateChangeCallback = opts && opts.onStateChange ? opts.onStateChange : null;
 
     if (typeof window.Spotify === 'undefined' || !window.Spotify || !window.Spotify.Player) {
+      console.warn('Spotify SDK not available yet — waiting for onSpotifyWebPlaybackSDKReady');
       pendingInit = true;
       return;
     }
@@ -249,13 +237,17 @@ var SpotifyAuth = (function () {
   }
 
   function createPlayer() {
-    if (sdkPlayer) return;
+    if (sdkPlayer) {
+      console.log('Spotify player already exists');
+      return;
+    }
     if (typeof window.Spotify === 'undefined' || !window.Spotify.Player) {
-      console.warn('Spotify SDK not loaded yet');
+      console.warn('Spotify SDK still not loaded — cannot create player');
       pendingInit = true;
       return;
     }
     try {
+      console.log('Creating Spotify Web Playback player...');
       sdkPlayer = new window.Spotify.Player({
         name: 'OpencoreOS Player',
         getOAuthToken: function (cb) {
@@ -283,27 +275,28 @@ var SpotifyAuth = (function () {
 
       sdkPlayer.addListener('initialization_error', function (e) {
         console.error('SDK init error:', e && e.message);
+        alert('Spotify SDK could not initialize: ' + (e && e.message));
       });
       sdkPlayer.addListener('authentication_error', function (e) {
         console.error('SDK auth error:', e && e.message);
+        alert('Spotify authentication error: ' + (e && e.message));
       });
       sdkPlayer.addListener('account_error', function (e) {
-        console.error('SDK account error (Premium required):', e && e.message);
+        console.error('SDK account error:', e && e.message);
+        alert('Spotify account error: ' + (e && e.message) + '\n\nSpotify Premium is required for playback.');
       });
 
       sdkPlayer.connect();
-      sdkReady = true;
     } catch (err) {
       console.error('Could not create Spotify player:', err);
       sdkPlayer = null;
     }
   }
 
-  // Register the SDK ready handler immediately
+  // Register the SDK-ready handler immediately
   function registerSdkReadyHandler() {
     window.onSpotifyWebPlaybackSDKReady = function () {
-      console.log('✓ Spotify SDK script loaded');
-      sdkReady = true;
+      console.log('✓ Spotify Web Playback SDK is ready');
       if (pendingInit) {
         pendingInit = false;
         createPlayer();
@@ -398,6 +391,8 @@ var SpotifyAuth = (function () {
     previousTrack: previousTrack,
     setVolume: setVolume,
     search: search,
-    getValidToken: getValidToken
+    getValidToken: getValidToken,
+    isSdkReady: function () { return !!(window.Spotify && window.Spotify.Player); },
+    isPlayerReady: function () { return !!deviceId; }
   };
 })();
